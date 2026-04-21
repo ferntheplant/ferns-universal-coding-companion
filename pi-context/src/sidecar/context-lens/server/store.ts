@@ -79,6 +79,7 @@ export class Store {
     string,
     { conversationId: string; lastSeen: number; lastMessagesTokens: number }
   >();
+  private pendingNames = new Map<string, string>();
 
   private dataRevision = 0;
   private nextEntryId = 1;
@@ -159,6 +160,10 @@ export class Store {
 
   getConversations(): Map<string, Conversation> {
     return this.conversations;
+  }
+
+  getConversation(conversationId: string): Conversation | undefined {
+    return this.conversations.get(conversationId);
   }
 
   loadState(): void {
@@ -262,6 +267,7 @@ export class Store {
     meta?: RequestMeta,
     requestHeaders?: Record<string, string>,
     sessionId?: string | null,
+    piSessionId?: string | null,
   ): CapturedEntry {
     const resolvedSource = detectSource(contextInfo, source, requestHeaders);
     const workingDirectory = extractWorkingDirectory(
@@ -280,14 +286,17 @@ export class Store {
     );
 
     const rawSessionId =
-      sessionId ?? extractSessionId(rawBody ?? null, requestHeaders);
+      piSessionId ?? sessionId ?? extractSessionId(rawBody ?? null, requestHeaders);
 
     // Register or look up conversation
     let conversationId: string | null = null;
 
     // Explicit session ID from the caller (e.g. mitmproxy addon) takes
     // precedence over all fingerprint-based grouping strategies.
-    if (sessionId) {
+    if (resolvedSource === "pi" && piSessionId) {
+      // Pi-native ingest includes a stable session UUID. Use it directly.
+      conversationId = piSessionId;
+    } else if (sessionId) {
       conversationId = createHash("sha256")
         .update(sessionId)
         .digest("hex")
@@ -397,14 +406,21 @@ export class Store {
     }
 
     if (conversationId && !this.conversations.has(conversationId)) {
+      const pendingName = rawSessionId
+        ? (this.pendingNames.get(rawSessionId) ?? null)
+        : null;
       this.conversations.set(conversationId, {
         id: conversationId,
         label: extractConversationLabel(contextInfo),
+        name: pendingName,
         source: resolvedSource || "unknown",
         workingDirectory,
         firstSeen: new Date().toISOString(),
         sessionId: rawSessionId,
       });
+      if (rawSessionId && pendingName) {
+        this.pendingNames.delete(rawSessionId);
+      }
     } else if (conversationId) {
       const convo = this.conversations.get(conversationId);
       if (convo) {
@@ -424,6 +440,14 @@ export class Store {
         // Backfill working directory if first request didn't have it
         if (!convo.workingDirectory && workingDirectory) {
           convo.workingDirectory = workingDirectory;
+        }
+        if (!convo.name && rawSessionId) {
+          const pendingName = this.pendingNames.get(rawSessionId);
+          if (pendingName) {
+            convo.name = pendingName;
+            this.pendingNames.delete(rawSessionId);
+            this.appendConversationEvent(conversationId);
+          }
         }
       }
     }
@@ -698,6 +722,7 @@ export class Store {
     this.geminiSessionTracker.clear();
     this.piSessionTracker.clear();
     this.importedSessionIds.clear();
+    this.pendingNames.clear();
     this.tagsStore.syncTags(new Set());
     this.nextEntryId = 1;
     this.dataRevision++;
@@ -713,6 +738,24 @@ export class Store {
 
   markSessionImported(sessionId: string): void {
     this.importedSessionIds.add(sessionId);
+  }
+
+  persistConversation(conversation: Conversation): void {
+    this.conversations.set(conversation.id, conversation);
+    this.dataRevision++;
+    this.appendConversationEvent(conversation.id);
+    this.emitChange("session-updated", conversation.id);
+  }
+
+  setPendingName(sessionId: string, name: string): void {
+    const normalizedSessionId = sessionId.trim();
+    const normalizedName = name.trim();
+    if (!normalizedSessionId) return;
+    if (!normalizedName) {
+      this.pendingNames.delete(normalizedSessionId);
+      return;
+    }
+    this.pendingNames.set(normalizedSessionId, normalizedName);
   }
 
   // ----- Internals -----
@@ -1250,7 +1293,7 @@ export class Store {
     convo.prunedMessages = [...existing, messageId];
     this.dataRevision++;
     // Persist the updated conversation row (prunedMessages is part of it)
-    this.appendPruneEvent(conversationId);
+    this.appendConversationEvent(conversationId);
     this.emitChange("session-updated", conversationId);
   }
 
@@ -1260,11 +1303,11 @@ export class Store {
     const existing = convo.prunedMessages ?? [];
     convo.prunedMessages = existing.filter((id) => id !== messageId);
     this.dataRevision++;
-    this.appendPruneEvent(conversationId);
+    this.appendConversationEvent(conversationId);
     this.emitChange("session-updated", conversationId);
   }
 
-  private appendPruneEvent(conversationId: string): void {
+  private appendConversationEvent(conversationId: string): void {
     const convo = this.conversations.get(conversationId);
     if (!convo) return;
     try {
@@ -1274,7 +1317,7 @@ export class Store {
       );
     } catch (err: unknown) {
       console.error(
-        "Prune state append error:",
+        "Conversation state append error:",
         err instanceof Error ? err.message : String(err),
       );
     }

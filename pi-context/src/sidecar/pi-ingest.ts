@@ -5,6 +5,7 @@ import type { CapturedEntry, ContextInfo, RequestMeta, ResponseData } from "./co
 
 interface PiTurnLike {
   sessionId: string;
+  systemPrompt: string | null;
   timestamp: string;
   sessionStartedAt: string | null;
   model: {
@@ -84,10 +85,14 @@ export class PiIngestPipeline {
     const turn = normalizeTurnPayload(payload);
     const traceId = turn.sessionId;
     const rolling = this.rollingSessions.get(traceId) ?? null;
-    const requestBody = buildRequestBodyForTurn(turn, rolling);
+    const apiFormat = normalizeApiFormat(turn.model.api);
+    const requestBody = applyMonitoredSystemPrompt(
+      buildRequestBodyForTurn(turn, rolling),
+      turn.systemPrompt,
+      apiFormat,
+    );
 
     const provider = normalizeProvider(turn.model.provider, turn.model.api, turn.model.baseUrl);
-    const apiFormat = normalizeApiFormat(turn.model.api);
     const path = derivePath(apiFormat, turn.model.id);
     const targetUrl = joinUrl(turn.model.baseUrl, path);
 
@@ -125,6 +130,7 @@ export class PiIngestPipeline {
       meta,
       {},
       traceId,
+      turn.sessionId,
     );
 
     const nextState = advanceRollingState(requestBody, turn);
@@ -167,6 +173,7 @@ function normalizeDirectPiPayload(value: Record<string, unknown>): PiTurnLike {
 
   return {
     sessionId: String(value.sessionId),
+    systemPrompt: asString(value.systemPrompt),
     timestamp: asIsoString(value.timestamp) ?? new Date().toISOString(),
     sessionStartedAt: asIsoString(value.sessionStartedAt),
     model: {
@@ -229,6 +236,7 @@ function normalizeSpikeTurnPayload(value: Record<string, unknown>): PiTurnLike {
 
   return {
     sessionId: String(session?.sessionId ?? randomUUID()),
+    systemPrompt: asString(session?.systemPrompt),
     timestamp:
       asIsoString(turn?.endedAt) ??
       asIsoString(turn?.startedAt) ??
@@ -397,6 +405,47 @@ function buildRequestBodyForTurn(
   fallbackTemplate.stream = true;
   fallbackTemplate.messages = rollingState?.messages ? [...rollingState.messages] : [];
   return fallbackTemplate;
+}
+
+function hasSystemPromptInBody(body: Record<string, unknown>): boolean {
+  if (typeof body.system === "string" && body.system.trim().length > 0) return true;
+  if (typeof body.instructions === "string" && body.instructions.trim().length > 0) return true;
+  if (!Array.isArray(body.messages)) return false;
+
+  for (const message of body.messages) {
+    if (!message || typeof message !== "object") continue;
+    const record = message as Record<string, unknown>;
+    if (record.role === "system" || record.role === "developer") return true;
+  }
+  return false;
+}
+
+function applyMonitoredSystemPrompt(
+  body: Record<string, unknown>,
+  monitoredSystemPrompt: string | null,
+  apiFormat: string,
+): Record<string, unknown> {
+  const prompt = typeof monitoredSystemPrompt === "string" ? monitoredSystemPrompt.trim() : "";
+  if (!prompt) return body;
+  if (hasSystemPromptInBody(body)) return body;
+
+  if (apiFormat === "responses" || apiFormat === "chatgpt-backend") {
+    body.instructions = prompt;
+    return body;
+  }
+
+  if (apiFormat === "anthropic-messages") {
+    body.system = prompt;
+    return body;
+  }
+
+  if (Array.isArray(body.messages)) {
+    body.messages = [{ role: "system", content: prompt }, ...body.messages];
+    return body;
+  }
+
+  body.system = prompt;
+  return body;
 }
 
 function normalizeAssistantContent(message: PiAssistantMessage | null): unknown[] {

@@ -190,6 +190,7 @@ export const ConversationLineSchema = v.object({
   data: v.object({
     id: v.string(),
     label: v.string(),
+    name: v.optional(v.nullable(v.string())),
     source: v.string(),
     workingDirectory: v.nullable(v.string()),
     firstSeen: v.string(),
@@ -294,6 +295,7 @@ export const IngestCapturePayloadSchema = v.object({
  */
 export const IngestPiPayloadSchema = v.object({
   sessionId: v.string(),
+  systemPrompt: v.optional(v.nullable(v.string()), null),
   timestamp: v.optional(v.string()),
   sessionStartedAt: v.optional(v.nullable(v.string())),
   model: v.object({
@@ -357,6 +359,7 @@ export const IngestPiSpikePayloadSchema = v.object({
   schemaVersion: v.literal(1),
   session: v.object({
     sessionId: v.string(),
+    systemPrompt: v.optional(v.nullable(v.string()), null),
   }),
   model: v.object({
     provider: v.optional(v.nullable(v.string())),

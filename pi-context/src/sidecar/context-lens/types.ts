@@ -141,6 +141,7 @@ export interface ResolveTargetResult {
 export interface Conversation {
   id: string;
   label: string;
+  name?: string | null;
   source: string;
   workingDirectory: string | null;
   firstSeen: string;

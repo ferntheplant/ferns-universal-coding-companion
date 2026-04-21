@@ -45,6 +45,8 @@ export interface SessionSnapshot {
   sessionId: string;
   sessionFile: string | null;
   cwd: string;
+  systemPrompt: string | null;
+  systemPromptSource: "session_start" | "context" | null;
 }
 
 export type SidecarLifecycleState = "stopped" | "starting" | "running" | "stopping" | "error";
@@ -204,6 +206,78 @@ function getSessionKey(ctx: ExtensionContext): string {
   return ctx.sessionManager.getSessionId();
 }
 
+function normalizeSystemPromptCandidate(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function extractTextFromMessageContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+
+  const parts: string[] = [];
+  for (const block of content) {
+    if (typeof block === "string") {
+      parts.push(block);
+      continue;
+    }
+    if (!block || typeof block !== "object") continue;
+    const asRecord = block as Record<string, unknown>;
+    if (typeof asRecord.text === "string") {
+      parts.push(asRecord.text);
+      continue;
+    }
+    if (typeof asRecord.thinking === "string") {
+      parts.push(asRecord.thinking);
+      continue;
+    }
+    if (typeof asRecord.content === "string") {
+      parts.push(asRecord.content);
+    }
+  }
+
+  return parts.join("\n");
+}
+
+function extractSystemPromptFromMessages(messages: unknown): string | null {
+  if (!Array.isArray(messages)) return null;
+
+  const systemChunks: string[] = [];
+  for (const rawMessage of messages) {
+    if (!rawMessage || typeof rawMessage !== "object") continue;
+    const message = rawMessage as Record<string, unknown>;
+    const role = message.role;
+    if (role !== "system" && role !== "developer") continue;
+
+    const content = extractTextFromMessageContent(message.content);
+    if (content.trim().length > 0) {
+      systemChunks.push(content.trim());
+    }
+  }
+
+  if (systemChunks.length === 0) return null;
+  return systemChunks.join("\n\n");
+}
+
+function readSessionSystemPrompt(ctx: ExtensionContext): string | null {
+  const sessionManager = ctx.sessionManager as unknown as {
+    getSystemPrompt?: () => unknown;
+  };
+  return normalizeSystemPromptCandidate(sessionManager.getSystemPrompt?.());
+}
+
+function updateSessionSystemPrompt(
+  state: SessionState,
+  prompt: string | null,
+  source: "session_start" | "context",
+): void {
+  if (!prompt) return;
+  if (state.session.systemPrompt === prompt) return;
+  state.session.systemPrompt = prompt;
+  state.session.systemPromptSource = source;
+}
+
 export function getModelSnapshot(ctx: ExtensionContext): SessionModelSnapshot {
   return {
     provider: ctx.model?.provider ?? null,
@@ -229,6 +303,8 @@ function getOrCreateSessionState(ctx: ExtensionContext): SessionState {
       sessionId: sessionKey,
       sessionFile: ctx.sessionManager.getSessionFile() ?? null,
       cwd: ctx.cwd,
+      systemPrompt: null,
+      systemPromptSource: null,
     },
     sessionStartedAtIso: null,
     lastModel: getModelSnapshot(ctx),
@@ -243,6 +319,7 @@ export function startSessionCapture(ctx: ExtensionContext): void {
   const state = getOrCreateSessionState(ctx);
   state.sessionStartedAtIso = new Date().toISOString();
   state.lastModel = getModelSnapshot(ctx);
+  updateSessionSystemPrompt(state, readSessionSystemPrompt(ctx), "session_start");
 }
 
 export function updateSessionModel(ctx: ExtensionContext, event?: ModelSelectEventLike): void {
@@ -287,6 +364,13 @@ function getCurrentTurn(ctx: ExtensionContext): PendingTurnState | null {
 }
 
 export function captureContextSnapshot(event: ContextEvent, ctx: ExtensionContext): void {
+  const state = getOrCreateSessionState(ctx);
+  updateSessionSystemPrompt(
+    state,
+    extractSystemPromptFromMessages(event.messages),
+    "context",
+  );
+
   const turn = getCurrentTurn(ctx);
   if (!turn) return;
 

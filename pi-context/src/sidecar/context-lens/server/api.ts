@@ -212,6 +212,30 @@ export function createApiApp(store: Store): Hono {
     }
   });
 
+  app.post("/api/session/name", async (c) => {
+    const body = await c.req.json<{
+      sessionId?: unknown;
+      name?: unknown;
+    }>();
+    const sessionId =
+      typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+
+    if (!sessionId || !name) {
+      return c.json({ error: "sessionId and name required" }, 400);
+    }
+
+    const conversation = store.getConversation(sessionId);
+    if (conversation) {
+      conversation.name = name;
+      store.persistConversation(conversation);
+      return c.json({ ok: true });
+    }
+
+    store.setPendingName(sessionId, name);
+    return c.json({ ok: true, pending: true });
+  });
+
   // --- Paste (manual request analysis) ---
 
   app.post("/api/paste", async (c) => {

@@ -10,7 +10,7 @@ import {
   handleTurnEnd,
   handleTurnStart,
 } from "./collector";
-import { registerCommands } from "./commands";
+import { registerCommands, restoreNamedSessionOnStart } from "./commands";
 import { notifyError } from "./notifications";
 import { dropSession, startSessionCapture, updateSessionModel } from "./runtime";
 
@@ -19,6 +19,12 @@ export default function piContextExtension(pi: ExtensionAPI): void {
 
   pi.on("session_start", async (_event, ctx) => {
     startSessionCapture(ctx);
+    try {
+      await restoreNamedSessionOnStart(pi, ctx);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      notifyError(ctx, `pi-context session name restore failed: ${message}`);
+    }
   });
 
   pi.on("model_select", async (event, ctx) => {
