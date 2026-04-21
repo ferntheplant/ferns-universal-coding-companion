@@ -260,6 +260,8 @@ Exit criteria:
 
 ## Milestone 5 - Commands, Open Flow, and Runtime Integration
 
+Status: Completed on 2026-04-21
+
 Primary write scope:
 - `src/extension/commands.ts`
 - `src/extension/server-manager.ts`

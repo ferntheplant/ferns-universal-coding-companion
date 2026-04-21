@@ -153,8 +153,10 @@ export async function stopSidecar(): Promise<{ stopped: boolean; status: Sidecar
   throw new Error("Timed out waiting for pi-context sidecar to stop");
 }
 
-export async function openSidecarInBrowser(ctx: ExtensionCommandContext): Promise<void> {
-  const { status } = await ensureSidecarRunning();
+export async function openSidecarInBrowser(
+  ctx: ExtensionCommandContext,
+): Promise<{ status: SidecarManagerStatus; reused: boolean }> {
+  const { status, reused } = await ensureSidecarRunning();
   const url = status.url;
 
   let command = "xdg-open";
@@ -176,4 +178,6 @@ export async function openSidecarInBrowser(ctx: ExtensionCommandContext): Promis
   } catch {
     notifyWarning(ctx, `pi-context dashboard is running at ${url}, but automatic browser open failed.`);
   }
+
+  return { status, reused };
 }
