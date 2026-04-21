@@ -1,0 +1,21 @@
+{
+  "name": "pi-context",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run index.ts",
+    "typecheck": "tsc --noEmit",
+    "sidecar": "bun run src/sidecar/index.ts",
+    "spike:to-context-lens": "bun run scripts/spike-to-context-lens.ts"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "^0.67.2",
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "typescript": "^5"
+  }
+}
