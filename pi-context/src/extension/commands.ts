@@ -11,7 +11,7 @@ import {
 
 function formatRuntimeSummary(sidecar: SidecarManagerStatus): string {
   const runtime = getRuntimeStatus();
-  return `sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; port=${sidecar.port ?? "unavailable"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; postedCaptures=${runtime.debug.postedCaptures}; failedPosts=${runtime.debug.failedPosts}; failedWrites=${runtime.debug.failedWrites}`;
+  return `sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; port=${sidecar.port ?? "unavailable"}; privacy=${sidecar.privacy ?? "standard"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; postedCaptures=${runtime.debug.postedCaptures}; failedPosts=${runtime.debug.failedPosts}; failedWrites=${runtime.debug.failedWrites}`;
 }
 
 async function handleMainCommand(_args: string, ctx: ExtensionCommandContext): Promise<void> {
@@ -40,7 +40,7 @@ async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext):
   const errorSuffix = runtime.sidecar.lastError ? `; lastError=${runtime.sidecar.lastError}` : "";
   notifyInfo(
     ctx,
-    `startedAt=${runtime.extensionStartedAt}; sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; port=${sidecar.port ?? "unavailable"}; pid=${sidecar.pid ?? "none"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; postedCaptures=${runtime.debug.postedCaptures}; failedPosts=${runtime.debug.failedPosts}; failedWrites=${runtime.debug.failedWrites}; dataDir=${sidecar.dataDir ?? "unavailable"}${errorSuffix}`,
+    `startedAt=${runtime.extensionStartedAt}; sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; port=${sidecar.port ?? "unavailable"}; pid=${sidecar.pid ?? "none"}; privacy=${sidecar.privacy ?? "standard"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; postedCaptures=${runtime.debug.postedCaptures}; failedPosts=${runtime.debug.failedPosts}; failedWrites=${runtime.debug.failedWrites}; dataDir=${sidecar.dataDir ?? "unavailable"}${errorSuffix}`,
   );
 }
 

@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { type SidecarPaths, SIDECAR_HOST, SIDECAR_PORT, SIDECAR_URL } from "./paths";
 import { initTokenizer } from "./context-lens/core";
 import { Store } from "./context-lens/server/store";
+import { resolvePrivacyLevel } from "./config";
 import { createApp as createContextLensApp, loadHtmlUI } from "./context-lens/server/webui";
 
 export interface SidecarStatusPayload {
@@ -17,6 +18,7 @@ export interface SidecarStatusPayload {
   url: string;
   dataDir: string;
   logsDir: string;
+  privacy: "minimal" | "standard" | "full";
 }
 
 export interface SidecarApp {
@@ -27,6 +29,7 @@ export interface SidecarApp {
 
 export function createSidecarApp(paths: SidecarPaths): SidecarApp {
   const startedAt = new Date().toISOString();
+  const privacy = resolvePrivacyLevel();
   const status: SidecarStatusPayload = {
     status: "ok",
     pid: process.pid,
@@ -36,6 +39,7 @@ export function createSidecarApp(paths: SidecarPaths): SidecarApp {
     url: SIDECAR_URL,
     dataDir: paths.dataDir,
     logsDir: paths.logsDir,
+    privacy,
   };
 
   // Provenance: this sidecar embeds Context Lens modules lifted from
@@ -45,7 +49,7 @@ export function createSidecarApp(paths: SidecarPaths): SidecarApp {
     stateFile: join(paths.dataDir, "state.jsonl"),
     maxSessions: 200,
     maxCompactMessages: 60,
-    privacy: "standard",
+    privacy,
   });
   store.loadState();
 

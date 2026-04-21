@@ -2,6 +2,7 @@ import type { ExtensionCommandContext } from "@mariozechner/pi-coding-agent";
 import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isProcessAlive, readSidecarLock } from "../sidecar/lock";
 import { notifyWarning } from "./notifications";
 import { setSidecarState } from "./runtime";
 
@@ -17,6 +18,7 @@ interface SidecarStatusResponse extends SidecarHealthResponse {
   port: number;
   dataDir: string;
   logsDir: string;
+  privacy: "minimal" | "standard" | "full";
 }
 
 export interface SidecarManagerStatus {
@@ -29,6 +31,7 @@ export interface SidecarManagerStatus {
   port: number | null;
   dataDir: string | null;
   logsDir: string | null;
+  privacy: "minimal" | "standard" | "full" | null;
   lastError: string | null;
 }
 
@@ -76,6 +79,7 @@ export async function getSidecarStatus(): Promise<SidecarManagerStatus> {
       port: liveStatus.port,
       dataDir: liveStatus.dataDir,
       logsDir: liveStatus.logsDir,
+      privacy: liveStatus.privacy,
       lastError: null,
     };
   }
@@ -91,6 +95,7 @@ export async function getSidecarStatus(): Promise<SidecarManagerStatus> {
     port: null,
     dataDir: null,
     logsDir: null,
+    privacy: null,
     lastError: null,
   };
 }
@@ -99,6 +104,19 @@ export async function ensureSidecarRunning(): Promise<{ status: SidecarManagerSt
   const current = await getSidecarStatus();
   if (current.running) {
     return { status: current, reused: true };
+  }
+
+  // If another Pi instance already launched the sidecar and wrote a lock file,
+  // wait briefly for health before attempting a new spawn.
+  const lock = await readSidecarLock();
+  if (lock && isProcessAlive(lock.pid)) {
+    const lockHealth = await waitForHealth(2_000);
+    if (lockHealth?.status === "ok") {
+      const status = await getSidecarStatus();
+      if (status.running) {
+        return { status, reused: true };
+      }
+    }
   }
 
   setSidecarState("starting");
@@ -112,6 +130,12 @@ export async function ensureSidecarRunning(): Promise<{ status: SidecarManagerSt
 
   const health = await waitForHealth();
   if (!health) {
+    // One final probe: another concurrent instance may have won the race
+    // after our spawn attempt.
+    const racedStatus = await getSidecarStatus();
+    if (racedStatus.running) {
+      return { status: racedStatus, reused: true };
+    }
     setSidecarState("error", "Timed out waiting for sidecar health check");
     throw new Error("Timed out waiting for pi-context sidecar to become healthy");
   }

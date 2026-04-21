@@ -605,7 +605,7 @@ export function createApiApp(store: Store): Hono {
 
   app.get("/api/export/lhar", (c) => {
     const conversation = c.req.query("conversation");
-    const privacy = (c.req.query("privacy") || "standard") as PrivacyLevel;
+    const privacy = (c.req.query("privacy") || store.getPrivacy()) as PrivacyLevel;
     const entries = getExportEntries(store, conversation);
     const jsonl = toLharJsonl(entries, store.getConversations(), privacy);
     const filename = buildExportFilename("lhar", conversation, privacy);
@@ -617,7 +617,7 @@ export function createApiApp(store: Store): Hono {
 
   app.get("/api/export/lhar.json", (c) => {
     const conversation = c.req.query("conversation");
-    const privacy = (c.req.query("privacy") || "standard") as PrivacyLevel;
+    const privacy = (c.req.query("privacy") || store.getPrivacy()) as PrivacyLevel;
     const entries = getExportEntries(store, conversation);
     const wrapped = toLharJson(entries, store.getConversations(), privacy);
     const filename = buildExportFilename("lhar.json", conversation, privacy);

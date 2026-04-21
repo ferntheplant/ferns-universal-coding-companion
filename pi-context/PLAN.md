@@ -298,6 +298,8 @@ Exit criteria:
 
 ## Milestone 6 - Privacy, Export, Persistence, and Multi-Instance Hardening
 
+Status: Completed on 2026-04-21
+
 Primary write scope:
 - sidecar persistence/export modules
 - `README.md`
@@ -350,6 +352,6 @@ These smoke tests are the final acceptance bar after Milestone 6:
 
 ## Implementation Notes
 
-- Milestones 3 and 4 were completed on 2026-04-21. Keep spike fixtures and `scripts/spike-to-context-lens.ts` as regression/parity oracles for future ingest changes.
+- Milestones 3 through 6 were completed on 2026-04-21. Keep spike fixtures and `scripts/spike-to-context-lens.ts` as regression/parity oracles for future ingest changes.
 - If an implementer discovers that `openai-codex` or `opencode-zen` no longer provide provider-native payloads in `before_provider_request`, stop and escalate before introducing fallback transport work.
 - Automated tests may be added for pure conversion helpers, but milestone completion should not depend on broad Pi-runtime test coverage.
