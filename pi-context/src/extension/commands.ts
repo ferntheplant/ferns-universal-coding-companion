@@ -1,40 +1,41 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@mariozechner/pi-coding-agent";
 import { notifyError, notifyInfo, notifySuccess } from "./notifications";
 import { getRuntimeStatus } from "./runtime";
+import { ensureSidecarRunning, getSidecarStatus, openSidecarInBrowser, stopSidecar } from "./server-manager";
 
 async function handleMainCommand(_args: string, ctx: ExtensionCommandContext): Promise<void> {
-  const status = getRuntimeStatus();
+  const { status, reused } = await ensureSidecarRunning();
   notifySuccess(
     ctx,
-    `pi-context is loaded. Sidecar=${status.sidecar.state} at ${status.sidecar.url}; activeSessions=${status.sessions.active}; pendingTurns=${status.sessions.pendingTurns}.`,
+    reused
+      ? `pi-context sidecar is already running at ${status.url}.`
+      : `pi-context sidecar started at ${status.url}.`,
   );
 }
 
 async function handleOpenCommand(_args: string, ctx: ExtensionCommandContext): Promise<void> {
-  const status = getRuntimeStatus();
-  notifyInfo(
-    ctx,
-    `pi-context open flow will target ${status.sidecar.url}. Sidecar state is currently ${status.sidecar.state}; browser launch arrives in the sidecar milestone.`,
-  );
+  await openSidecarInBrowser(ctx);
+  notifyInfo(ctx, "pi-context dashboard open requested.");
 }
 
 async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext): Promise<void> {
-  const status = getRuntimeStatus();
-  const errorSuffix = status.sidecar.lastError ? `; lastError=${status.sidecar.lastError}` : "";
+  const runtime = getRuntimeStatus();
+  const sidecar = await getSidecarStatus();
+  const errorSuffix = runtime.sidecar.lastError ? `; lastError=${runtime.sidecar.lastError}` : "";
   notifyInfo(
     ctx,
-    `startedAt=${status.extensionStartedAt}; sidecar=${status.sidecar.state}; sidecarUrl=${status.sidecar.url}; sidecarUpdatedAt=${status.sidecar.lastTransitionAt}; activeSessions=${status.sessions.active}; pendingTurns=${status.sessions.pendingTurns}${errorSuffix}`,
+    `startedAt=${runtime.extensionStartedAt}; sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; pid=${sidecar.pid ?? "none"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; dataDir=${sidecar.dataDir ?? "unavailable"}${errorSuffix}`,
   );
 }
 
 async function handleStopCommand(_args: string, ctx: ExtensionCommandContext): Promise<void> {
-  const status = getRuntimeStatus();
-  if (status.sidecar.state === "stopped") {
+  const result = await stopSidecar();
+  if (!result.stopped) {
     notifyInfo(ctx, "pi-context sidecar is already stopped.");
     return;
   }
 
-  notifyInfo(ctx, "pi-context sidecar stop is not wired yet. Current runtime state preserved.");
+  notifyInfo(ctx, "pi-context sidecar stopped.");
 }
 
 export function registerCommands(pi: ExtensionAPI): void {

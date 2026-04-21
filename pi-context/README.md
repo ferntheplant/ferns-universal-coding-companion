@@ -24,9 +24,11 @@ The first validated Pi-native providers remain:
 - `/pi-context` shows the current runtime summary
 - `/pi-context-open` is the dashboard entrypoint
 - `/pi-context-status` shows detailed runtime state
-- `/pi-context-stop` stops the shared sidecar once sidecar management is implemented
+- `/pi-context-stop` stops the shared sidecar
 
-At Milestone 0, the command surface is in place but sidecar lifecycle and browser-open behavior are still placeholders.
+The sidecar skeleton now serves:
+- `GET /health`
+- `GET /api/status`
 
 ## Development
 
@@ -52,10 +54,10 @@ bun run spike:to-context-lens
 2. Confirm `/pi-context`, `/pi-context-open`, `/pi-context-status`, and `/pi-context-stop` are registered.
 3. Run `/pi-context-status`.
 4. Confirm the runtime reports `sidecar=stopped` and does not reference the old spike-only command flow.
+5. Run `bun run sidecar` and confirm `http://127.0.0.1:4041/health` responds.
 
 ## Current Limitations
 
-- the shared sidecar process is not implemented yet
-- `/pi-context-open` does not launch the browser yet
-- `/pi-context-stop` is currently a no-op when the sidecar is stopped
+- the sidecar currently exposes only health/status skeleton routes
+- the browser-open path is best-effort and not yet deeply hardened
 - fixture-writing capture is still present internally until the production ingest path replaces it

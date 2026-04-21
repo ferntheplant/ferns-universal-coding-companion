@@ -96,6 +96,8 @@ Exit criteria:
 
 ## Milestone 1 - Sidecar Skeleton and Singleton Ownership
 
+Status: Completed on 2026-04-21
+
 Primary write scope:
 - `src/sidecar/index.ts`
 - `src/sidecar/app.ts`
