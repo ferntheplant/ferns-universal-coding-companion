@@ -66,7 +66,7 @@ try {
   const message = error instanceof Error ? error.message : String(error);
   await log(`sidecar startup failed: ${message}`);
 
-  if (message.includes("EADDRINUSE")) {
+  if (message.includes("EADDRINUSE") || message.toLowerCase().includes("port 4041 in use")) {
     process.exit(0);
   }
 

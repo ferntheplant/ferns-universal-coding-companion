@@ -1,0 +1,663 @@
+import type { ContentBlock, ContextInfo, ParsedMessage } from "../types.js";
+import { estimateTokens } from "./tokens.js";
+
+/**
+ * Parse a single item from the OpenAI Responses API `input` array.
+ *
+ * Maps typed items (function_call, function_call_output, reasoning, output_text, etc.)
+ * to a normalized `ParsedMessage` with a stable `role` and optional `contentBlocks`.
+ */
+function parseResponsesItem(
+  item: any,
+  model?: string,
+): {
+  message: ParsedMessage;
+  tokens: number;
+  isSystem: boolean;
+  content: string;
+} {
+  const type: string = item.type || "";
+
+  // Standard message with role/content (e.g. {"type":"message","role":"user","content":[...]})
+  if (item.role) {
+    const isSystem = item.role === "system" || item.role === "developer";
+    let content: string;
+    let contentBlocks: ContentBlock[] | null = null;
+    if (typeof item.content === "string") {
+      content = item.content;
+    } else if (Array.isArray(item.content)) {
+      contentBlocks = item.content as ContentBlock[];
+      content = item.content.map((b: any) => b.text || "").join("\n");
+    } else {
+      content = JSON.stringify(item.content || item);
+    }
+    const tokens = estimateTokens(item.content ?? content, model);
+    return {
+      message: { role: item.role, content, contentBlocks, tokens },
+      tokens,
+      isSystem,
+      content,
+    };
+  }
+
+  // function_call → assistant tool_use
+  if (type === "function_call" || type === "custom_tool_call") {
+    const name = item.name || "unknown";
+    const args = item.arguments || "";
+    const content =
+      name +
+      "(" +
+      (typeof args === "string"
+        ? args.slice(0, 200)
+        : JSON.stringify(args).slice(0, 200)) +
+      ")";
+    const tokens = estimateTokens(item, model);
+    // Parse stringified arguments (OpenAI Responses API sends JSON strings)
+    let parsedInput: Record<string, any> = {};
+    if (typeof args === "string" && args.length > 0) {
+      try {
+        const parsed = JSON.parse(args);
+        if (typeof parsed === "object" && parsed !== null) {
+          parsedInput = parsed;
+        }
+      } catch {
+        /* not valid JSON, keep empty */
+      }
+    } else if (typeof args === "object" && args !== null) {
+      parsedInput = args;
+    }
+    const block: ContentBlock = {
+      type: "tool_use",
+      id: item.call_id || "",
+      name,
+      input: parsedInput,
+    };
+    return {
+      message: { role: "assistant", content, contentBlocks: [block], tokens },
+      tokens,
+      isSystem: false,
+      content,
+    };
+  }
+
+  // function_call_output → user tool_result
+  if (type === "function_call_output" || type === "custom_tool_call_output") {
+    const output =
+      typeof item.output === "string"
+        ? item.output
+        : JSON.stringify(item.output || "");
+    const tokens = estimateTokens(output, model);
+    const block: ContentBlock = {
+      type: "tool_result",
+      tool_use_id: item.call_id || "",
+      content: output,
+    };
+    return {
+      message: {
+        role: "user",
+        content: output,
+        contentBlocks: [block],
+        tokens,
+      },
+      tokens,
+      isSystem: false,
+      content: output,
+    };
+  }
+
+  // reasoning → assistant thinking
+  if (type === "reasoning") {
+    const summary = Array.isArray(item.summary)
+      ? item.summary.map((s: any) => s.text || "").join("\n")
+      : "";
+    const content = summary || "[reasoning]";
+    const tokens = estimateTokens(item, model);
+    return {
+      message: {
+        role: "assistant",
+        content,
+        contentBlocks: [{ type: "thinking", thinking: content } as any],
+        tokens,
+      },
+      tokens,
+      isSystem: false,
+      content,
+    };
+  }
+
+  // output_text → assistant text
+  if (type === "output_text") {
+    const text = item.text || "";
+    const tokens = estimateTokens(text, model);
+    return {
+      message: {
+        role: "assistant",
+        content: text,
+        contentBlocks: [{ type: "text", text }],
+        tokens,
+      },
+      tokens,
+      isSystem: false,
+      content: text,
+    };
+  }
+
+  // input_text → user text
+  if (type === "input_text") {
+    const text = item.text || "";
+    const tokens = estimateTokens(text, model);
+    return {
+      message: {
+        role: "user",
+        content: text,
+        contentBlocks: [{ type: "text", text }],
+        tokens,
+      },
+      tokens,
+      isSystem: false,
+      content: text,
+    };
+  }
+
+  // Fallback: serialize the whole item
+  const content = JSON.stringify(item);
+  const tokens = estimateTokens(content, model);
+  return {
+    message: { role: item.role || "user", content, tokens },
+    tokens,
+    isSystem: false,
+    content,
+  };
+}
+
+/**
+ * Parse a request body and extract normalized context information.
+ *
+ * This is the core "shape-normalizer" for Context Lens. It supports:
+ * - Anthropic Messages API
+ * - OpenAI Responses API and Chat Completions
+ * - ChatGPT backend schema (Codex subscription traffic)
+ * - Gemini (including Code Assist wrappers)
+ *
+ * @param provider - Provider inferred from routing (anthropic/openai/gemini/chatgpt/unknown).
+ * @param body - Parsed JSON request body.
+ * @param apiFormat - API schema family inferred from routing.
+ * @returns A `ContextInfo` with token estimates and normalized messages/blocks.
+ */
+export function parseContextInfo(
+  provider: string,
+  body: Record<string, any>,
+  apiFormat: string,
+): ContextInfo {
+  const info: ContextInfo = {
+    provider,
+    apiFormat,
+    model: body.model || "unknown",
+    systemTokens: 0,
+    toolsTokens: 0,
+    messagesTokens: 0,
+    totalTokens: 0,
+    systemPrompts: [],
+    tools: [],
+    messages: [],
+  };
+
+  const model = info.model;
+
+  if (provider === "anthropic") {
+    if (body.system) {
+      const systemText =
+        typeof body.system === "string"
+          ? body.system
+          : Array.isArray(body.system)
+            ? body.system.map((b: any) => b.text || "").join("\n")
+            : JSON.stringify(body.system);
+      info.systemPrompts.push({ content: systemText });
+      info.systemTokens = estimateTokens(systemText, model);
+    }
+
+    if (body.tools && Array.isArray(body.tools)) {
+      info.tools = body.tools;
+      info.toolsTokens = estimateTokens(JSON.stringify(body.tools), model);
+    }
+
+    if (body.messages && Array.isArray(body.messages)) {
+      info.messages = body.messages.map((msg: any): ParsedMessage => {
+        const contentBlocks = Array.isArray(msg.content) ? msg.content : null;
+        return {
+          role: msg.role,
+          content:
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content),
+          contentBlocks,
+          tokens: estimateTokens(msg.content, model),
+        };
+      });
+      info.messagesTokens = info.messages.reduce((sum, m) => sum + m.tokens, 0);
+    }
+  } else if (apiFormat === "responses" || provider === "chatgpt") {
+    if (body.instructions) {
+      info.systemPrompts.push({ content: body.instructions });
+      info.systemTokens = estimateTokens(body.instructions, model);
+    }
+    if (body.system) {
+      const systemText =
+        typeof body.system === "string"
+          ? body.system
+          : Array.isArray(body.system)
+            ? body.system.map((b: any) => b.text || "").join("\n")
+            : JSON.stringify(body.system);
+      info.systemPrompts.push({ content: systemText });
+      info.systemTokens += estimateTokens(systemText, model);
+    }
+
+    const msgs = body.input || body.messages;
+    if (msgs) {
+      if (typeof msgs === "string") {
+        info.messages.push({
+          role: "user",
+          content: msgs,
+          tokens: estimateTokens(msgs, model),
+        });
+        info.messagesTokens = estimateTokens(msgs, model);
+      } else if (Array.isArray(msgs)) {
+        msgs.forEach((item: any) => {
+          const parsed = parseResponsesItem(item, model);
+          if (parsed.isSystem) {
+            info.systemPrompts.push({ content: parsed.content });
+            info.systemTokens += parsed.tokens;
+          } else {
+            info.messages.push(parsed.message);
+            info.messagesTokens += parsed.tokens;
+          }
+        });
+      }
+    }
+
+    if (body.tools && Array.isArray(body.tools)) {
+      info.tools = body.tools;
+      info.toolsTokens = estimateTokens(JSON.stringify(body.tools), model);
+    }
+  } else if (
+    provider === "gemini" ||
+    provider === "vertex" ||
+    apiFormat === "gemini"
+  ) {
+    // Gemini API: contents[], systemInstruction, tools[{functionDeclarations}]
+    // Code Assist wraps everything inside body.request: {contents, systemInstruction, tools, ...}
+    const geminiBody = body.request || body;
+    if (geminiBody.systemInstruction) {
+      const parts = geminiBody.systemInstruction.parts || [];
+      const systemText = parts.map((p: any) => p.text || "").join("\n");
+      info.systemPrompts.push({ content: systemText });
+      info.systemTokens = estimateTokens(systemText, model);
+    }
+    if (geminiBody.tools && Array.isArray(geminiBody.tools)) {
+      const allDecls = geminiBody.tools.flatMap(
+        (t: any) => t.functionDeclarations || [],
+      );
+      info.tools = allDecls;
+      info.toolsTokens = estimateTokens(
+        JSON.stringify(geminiBody.tools),
+        model,
+      );
+    }
+    if (geminiBody.contents && Array.isArray(geminiBody.contents)) {
+      info.messages = geminiBody.contents.map((turn: any): ParsedMessage => {
+        const role = turn.role || "user";
+        const parts = turn.parts || [];
+        const contentBlocks: ContentBlock[] = [];
+        const textParts: string[] = [];
+        for (const part of parts) {
+          if (part.text) {
+            textParts.push(part.text);
+            contentBlocks.push({ type: "text", text: part.text });
+          } else if (part.functionCall) {
+            contentBlocks.push({
+              type: "tool_use",
+              id: part.functionCall.id || "",
+              name: part.functionCall.name || "",
+              input: part.functionCall.args || {},
+            });
+          } else if (part.functionResponse) {
+            const resp = part.functionResponse.response;
+            // Gemini CLI wraps tool output in {output: "..."} or {error: "..."}
+            const respText =
+              typeof resp === "string"
+                ? resp
+                : typeof resp?.output === "string"
+                  ? resp.output
+                  : typeof resp?.error === "string"
+                    ? resp.error
+                    : JSON.stringify(resp || "");
+            contentBlocks.push({
+              type: "tool_result",
+              tool_use_id: part.functionResponse.id || "",
+              content: respText,
+            });
+          } else if (part.inlineData) {
+            contentBlocks.push({ type: "image" });
+          } else if (part.executableCode) {
+            contentBlocks.push({
+              type: "text",
+              text: part.executableCode.code || "",
+            });
+          } else if (part.codeExecutionResult) {
+            contentBlocks.push({
+              type: "text",
+              text: part.codeExecutionResult.output || "",
+            });
+          }
+        }
+        const content = textParts.join("\n") || JSON.stringify(parts);
+        const tokens = estimateTokens(turn, model);
+        return {
+          role: role === "model" ? "assistant" : role,
+          content,
+          contentBlocks,
+          tokens,
+        };
+      });
+      info.messagesTokens = info.messages.reduce((sum, m) => sum + m.tokens, 0);
+    }
+  } else if (provider === "openai") {
+    if (body.messages && Array.isArray(body.messages)) {
+      body.messages.forEach((msg: any) => {
+        if (msg.role === "system" || msg.role === "developer") {
+          info.systemPrompts.push({ content: msg.content });
+          info.systemTokens += estimateTokens(msg.content, model);
+        } else {
+          let contentBlocks: ContentBlock[] = [];
+          let contentStr: string;
+          let tokenSource: string | Record<string, unknown> = msg.content ?? "";
+
+          // Handle text content (string, array, or null)
+          if (typeof msg.content === "string") {
+            contentStr = msg.content;
+            contentBlocks.push({ type: "text", text: msg.content });
+          } else if (Array.isArray(msg.content)) {
+            contentStr = msg.content
+              .map((b: { text?: string }) => b.text || "")
+              .join("\n");
+            for (const part of msg.content) {
+              if (part.type === "text")
+                contentBlocks.push({ type: "text", text: part.text || "" });
+            }
+          } else {
+            contentStr = "";
+          }
+
+          // Handle tool_calls on assistant messages
+          if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
+            for (const tc of msg.tool_calls) {
+              const fn = tc.function || {};
+              let parsedArgs: Record<string, unknown> = {};
+              if (typeof fn.arguments === "string" && fn.arguments.length > 0) {
+                try {
+                  parsedArgs = JSON.parse(fn.arguments);
+                } catch {
+                  /* keep empty */
+                }
+              }
+              contentBlocks.push({
+                type: "tool_use",
+                id: tc.id || "",
+                name: fn.name || "unknown",
+                input: parsedArgs,
+              });
+            }
+            tokenSource = { content: msg.content, tool_calls: msg.tool_calls };
+          }
+
+          // Handle role="tool" messages
+          if (msg.role === "tool" && msg.tool_call_id) {
+            contentBlocks = [
+              {
+                type: "tool_result",
+                tool_use_id: msg.tool_call_id,
+                content: contentStr,
+              },
+            ];
+          }
+
+          const tokens = estimateTokens(tokenSource, model);
+          info.messages.push({
+            role: msg.role,
+            content: contentStr || JSON.stringify(msg.content),
+            contentBlocks: contentBlocks.length > 0 ? contentBlocks : null,
+            tokens,
+          });
+          info.messagesTokens += tokens;
+        }
+      });
+    }
+
+    if (body.tools && Array.isArray(body.tools)) {
+      info.tools = body.tools;
+      info.toolsTokens = estimateTokens(JSON.stringify(body.tools), model);
+    } else if (body.functions && Array.isArray(body.functions)) {
+      info.tools = body.functions;
+      info.toolsTokens = estimateTokens(JSON.stringify(body.functions), model);
+    }
+  }
+
+  info.totalTokens = info.systemTokens + info.toolsTokens + info.messagesTokens;
+  return info;
+}
+
+/**
+ * Extract the assistant's response from a captured response body as a
+ * `ParsedMessage`, so callers can append it to `contextInfo.messages`.
+ *
+ * Returns `null` for error responses, unknown formats, or when content
+ * cannot be extracted.
+ */
+export function extractLastAssistantMessage(
+  responseData: unknown,
+  model?: string,
+): ParsedMessage | null {
+  if (!responseData || typeof responseData !== "object") return null;
+  const r = responseData as Record<string, unknown>;
+
+  // ── Non-streaming Anthropic messages ──────────────────────────────────────
+  // { role: "assistant", content: [...] }
+  if (r.role === "assistant" && Array.isArray(r.content)) {
+    const blocks = r.content as ContentBlock[];
+    const text = blocks
+      .filter((b) => b.type === "text")
+      .map((b) => (b as { text: string }).text)
+      .join("");
+    const nonTextBlocks = blocks.filter((b) => b.type !== "text");
+    return {
+      role: "assistant",
+      content: text,
+      contentBlocks: blocks.length > 0 ? blocks : null,
+      tokens: estimateTokens(nonTextBlocks.length > 0 ? blocks : text, model),
+    };
+  }
+
+  // ── Non-streaming OpenAI chat completions ─────────────────────────────────
+  // { choices: [{ message: { role: "assistant", content: "..." } }] }
+  if (Array.isArray(r.choices)) {
+    const choices = r.choices as Array<Record<string, unknown>>;
+    const first = choices[0];
+    if (first) {
+      const msg = first.message as Record<string, unknown> | undefined;
+      if (msg?.role === "assistant") {
+        const content =
+          typeof msg.content === "string"
+            ? msg.content
+            : JSON.stringify(msg.content ?? "");
+        return {
+          role: "assistant",
+          content,
+          contentBlocks: null,
+          tokens: estimateTokens(content, model),
+        };
+      }
+    }
+  }
+
+  // ── Streaming: reconstruct from SSE chunks ─────────────────────────────────
+  if (r.streaming === true && typeof r.chunks === "string") {
+    return extractAssistantFromStream(r.chunks, model);
+  }
+
+  return null;
+}
+
+function extractAssistantFromStream(
+  chunks: string,
+  model?: string,
+): ParsedMessage | null {
+  // Accumulated text and blocks across all SSE events
+  const textByIndex: Record<number, string> = {};
+  const blocksByIndex: Record<number, ContentBlock> = {};
+  let hasContent = false;
+
+  const lines = chunks.split("\n");
+  for (const line of lines) {
+    if (!line.startsWith("data: ")) continue;
+    const data = line.slice(6).trim();
+    if (data === "[DONE]") continue;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      continue;
+    }
+
+    // Anthropic streaming ──────────────────────────────────────────────────
+    if (typeof parsed.type === "string") {
+      const type = parsed.type as string;
+
+      if (type === "content_block_start") {
+        const idx = parsed.index as number;
+        const block = parsed.content_block as Record<string, unknown>;
+        if (block?.type === "tool_use") {
+          blocksByIndex[idx] = {
+            type: "tool_use",
+            id: block.id as string,
+            name: block.name as string,
+            input: {},
+          };
+        } else {
+          textByIndex[idx] = "";
+        }
+        hasContent = true;
+      }
+
+      if (type === "content_block_delta") {
+        const idx = parsed.index as number;
+        const delta = parsed.delta as Record<string, unknown>;
+        if (delta?.type === "text_delta" && typeof delta.text === "string") {
+          textByIndex[idx] = (textByIndex[idx] ?? "") + delta.text;
+        } else if (
+          delta?.type === "input_json_delta" &&
+          typeof delta.partial_json === "string"
+        ) {
+          const block = blocksByIndex[idx];
+          if (block?.type === "tool_use") {
+            (block as any)._rawInput =
+              ((block as any)._rawInput ?? "") + delta.partial_json;
+          }
+        }
+      }
+    }
+
+    // OpenAI Chat Completions streaming ───────────────────────────────────
+    if (Array.isArray(parsed.choices)) {
+      const choices = parsed.choices as Array<Record<string, unknown>>;
+      const delta = choices[0]?.delta as Record<string, unknown> | undefined;
+      if (typeof delta?.content === "string") {
+        textByIndex[0] = (textByIndex[0] ?? "") + delta.content;
+        hasContent = true;
+      }
+    }
+
+    // OpenAI Responses API streaming (ChatGPT/Codex backend) ───────────────
+    // Events use response.* type names; text arrives via response.output_text.delta,
+    // function calls via response.output_item.added + response.function_call_arguments.delta.
+    if (
+      typeof parsed.type === "string" &&
+      parsed.type.startsWith("response.")
+    ) {
+      const idx =
+        typeof parsed.output_index === "number" ? parsed.output_index : 0;
+      if (
+        parsed.type === "response.output_text.delta" &&
+        typeof parsed.delta === "string"
+      ) {
+        textByIndex[idx] = (textByIndex[idx] ?? "") + parsed.delta;
+        hasContent = true;
+      } else if (parsed.type === "response.output_item.added") {
+        const item = parsed.item as Record<string, unknown> | undefined;
+        if (item?.type === "function_call") {
+          blocksByIndex[idx] = {
+            type: "tool_use",
+            id: (item.call_id as string) || (item.id as string) || "",
+            name: (item.name as string) || "",
+            input: {},
+          };
+          hasContent = true;
+        }
+      } else if (
+        parsed.type === "response.function_call_arguments.delta" &&
+        typeof parsed.delta === "string"
+      ) {
+        const block = blocksByIndex[idx];
+        if (block?.type === "tool_use") {
+          (block as any)._rawInput =
+            ((block as any)._rawInput ?? "") + parsed.delta;
+        }
+      }
+    }
+  }
+
+  if (!hasContent) return null;
+
+  // Resolve tool_use blocks: parse accumulated JSON input
+  for (const block of Object.values(blocksByIndex)) {
+    if (block.type === "tool_use") {
+      const raw = (block as any)._rawInput;
+      if (raw) {
+        try {
+          (block as any).input = JSON.parse(raw);
+        } catch {
+          (block as any).input = {};
+        }
+        delete (block as any)._rawInput;
+      }
+    }
+  }
+
+  // Build final content blocks in index order
+  const maxIdx = Math.max(
+    ...Object.keys(textByIndex).map(Number),
+    ...Object.keys(blocksByIndex).map(Number),
+    -1,
+  );
+
+  if (maxIdx < 0) return null;
+
+  const finalBlocks: ContentBlock[] = [];
+  for (let i = 0; i <= maxIdx; i++) {
+    if (blocksByIndex[i]) {
+      finalBlocks.push(blocksByIndex[i]);
+    } else if (textByIndex[i] !== undefined) {
+      finalBlocks.push({ type: "text", text: textByIndex[i] });
+    }
+  }
+
+  const textContent = Object.values(textByIndex).join("");
+  return {
+    role: "assistant",
+    content: textContent,
+    contentBlocks: finalBlocks.length > 0 ? finalBlocks : null,
+    tokens: estimateTokens(
+      finalBlocks.length > 0 ? finalBlocks : textContent,
+      model,
+    ),
+  };
+}

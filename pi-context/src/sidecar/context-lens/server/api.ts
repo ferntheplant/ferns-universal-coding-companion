@@ -1,0 +1,602 @@
+import type { JsonValue } from "@contextio/core";
+import { Hono } from "hono";
+import { streamSSE } from "hono/streaming";
+import * as v from "valibot";
+
+import { ingestCapture } from "../analysis/ingest.js";
+import { computeFingerprint, extractSessionId } from "../core/conversation.js";
+import { classifyRequest } from "../core/routing.js";
+import { parseContextInfo } from "../core.js";
+import { importSessions } from "../importers/index.js";
+import { toLharJson, toLharJsonl } from "../lhar.js";
+import {
+  IngestCapturePayloadSchema,
+  IngestLegacyPayloadSchema,
+} from "../schemas.js";
+import type {
+  AgentGroup,
+  CapturedEntry,
+  Conversation,
+  ConversationGroup,
+  PrivacyLevel,
+} from "../types.js";
+import { projectEntry } from "./projection.js";
+import type { Store } from "./store.js";
+
+function projectEntryForApi(e: CapturedEntry) {
+  return projectEntry(e, e.contextInfo);
+}
+
+function getExportEntries(
+  store: Store,
+  conversation?: string,
+): CapturedEntry[] {
+  if (!conversation) return store.getCapturedRequests();
+  return store
+    .getCapturedRequests()
+    .filter((e) => e.conversationId === conversation);
+}
+
+function sanitizeFilenamePart(
+  input: string | null | undefined,
+  fallback: string,
+): string {
+  const sanitized = String(input || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+  return sanitized || fallback;
+}
+
+function buildExportFilename(
+  format: "lhar" | "lhar.json",
+  conversation: string | null | undefined,
+  privacy: PrivacyLevel,
+): string {
+  const sessionPart = `session-${sanitizeFilenamePart(conversation, "all")}`;
+  const privacyPart = `privacy-${sanitizeFilenamePart(privacy, "standard")}`;
+  const ext = format === "lhar" ? "lhar" : "lhar.json";
+  return `context-lens-export-${sessionPart}-${privacyPart}.${ext}`;
+}
+
+/**
+ * Group captured requests into conversations with agents.
+ * Shared by both full and summary endpoints.
+ */
+function buildConversationGroups(store: Store): {
+  grouped: Map<string, CapturedEntry[]>;
+  ungrouped: CapturedEntry[];
+} {
+  const capturedRequests = store.getCapturedRequests();
+  const grouped = new Map<string, CapturedEntry[]>();
+  const ungrouped: CapturedEntry[] = [];
+  for (const entry of capturedRequests) {
+    if (entry.conversationId) {
+      if (!grouped.has(entry.conversationId))
+        grouped.set(entry.conversationId, []);
+      grouped.get(entry.conversationId)?.push(entry);
+    } else {
+      ungrouped.push(entry);
+    }
+  }
+  return { grouped, ungrouped };
+}
+
+function buildFullConversation(
+  id: string,
+  entries: CapturedEntry[],
+  conversations: Map<string, Conversation>,
+  store: Store,
+): ConversationGroup {
+  // Sort newest-first (by timestamp descending) for consistent API output.
+  // The UI and scrubber expect entries[0] to be the latest turn.
+  const sorted = [...entries].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  const meta = conversations.get(id) || {
+    id,
+    label: "Unknown",
+    source: "unknown",
+    workingDirectory: null,
+    firstSeen: sorted[sorted.length - 1].timestamp,
+  };
+
+  // Get tags and prune list for this conversation
+  const tags = store.getTags(id);
+  const prunedMessages = store.getPrunedMessages(id);
+
+  const agentMap = new Map<string, CapturedEntry[]>();
+  for (const e of sorted) {
+    const ak = e.agentKey || "_default";
+    if (!agentMap.has(ak)) agentMap.set(ak, []);
+    agentMap.get(ak)?.push(e);
+  }
+  const agents: AgentGroup[] = [];
+  for (const [_ak, agentEntries] of agentMap) {
+    agents.push({
+      key: _ak,
+      label: agentEntries[agentEntries.length - 1].agentLabel || "Unnamed",
+      model: agentEntries[0].contextInfo.model,
+      entries: agentEntries.map(projectEntryForApi),
+    });
+  }
+  agents.sort(
+    (a, b) =>
+      new Date(b.entries[0].timestamp).getTime() -
+      new Date(a.entries[0].timestamp).getTime(),
+  );
+  return {
+    ...meta,
+    tags,
+    prunedMessages,
+    agents,
+    entries: sorted.map(projectEntryForApi),
+  };
+}
+
+/**
+ * Create the Hono app with all API routes.
+ */
+export function createApiApp(store: Store): Hono {
+  const app = new Hono();
+
+  // --- Health ---
+
+  app.get("/health", (c) => c.json({ status: "ok" }));
+
+  // --- Ingest ---
+
+  app.post("/api/ingest", async (c) => {
+    const raw = await c.req.json();
+
+    // Try capture format first (from mitmproxy addon), then legacy format
+    const captureResult = v.safeParse(IngestCapturePayloadSchema, raw);
+    if (captureResult.success) {
+      const data = captureResult.output;
+      ingestCapture(store, {
+        ...data,
+        source: data.source ?? "unknown",
+        requestBody: (data.requestBody ?? null) as JsonValue | null,
+      });
+      console.log(
+        `  📥 Ingested (capture): [${data.provider}] from ${data.source ?? "unknown"}`,
+      );
+      return c.json({ ok: true });
+    }
+
+    const legacyResult = v.safeParse(IngestLegacyPayloadSchema, raw);
+    if (legacyResult.success) {
+      const data = legacyResult.output;
+      const contextInfo = parseContextInfo(
+        data.provider,
+        data.body,
+        data.apiFormat,
+      );
+      store.storeRequest(contextInfo, data.response, data.source, data.body);
+      console.log(
+        `  📥 Ingested: [${data.provider}] ${contextInfo.model} from ${data.source}`,
+      );
+      return c.json({ ok: true });
+    }
+
+    const message = v.summarize(legacyResult.issues);
+    console.error("Ingest validation error:", message);
+    return c.json({ error: message }, 400);
+  });
+
+  // --- Paste (manual request analysis) ---
+
+  app.post("/api/paste", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "Invalid JSON" }, 400);
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return c.json({ error: "Request body must be a JSON object" }, 400);
+    }
+
+    // Auto-detect provider and format from the request body structure.
+    // Anthropic requests have a "messages" array and no "input" field (Responses API).
+    // OpenAI chat completions have "messages". OpenAI Responses API has "input".
+    // We use path heuristics based on common field presence.
+    let pathname = "/v1/messages"; // default: assume Anthropic
+    if ("input" in body) {
+      pathname = "/responses";
+    } else if ("messages" in body) {
+      // Could be Anthropic or OpenAI chat completions — check for Anthropic-specific fields
+      if (!("anthropic_version" in body) && !("system" in body)) {
+        pathname = "/v1/chat/completions";
+      }
+    } else if ("contents" in body || "generationConfig" in body) {
+      pathname = "/v1beta/models/gemini:generateContent";
+    }
+
+    const { provider, apiFormat } = classifyRequest(pathname, {});
+
+    ingestCapture(store, {
+      provider,
+      apiFormat,
+      source: "paste",
+      path: pathname,
+      method: "POST",
+      timestamp: new Date().toISOString(),
+      requestBody: body as JsonValue,
+      responseBody: "",
+      responseStatus: 200,
+      responseIsStreaming: false,
+      targetUrl: "",
+      requestHeaders: {},
+      responseHeaders: {},
+      timings: { send_ms: 0, wait_ms: 0, receive_ms: 0, total_ms: 0 },
+      requestBytes: 0,
+      responseBytes: 0,
+      sessionId: null,
+    });
+
+    // Find the most recently ingested conversation (just added above)
+    const { grouped } = buildConversationGroups(store);
+    let latestId: string | null = null;
+    let latestTime = 0;
+    for (const [id, entries] of grouped) {
+      const t = Math.max(
+        ...entries.map((e) => new Date(e.timestamp).getTime()),
+      );
+      if (t > latestTime) {
+        latestTime = t;
+        latestId = id;
+      }
+    }
+
+    console.log(
+      `  📋 Pasted: [${provider}/${apiFormat}] → session ${latestId}`,
+    );
+    return c.json({ ok: true, conversationId: latestId });
+  });
+
+  // --- CLI session import ---
+
+  app.post("/api/import/scan", (c) => {
+    const summaries = importSessions(store);
+    const total = summaries.reduce((s, r) => s + r.imported, 0);
+    console.log(`  📂 Import scan complete: ${total} session(s) imported`);
+    return c.json({ ok: true, summaries });
+  });
+
+  // --- Entry detail ---
+
+  app.get("/api/entries/:id/detail", (c) => {
+    const entryId = parseInt(c.req.param("id"), 10);
+    const contextInfo = store.getEntryDetail(entryId);
+    if (contextInfo) {
+      return c.json({ contextInfo });
+    }
+    return c.json({ error: "Detail not found for this entry" }, 404);
+  });
+
+  // --- Conversations ---
+
+  app.delete("/api/conversations/:id", (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    store.deleteConversation(convoId);
+    return c.json({ ok: true });
+  });
+
+  app.get("/api/conversations/:id", (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const { grouped } = buildConversationGroups(store);
+    const conversations = store.getConversations();
+    const entries = grouped.get(convoId);
+
+    if (!entries || entries.length === 0) {
+      return c.json({ error: "Conversation not found" }, 404);
+    }
+
+    return c.json(
+      buildFullConversation(convoId, entries, conversations, store),
+    );
+  });
+
+  // --- Reset ---
+
+  app.post("/api/reset", (c) => {
+    store.resetAll();
+    return c.json({ ok: true });
+  });
+
+  // --- Tags ---
+
+  app.get("/api/tags", (c) => {
+    const allTags = store.getAllTags();
+    const tags = [...allTags.entries()].map(([name, count]) => ({
+      name,
+      count,
+    }));
+    tags.sort((a, b) => a.name.localeCompare(b.name));
+    return c.json({ tags });
+  });
+
+  app.patch("/api/sessions/:id/tags", async (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const body = await c.req.json();
+
+    if (!Array.isArray(body.tags)) {
+      return c.json({ error: "tags must be an array" }, 400);
+    }
+
+    try {
+      store.setTags(convoId, body.tags);
+      return c.json({ ok: true, tags: store.getTags(convoId) });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 404);
+    }
+  });
+
+  app.post("/api/sessions/:id/tags", async (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const body = await c.req.json();
+
+    if (typeof body.tag !== "string" || !body.tag.trim()) {
+      return c.json({ error: "tag must be a non-empty string" }, 400);
+    }
+
+    try {
+      store.addTag(convoId, body.tag);
+      return c.json({ ok: true, tags: store.getTags(convoId) });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 404);
+    }
+  });
+
+  app.delete("/api/sessions/:id/tags/:tag", (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const tag = decodeURIComponent(c.req.param("tag"));
+
+    try {
+      store.removeTag(convoId, tag);
+      return c.json({ ok: true, tags: store.getTags(convoId) });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 404);
+    }
+  });
+
+  // --- Context pruning ---
+
+  /** Get pruned message IDs for a session (called by the proxy). */
+  app.get("/api/sessions/:id/prunes", (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const pruned = store.getPrunedMessages(convoId);
+    return c.json({ prunedMessages: pruned });
+  });
+
+  /** Permanently prune a message from a session. */
+  app.post("/api/sessions/:id/prunes", async (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const body = await c.req.json<{ messageId: string }>();
+    if (!body?.messageId || typeof body.messageId !== "string") {
+      return c.json({ error: "messageId required" }, 400);
+    }
+    try {
+      store.addPrunedMessage(convoId, body.messageId);
+      return c.json({
+        ok: true,
+        prunedMessages: store.getPrunedMessages(convoId),
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 404);
+    }
+  });
+
+  /** Restore (un-prune) a previously pruned message. */
+  app.delete("/api/sessions/:id/prunes/:messageId", (c) => {
+    const convoId = decodeURIComponent(c.req.param("id"));
+    const messageId = decodeURIComponent(c.req.param("messageId"));
+    try {
+      store.removePrunedMessage(convoId, messageId);
+      return c.json({
+        ok: true,
+        prunedMessages: store.getPrunedMessages(convoId),
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 404);
+    }
+  });
+
+  /**
+   * Proxy prune lookup: accepts a raw request body, identifies the
+   * conversation using the same fingerprinting logic as the store,
+   * and returns the prune list. Called by the proxy plugin on every
+   * outgoing request.
+   */
+  app.post("/api/prune-lookup", async (c) => {
+    const body = await c.req.json<Record<string, unknown>>();
+    if (!body) return c.json({ prunedMessages: [] });
+
+    // Try session ID first (Anthropic metadata.user_id)
+    const sessionId = extractSessionId(body);
+    let conversationId: string | null = null;
+    if (sessionId) {
+      const { createHash } = await import("node:crypto");
+      conversationId = createHash("sha256")
+        .update(sessionId)
+        .digest("hex")
+        .slice(0, 16);
+    }
+
+    // Fall back to fingerprint matching against known conversations
+    if (!conversationId) {
+      const conversations = store.getConversations();
+      // Quick match: find a conversation whose last request has the same
+      // system prompt + first user message fingerprint
+      const ci = parseContextInfo("anthropic", body, "anthropic-messages");
+      const fp = computeFingerprint(ci, body, new Map(), null, null);
+      if (fp) {
+        for (const [id, _convo] of conversations) {
+          if (id === fp) {
+            conversationId = id;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!conversationId) return c.json({ prunedMessages: [] });
+    return c.json({ prunedMessages: store.getPrunedMessages(conversationId) });
+  });
+
+  // --- Requests (summary + full) ---
+
+  app.get("/api/requests", (c) => {
+    const isSummary = c.req.query("summary") === "true";
+    const { grouped, ungrouped } = buildConversationGroups(store);
+    const conversations = store.getConversations();
+
+    if (isSummary) {
+      const summaries = [];
+      for (const [id, rawEntries] of grouped) {
+        // Sort newest-first for consistent access patterns
+        const entries = [...rawEntries].sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        );
+        const meta = conversations.get(id) || {
+          id,
+          label: "Unknown",
+          source: "unknown",
+          workingDirectory: null,
+          firstSeen: entries[entries.length - 1].timestamp,
+        };
+        const latest = entries[0];
+        const totalCost = entries.reduce((sum, e) => sum + (e.costUsd ?? 0), 0);
+
+        const keyCounts = new Map<string, number>();
+        for (const e of entries) {
+          const k = e.agentKey || "_default";
+          keyCounts.set(k, (keyCounts.get(k) || 0) + 1);
+        }
+        let mainKey = "_default";
+        let maxCount = 0;
+        for (const [k, count] of keyCounts) {
+          if (count > maxCount) {
+            mainKey = k;
+            maxCount = count;
+          }
+        }
+        const tokenHistory: number[] = [];
+        for (let i = entries.length - 1; i >= 0; i--) {
+          const k = entries[i].agentKey || "_default";
+          if (k === mainKey) {
+            tokenHistory.push(entries[i].contextInfo.totalTokens);
+          }
+        }
+
+        // Get tags for this conversation
+        const tags = store.getTags(id);
+
+        summaries.push({
+          ...meta,
+          entryCount: entries.length,
+          latestTimestamp: latest.timestamp,
+          latestModel: latest.contextInfo.model,
+          latestTotalTokens: latest.contextInfo.totalTokens,
+          contextLimit: latest.contextLimit,
+          totalCost,
+          healthScore: latest.healthScore,
+          tokenHistory,
+          tags,
+        });
+      }
+      summaries.sort(
+        (a, b) =>
+          new Date(b.latestTimestamp).getTime() -
+          new Date(a.latestTimestamp).getTime(),
+      );
+      return c.json({
+        revision: store.getRevision(),
+        conversations: summaries,
+        ungroupedCount: ungrouped.length,
+      });
+    }
+
+    // Full response
+    const convos: ConversationGroup[] = [];
+    for (const [id, entries] of grouped) {
+      convos.push(buildFullConversation(id, entries, conversations, store));
+    }
+    convos.sort(
+      (a, b) =>
+        new Date(b.entries[0].timestamp).getTime() -
+        new Date(a.entries[0].timestamp).getTime(),
+    );
+    return c.json({
+      revision: store.getRevision(),
+      conversations: convos,
+      ungrouped: ungrouped.map(projectEntryForApi),
+    });
+  });
+
+  // --- SSE events ---
+
+  app.get("/api/events", (c) => {
+    return streamSSE(c, async (stream) => {
+      const initial = JSON.stringify({
+        revision: store.getRevision(),
+        type: "connected",
+      });
+      await stream.writeSSE({ data: initial });
+
+      const listener = (event: {
+        type: string;
+        revision: number;
+        conversationId?: string | null;
+      }) => {
+        const data = JSON.stringify(event);
+        stream.writeSSE({ data }).catch(() => {
+          // Client disconnected
+        });
+      };
+
+      store.on("change", listener);
+      stream.onAbort(() => {
+        store.off("change", listener);
+      });
+
+      // Keep the stream open until the client disconnects
+      await new Promise(() => {});
+    });
+  });
+
+  // --- Export ---
+
+  app.get("/api/export/lhar", (c) => {
+    const conversation = c.req.query("conversation");
+    const privacy = (c.req.query("privacy") || "standard") as PrivacyLevel;
+    const entries = getExportEntries(store, conversation);
+    const jsonl = toLharJsonl(entries, store.getConversations(), privacy);
+    const filename = buildExportFilename("lhar", conversation, privacy);
+    c.header("Content-Disposition", `attachment; filename="${filename}"`);
+    return c.text(jsonl, 200, {
+      "Content-Type": "application/x-ndjson",
+    });
+  });
+
+  app.get("/api/export/lhar.json", (c) => {
+    const conversation = c.req.query("conversation");
+    const privacy = (c.req.query("privacy") || "standard") as PrivacyLevel;
+    const entries = getExportEntries(store, conversation);
+    const wrapped = toLharJson(entries, store.getConversations(), privacy);
+    const filename = buildExportFilename("lhar.json", conversation, privacy);
+    c.header("Content-Disposition", `attachment; filename="${filename}"`);
+    return c.json(wrapped);
+  });
+
+  return app;
+}

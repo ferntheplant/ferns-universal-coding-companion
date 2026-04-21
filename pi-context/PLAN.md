@@ -136,6 +136,8 @@ Exit criteria:
 
 ## Milestone 2 - Lift Context Lens Server, Store, UI, and LHAR Stack
 
+Status: Completed on 2026-04-21
+
 Primary write scope:
 - lifted Context Lens modules under `src/sidecar/context-lens/**` or equivalent
 - any import adapters needed in `src/sidecar/app.ts`

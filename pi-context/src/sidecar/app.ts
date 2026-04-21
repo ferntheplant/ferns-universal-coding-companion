@@ -1,6 +1,12 @@
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { appendFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
 import { type SidecarPaths, SIDECAR_HOST, SIDECAR_PORT, SIDECAR_URL } from "./paths";
+import { initTokenizer } from "./context-lens/core";
+import { Store } from "./context-lens/server/store";
+import { createApp as createContextLensApp, loadHtmlUI } from "./context-lens/server/webui";
 
 export interface SidecarStatusPayload {
   status: "ok";
@@ -19,42 +25,6 @@ export interface SidecarApp {
   listen(): Promise<void>;
 }
 
-function writeJson(res: ServerResponse, statusCode: number, payload: unknown): void {
-  res.statusCode = statusCode;
-  res.setHeader("content-type", "application/json; charset=utf-8");
-  res.end(`${JSON.stringify(payload, null, 2)}\n`);
-}
-
-function writeNotFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not found" });
-}
-
-function routeRequest(
-  req: IncomingMessage,
-  res: ServerResponse,
-  status: SidecarStatusPayload,
-): void {
-  const method = req.method ?? "GET";
-  const url = req.url ?? "/";
-
-  if (method === "GET" && url === "/health") {
-    writeJson(res, 200, {
-      status: "ok",
-      pid: status.pid,
-      startedAt: status.startedAt,
-      url: status.url,
-    });
-    return;
-  }
-
-  if (method === "GET" && url === "/api/status") {
-    writeJson(res, 200, status);
-    return;
-  }
-
-  writeNotFound(res);
-}
-
 export function createSidecarApp(paths: SidecarPaths): SidecarApp {
   const startedAt = new Date().toISOString();
   const status: SidecarStatusPayload = {
@@ -68,7 +38,31 @@ export function createSidecarApp(paths: SidecarPaths): SidecarApp {
     logsDir: paths.logsDir,
   };
 
-  const server: Server = createServer((req, res) => routeRequest(req, res, status));
+  // Provenance: this sidecar embeds Context Lens modules lifted from
+  // `references/context-lens` and adapted for Pi-native ingestion.
+  const store = new Store({
+    dataDir: paths.dataDir,
+    stateFile: join(paths.dataDir, "state.jsonl"),
+    maxSessions: 200,
+    maxCompactMessages: 60,
+    privacy: "standard",
+  });
+  store.loadState();
+
+  const baseDir = join(dirname(fileURLToPath(import.meta.url)), "context-lens", "server");
+  const contextLensApp = createContextLensApp(store, loadHtmlUI(), baseDir);
+  const app = new Hono();
+  app.get("/health", (c) =>
+    c.json({
+      status: "ok",
+      pid: status.pid,
+      startedAt: status.startedAt,
+      url: status.url,
+    }),
+  );
+  app.get("/api/status", (c) => c.json(status));
+  app.route("/", contextLensApp);
+  let server: ReturnType<typeof serve> | null = null;
 
   async function log(message: string): Promise<void> {
     const line = `[${new Date().toISOString()}] ${message}\n`;
@@ -82,8 +76,9 @@ export function createSidecarApp(paths: SidecarPaths): SidecarApp {
   return {
     async close(): Promise<void> {
       await log("sidecar shutdown requested");
+      if (!server) return;
       await new Promise<void>((resolve, reject) => {
-        server.close((error) => {
+        server?.close((error) => {
           if (error) {
             reject(error);
             return;
@@ -97,12 +92,21 @@ export function createSidecarApp(paths: SidecarPaths): SidecarApp {
     },
     async listen(): Promise<void> {
       await log("sidecar startup requested");
+      try {
+        await initTokenizer();
+      } catch {
+        // Tokenizer preload is best-effort; Context Lens falls back safely.
+      }
       await new Promise<void>((resolve, reject) => {
+        server = serve(
+          {
+            fetch: app.fetch,
+            hostname: SIDECAR_HOST,
+            port: SIDECAR_PORT,
+          },
+          () => resolve(),
+        );
         server.once("error", reject);
-        server.listen(SIDECAR_PORT, SIDECAR_HOST, () => {
-          server.removeListener("error", reject);
-          resolve();
-        });
       });
       await log(`sidecar listening at ${SIDECAR_URL}`);
     },
