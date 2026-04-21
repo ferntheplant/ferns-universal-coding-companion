@@ -18,6 +18,8 @@ import {
   captureTurnEnd,
   flushPendingTurn,
   getSpikeDir,
+  markCapturePosted,
+  markPostFailure,
   markTurnPersisted,
   markWriteFailure,
   type MessageEndEventLike,
@@ -26,6 +28,9 @@ import {
   type SpikeTurnRecord,
   startTurnCapture,
 } from "./runtime";
+import { ensureSidecarRunning } from "./server-manager";
+
+const PI_INGEST_URL = "http://127.0.0.1:4041/api/ingest/pi";
 
 async function persistRecord(record: SpikeTurnRecord): Promise<void> {
   await mkdir(getSpikeDir(), { recursive: true });
@@ -36,6 +41,27 @@ async function persistRecord(record: SpikeTurnRecord): Promise<void> {
 
 async function persistIfPresent(record: SpikeTurnRecord | null, ctx: ExtensionContext): Promise<void> {
   if (!record) return;
+
+  try {
+    await ensureSidecarRunning();
+    const response = await fetch(PI_INGEST_URL, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(record),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`${response.status} ${response.statusText}${body ? `: ${body}` : ""}`);
+    }
+    markCapturePosted();
+  } catch (error) {
+    markPostFailure();
+    const message = error instanceof Error ? error.message : String(error);
+    ctx.ui.notify(`pi-context failed to post ingest payload: ${message}`, "warning");
+  }
 
   try {
     await persistRecord(record);

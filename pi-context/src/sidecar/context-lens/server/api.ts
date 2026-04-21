@@ -2,6 +2,7 @@ import type { JsonValue } from "@contextio/core";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import * as v from "valibot";
+import { PiIngestPipeline } from "../../pi-ingest.js";
 
 import { ingestCapture } from "../analysis/ingest.js";
 import { computeFingerprint, extractSessionId } from "../core/conversation.js";
@@ -12,6 +13,7 @@ import { toLharJson, toLharJsonl } from "../lhar.js";
 import {
   IngestCapturePayloadSchema,
   IngestLegacyPayloadSchema,
+  IngestPiAnyPayloadSchema,
 } from "../schemas.js";
 import type {
   AgentGroup,
@@ -140,6 +142,7 @@ function buildFullConversation(
  */
 export function createApiApp(store: Store): Hono {
   const app = new Hono();
+  const piIngest = new PiIngestPipeline(store);
 
   // --- Health ---
 
@@ -183,6 +186,30 @@ export function createApiApp(store: Store): Hono {
     const message = v.summarize(legacyResult.issues);
     console.error("Ingest validation error:", message);
     return c.json({ error: message }, 400);
+  });
+
+  app.post("/api/ingest/pi", async (c) => {
+    const raw = await c.req.json();
+    const result = v.safeParse(IngestPiAnyPayloadSchema, raw);
+    if (!result.success) {
+      const message = v.summarize(result.issues);
+      console.error("Pi ingest validation error:", message);
+      return c.json({ error: message }, 400);
+    }
+
+    try {
+      const summary = piIngest.ingest(result.output);
+      return c.json({
+        ok: true,
+        conversationId: summary.entry.conversationId,
+        traceId: summary.traceId,
+        sequence: summary.sequence,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Pi ingest conversion error:", message);
+      return c.json({ error: message }, 400);
+    }
   });
 
   // --- Paste (manual request analysis) ---

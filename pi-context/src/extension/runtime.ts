@@ -138,6 +138,8 @@ export interface RuntimeStatus {
     captureDir: string;
     persistedFixtures: number;
     failedWrites: number;
+    postedCaptures: number;
+    failedPosts: number;
   };
 }
 
@@ -148,6 +150,8 @@ interface RuntimeState {
   sidecarLastTransitionAtMs: number;
   completedTurnFixtures: number;
   failedWrites: number;
+  postedCaptures: number;
+  failedPosts: number;
   sessions: Map<string, SessionState>;
 }
 
@@ -161,6 +165,8 @@ const runtimeState: RuntimeState = {
   sidecarLastTransitionAtMs: Date.now(),
   completedTurnFixtures: 0,
   failedWrites: 0,
+  postedCaptures: 0,
+  failedPosts: 0,
   sessions: new Map(),
 };
 
@@ -174,6 +180,14 @@ export function markWriteFailure(): void {
 
 export function markTurnPersisted(): void {
   runtimeState.completedTurnFixtures += 1;
+}
+
+export function markCapturePosted(): void {
+  runtimeState.postedCaptures += 1;
+}
+
+export function markPostFailure(): void {
+  runtimeState.failedPosts += 1;
 }
 
 export function setSidecarState(state: SidecarLifecycleState, errorMessage?: string | null): void {
@@ -434,6 +448,8 @@ export function getRuntimeStatus(): RuntimeStatus {
       captureDir: SPIKE_DIR,
       persistedFixtures: runtimeState.completedTurnFixtures,
       failedWrites: runtimeState.failedWrites,
+      postedCaptures: runtimeState.postedCaptures,
+      failedPosts: runtimeState.failedPosts,
     },
   };
 }
@@ -445,6 +461,8 @@ export function resetRuntimeState(): void {
   runtimeState.sidecarLastTransitionAtMs = Date.now();
   runtimeState.completedTurnFixtures = 0;
   runtimeState.failedWrites = 0;
+  runtimeState.postedCaptures = 0;
+  runtimeState.failedPosts = 0;
   runtimeState.sessions.clear();
 }
 

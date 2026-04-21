@@ -24,7 +24,7 @@ async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext):
   const errorSuffix = runtime.sidecar.lastError ? `; lastError=${runtime.sidecar.lastError}` : "";
   notifyInfo(
     ctx,
-    `startedAt=${runtime.extensionStartedAt}; sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; pid=${sidecar.pid ?? "none"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; dataDir=${sidecar.dataDir ?? "unavailable"}${errorSuffix}`,
+    `startedAt=${runtime.extensionStartedAt}; sidecar=${sidecar.state}; sidecarUrl=${sidecar.url}; pid=${sidecar.pid ?? "none"}; activeSessions=${runtime.sessions.active}; pendingTurns=${runtime.sessions.pendingTurns}; postedCaptures=${runtime.debug.postedCaptures}; failedPosts=${runtime.debug.failedPosts}; dataDir=${sidecar.dataDir ?? "unavailable"}${errorSuffix}`,
   );
 }
 

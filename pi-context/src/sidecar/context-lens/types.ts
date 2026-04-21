@@ -270,6 +270,7 @@ export type {
 import type { CompositionEntry, Timings } from "./lhar-types.generated.js";
 
 export interface RequestMeta {
+  capturedAt?: string;
   httpStatus?: number;
   timings?: Timings;
   requestBytes?: number;

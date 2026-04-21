@@ -7,7 +7,8 @@
     "dev": "bun run index.ts",
     "typecheck": "tsc --noEmit",
     "sidecar": "bun run src/sidecar/index.ts",
-    "spike:to-context-lens": "bun run scripts/spike-to-context-lens.ts"
+    "spike:to-context-lens": "bun run scripts/spike-to-context-lens.ts",
+    "spike:ingest-pi": "bun run scripts/ingest-spike-pi.ts"
   },
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "^0.67.2",

@@ -482,7 +482,7 @@ export class Store {
 
     const entry: CapturedEntry = {
       id: this.nextEntryId++,
-      timestamp: new Date().toISOString(),
+      timestamp: meta?.capturedAt ?? new Date().toISOString(),
       contextInfo,
       response: responseData,
       contextLimit: getContextLimit(contextInfo.model),

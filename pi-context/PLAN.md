@@ -165,6 +165,8 @@ Exit criteria:
 
 ## Milestone 3 - Pi-Native Ingest Contract and Conversion Pipeline
 
+Status: Completed on 2026-04-21
+
 Primary write scope:
 - `src/sidecar/pi-ingest.ts`
 - conversion helpers under `src/sidecar/**`
@@ -210,6 +212,8 @@ Exit criteria:
 
 ## Milestone 4 - Extension Collector and Turn Correlation
 
+Status: Completed on 2026-04-21
+
 Primary write scope:
 - `src/extension/collector.ts`
 - `src/extension/capture-session.ts`
@@ -218,6 +222,7 @@ Primary write scope:
 
 Goal:
 - replace fixture-writing spike behavior with production event correlation and normalized capture assembly
+- use Pi-native turn semantics where each model-control cycle is a first-class turn; tool-loop continuation turns that begin with `tool_results` are expected and correct
 
 Tasks:
 - move per-session and per-turn capture logic into explicit capture-session structures
@@ -233,6 +238,9 @@ Tasks:
   - `turn_end`
   - `session_shutdown`
 - preserve enough rolling state to handle multi-cycle Pi tool loops where later cycles do not include a fresh provider payload
+- preserve semantic turn boundaries for tool loops:
+  - each defer/return cycle is captured as its own turn
+  - turns may begin with `tool_results` rather than `user_text` after tool execution
 - normalize best-effort timing fields
 - stop writing spike fixtures as the primary output path
 - emit one normalized Pi-native capture payload per finalized turn/user-visible step to the sidecar client layer
@@ -248,6 +256,7 @@ Verification:
 
 Exit criteria:
 - the extension produces production ingest payloads reliably from real Pi events
+- UI turn timelines reflect the intended semantics for tool-loop turns without collapsing them into a single synthetic user turn
 
 ## Milestone 5 - Commands, Open Flow, and Runtime Integration
 
@@ -339,6 +348,6 @@ These smoke tests are the final acceptance bar after Milestone 6:
 
 ## Implementation Notes
 
-- The current spike fixtures and `scripts/spike-to-context-lens.ts` should be kept until Milestone 3 is complete; they remain the best parity oracle for conversion logic.
+- Milestones 3 and 4 were completed on 2026-04-21. Keep spike fixtures and `scripts/spike-to-context-lens.ts` as regression/parity oracles for future ingest changes.
 - If an implementer discovers that `openai-codex` or `opencode-zen` no longer provide provider-native payloads in `before_provider_request`, stop and escalate before introducing fallback transport work.
 - Automated tests may be added for pure conversion helpers, but milestone completion should not depend on broad Pi-runtime test coverage.

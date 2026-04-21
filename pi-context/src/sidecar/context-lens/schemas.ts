@@ -290,6 +290,135 @@ export const IngestCapturePayloadSchema = v.object({
 });
 
 /**
+ * Pi-native ingest format from extension turn correlation.
+ */
+export const IngestPiPayloadSchema = v.object({
+  sessionId: v.string(),
+  timestamp: v.optional(v.string()),
+  sessionStartedAt: v.optional(v.nullable(v.string())),
+  model: v.object({
+    provider: v.optional(v.nullable(v.string())),
+    api: v.optional(v.nullable(v.string())),
+    id: v.optional(v.nullable(v.string())),
+    baseUrl: v.optional(v.nullable(v.string())),
+    contextWindow: v.optional(v.nullable(v.number())),
+  }),
+  providerRequest: v.optional(
+    v.nullable(
+      v.object({
+        payload: v.record(v.string(), v.unknown()),
+      }),
+    ),
+    null,
+  ),
+  providerResponse: v.optional(
+    v.nullable(
+      v.object({
+        status: v.number(),
+        headers: v.optional(v.record(v.string(), v.string()), {}),
+      }),
+    ),
+    null,
+  ),
+  assistantMessage: v.optional(v.nullable(v.unknown()), null),
+  toolResults: v.optional(v.array(v.unknown()), []),
+  requestBytes: v.optional(v.nullable(v.number()), null),
+  responseBytes: v.optional(v.nullable(v.number()), null),
+  timings: v.optional(
+    v.nullable(
+      v.object({
+        send_ms: v.number(),
+        wait_ms: v.number(),
+        receive_ms: v.number(),
+        total_ms: v.number(),
+      }),
+    ),
+    null,
+  ),
+  timestamps: v.optional(
+    v.object({
+      requestStartedAt: v.optional(v.nullable(v.string()), null),
+      responseStartedAt: v.optional(v.nullable(v.string()), null),
+      assistantCompletedAt: v.optional(v.nullable(v.string()), null),
+    }),
+    {
+      requestStartedAt: null,
+      responseStartedAt: null,
+      assistantCompletedAt: null,
+    },
+  ),
+});
+
+/**
+ * Spike fixture shape used during milestone development.
+ * Accepted so existing fixtures can be ingested directly for parity checks.
+ */
+export const IngestPiSpikePayloadSchema = v.object({
+  schemaVersion: v.literal(1),
+  session: v.object({
+    sessionId: v.string(),
+  }),
+  model: v.object({
+    provider: v.optional(v.nullable(v.string())),
+    api: v.optional(v.nullable(v.string())),
+    id: v.optional(v.nullable(v.string())),
+    baseUrl: v.optional(v.nullable(v.string())),
+    contextWindow: v.optional(v.nullable(v.number())),
+  }),
+  turn: v.object({
+    startedAt: v.string(),
+    endedAt: v.optional(v.nullable(v.string()), null),
+  }),
+  timestamps: v.object({
+    requestStartedAt: v.optional(v.nullable(v.string()), null),
+    responseStartedAt: v.optional(v.nullable(v.string()), null),
+    assistantCompletedAt: v.optional(v.nullable(v.string()), null),
+  }),
+  providerRequest: v.optional(
+    v.nullable(
+      v.object({
+        payload: v.record(v.string(), v.unknown()),
+      }),
+    ),
+    null,
+  ),
+  providerResponse: v.optional(
+    v.nullable(
+      v.object({
+        status: v.number(),
+        headers: v.optional(v.record(v.string(), v.string()), {}),
+      }),
+    ),
+    null,
+  ),
+  finalAssistantMessage: v.optional(
+    v.nullable(
+      v.object({
+        message: v.unknown(),
+      }),
+    ),
+    null,
+  ),
+  turnEnd: v.optional(
+    v.nullable(
+      v.object({
+        message: v.unknown(),
+        toolResults: v.optional(v.array(v.unknown()), []),
+      }),
+    ),
+    null,
+  ),
+});
+
+/**
+ * Union: accept either normalized Pi-native payload or spike fixture payload.
+ */
+export const IngestPiAnyPayloadSchema = v.union([
+  IngestPiPayloadSchema,
+  IngestPiSpikePayloadSchema,
+]);
+
+/**
  * Union: accept either capture-format or legacy format.
  */
 export const IngestPayloadSchema = v.union([
@@ -305,3 +434,4 @@ export type StateLineData = v.InferOutput<typeof StateLineSchema>;
 export type ConversationLineData = v.InferOutput<typeof ConversationLineSchema>;
 export type EntryLineData = v.InferOutput<typeof EntryLineSchema>;
 export type IngestPayloadData = v.InferOutput<typeof IngestPayloadSchema>;
+export type IngestPiPayloadData = v.InferOutput<typeof IngestPiAnyPayloadSchema>;
