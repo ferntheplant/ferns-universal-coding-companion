@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Building a Coding Agent — Synthesized Learnings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Fragment+Mono:wght@400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07111f;
+      --bg-2: #0b1730;
+      --surface: rgba(255, 255, 255, 0.06);
+      --surface-2: rgba(255, 255, 255, 0.09);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #eaf0ff;
+      --text-dim: #afbddf;
+      --accent: #7dd3fc;
+      --accent-2: #a78bfa;
+      --accent-3: #86efac;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+      --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
+      --font-mono: 'Fragment Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    @media (prefers-color-scheme: light) {
+      html {
+        color-scheme: light;
+      }
+
+      :root {
+        --bg: #f4efe6;
+        --bg-2: #ede2d2;
+        --surface: rgba(255, 252, 247, 0.66);
+        --surface-2: rgba(255, 248, 238, 0.82);
+        --border: rgba(82, 66, 48, 0.12);
+        --text: #243042;
+        --text-dim: #5f6876;
+        --accent: #0f766e;
+        --accent-2: #6d28d9;
+        --accent-3: #2f855a;
+        --warn: #b7791f;
+        --danger: #c24141;
+        --shadow: 0 18px 50px rgba(98, 78, 54, 0.10);
+      }
+
+      body {
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 30%),
+          radial-gradient(circle at top right, rgba(109, 40, 217, 0.10), transparent 26%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+        background-attachment: fixed;
+      }
+
+      .section+.section {
+        border-top-color: rgba(82, 66, 48, 0.12);
+      }
+
+      .card {
+        box-shadow: var(--shadow);
+      }
+
+      .badge {
+        background: rgba(15, 118, 110, 0.10);
+        border-color: rgba(15, 118, 110, 0.16);
+        color: var(--accent);
+      }
+
+      .callout {
+        background: rgba(15, 118, 110, 0.07);
+        border-color: rgba(15, 118, 110, 0.16);
+        color: var(--text);
+      }
+
+      .callout strong {
+        color: var(--text);
+      }
+
+      .stat,
+      .mini-card {
+        background: var(--surface-2);
+        border-color: var(--border);
+      }
+
+      .table-wrap {
+        background: rgba(255, 252, 247, 0.52);
+        border-color: var(--border);
+      }
+
+      th {
+        background: rgba(245, 240, 230, 0.95);
+        color: var(--text-dim);
+      }
+
+      th,
+      td {
+        border-bottom-color: rgba(82, 66, 48, 0.10);
+      }
+
+      .divider {
+        background: linear-gradient(90deg, transparent, rgba(82, 66, 48, 0.16), transparent);
+      }
+
+      .mermaid-shell {
+        background: rgba(255, 252, 247, 0.50);
+        border-color: var(--border);
+      }
+
+      .zoom-controls {
+        background: rgba(245, 240, 230, 0.92);
+        border-color: var(--border);
+      }
+
+      .zoom-controls button:hover {
+        background: rgba(15, 118, 110, 0.10);
+        color: var(--text);
+      }
+
+      code {
+        background: rgba(15, 118, 110, 0.10);
+        color: var(--accent);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(125, 211, 252, 0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.15), transparent 26%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      background-attachment: fixed;
+      overflow-y: auto;
+    }
+
+    .page {
+      width: min(1220px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    .title-block {
+      padding: 10px 0 22px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 34px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    h1 {
+      margin: 10px 0 10px;
+      font-size: clamp(36px, 4.4vw, 64px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      max-width: 1100px;
+      text-wrap: balance;
+    }
+
+    .lede {
+      max-width: 1100px;
+      font-size: clamp(17px, 1.55vw, 21px);
+      line-height: 1.55;
+      color: var(--text-dim);
+      margin: 0;
+    }
+
+    .section {
+      padding: 26px 0 30px;
+    }
+
+    .section+.section {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section-head {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(22px, 2.2vw, 30px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--text-dim);
+      line-height: 1.55;
+      font-size: 15px;
+      max-width: 1120px;
+    }
+
+    .card {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+
+    .card.pad {
+      padding: 20px;
+    }
+
+    .card+.card {
+      margin-top: 16px;
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 10px;
+      min-width: 34px;
+      border-radius: 999px;
+      background: rgba(125, 211, 252, 0.12);
+      border: 1px solid rgba(125, 211, 252, 0.18);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(125, 211, 252, 0.08);
+      border: 1px solid rgba(125, 211, 252, 0.18);
+      line-height: 1.55;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .callout strong {
+      color: #fff;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 15px;
+    }
+
+    .stat .kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .stat .value {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .stat .desc {
+      margin-top: 6px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text-dim);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      vertical-align: top;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: rgba(9, 18, 34, 0.96);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      z-index: 1;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td strong {
+      color: #fff;
+    }
+
+    code,
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    code {
+      background: rgba(125, 211, 252, 0.12);
+      color: var(--accent);
+      padding: 1px 5px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .list li+li {
+      margin-top: 10px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .mini-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .mini-card h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .mini-card p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-dim);
+    }
+
+    .mermaid-shell {
+      margin-top: 10px;
+    }
+
+    .mermaid-wrap {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 12px;
+      overflow: hidden;
+      min-height: 400px;
+      cursor: grab;
+    }
+
+    .mermaid-wrap.is-panning {
+      cursor: grabbing;
+      user-select: none;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .zoom-controls button {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+
+    .zoom-controls button:hover {
+      background: rgba(125, 211, 252, 0.12);
+      color: var(--text);
+    }
+
+    .zoom-label {
+      padding: 0 10px 0 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .mermaid-viewport {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .mermaid-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .mermaid .nodeLabel {
+      font-family: var(--font-body) !important;
+      font-size: 16px !important;
+    }
+
+    .mermaid .edgeLabel {
+      font-family: var(--font-mono) !important;
+      font-size: 13px !important;
+    }
+
+    .mermaid .node rect,
+    .mermaid .node circle,
+    .mermaid .node polygon {
+      stroke-width: 1.5px !important;
+    }
+
+    .divider {
+      margin: 18px 0 0;
+      border: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      padding-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--text-dim);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .decision {
+      border-left: 4px solid var(--accent-3);
+    }
+
+    .tradeoff {
+      border-left: 4px solid var(--warn);
+    }
+
+    .risk {
+      border-left: 4px solid var(--danger);
+    }
+
+    .good {
+      border-left: 4px solid var(--accent);
+    }
+
+    @media (max-width: 980px) {
+
+      .two-col,
+      .mini-grid,
+      .stat-row {
+        grid-template-columns: 1fr;
+      }
+
+      .page {
+        width: min(100vw - 22px, 1220px);
+      }
+
+      table {
+        min-width: 720px;
+      }
+
+      h1 {
+        font-size: clamp(32px, 9vw, 54px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      .callout strong {
+        color: var(--text);
+      }
+
+      td strong {
+        color: var(--text);
+      }
+
+      th {
+        background: rgba(245, 240, 230, 0.95);
+        color: var(--text-dim);
+      }
+
+      .table-wrap {
+        background: rgba(255, 252, 247, 0.52);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header class="title-block">
+      <div class="eyebrow">Document source / context</div>
+      <h1>Main document thesis or title goes here.</h1>
+      <p class="lede">
+        One-paragraph setup. Explain the document’s core argument and how to read the page: as a vertically scrolling,
+        slide-like synthesis made of sections/cards.
+      </p>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Section title</h2>
+        <p>Short framing paragraph for the section.</p>
+      </div>
+
+      <article class="card pad decision">
+        <h3><span class="badge">Thesis</span> Card title</h3>
+        <div class="two-col">
+          <div>
+            <ul class="list">
+              <li>First takeaway.</li>
+              <li>Second takeaway.</li>
+              <li>Third takeaway.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="callout"><strong>Important:</strong> Put the key synthesis here.</div>
+            <div class="stat-row">
+              <div class="stat">
+                <div class="kicker">Label</div>
+                <div class="value">Value</div>
+                <div class="desc">Short explanation.</div>
+              </div>
+              <div class="stat">
+                <div class="kicker">Label</div>
+                <div class="value">Value</div>
+                <div class="desc">Short explanation.</div>
+              </div>
+              <div class="stat">
+                <div class="kicker">Label</div>
+                <div class="value">Value</div>
+                <div class="desc">Short explanation.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card pad diagram-shell" style="margin-top:16px;">
+        <h3><span class="badge">Visual</span> Diagram card title</h3>
+        <p style="margin:0;color:var(--text-dim);line-height:1.55;max-width:1120px;">
+          Introduce what the diagram is meant to clarify.
+        </p>
+        <div class="mermaid-shell">
+          <div class="mermaid-wrap">
+            <div class="zoom-controls">
+              <button type="button" data-action="zoom-in" title="Zoom in">+</button>
+              <button type="button" data-action="zoom-out" title="Zoom out">&minus;</button>
+              <button type="button" data-action="zoom-fit" title="Smart fit">&#8634;</button>
+              <button type="button" data-action="zoom-one" title="1:1 zoom">1:1</button>
+              <button type="button" data-action="zoom-expand" title="Open full size">&#x26F6;</button>
+              <span class="zoom-label">Loading...</span>
+            </div>
+            <div class="mermaid-viewport">
+              <div class="mermaid mermaid-canvas"></div>
+            </div>
+            <script type="text/plain" class="diagram-source">
+flowchart LR
+  A[Start] --> B[Middle]
+  B --> C[End]
+
+  style A fill:#0ea5e9,stroke:#7dd3fc,color:#fff
+  style B fill:#8b5cf6,stroke:#c4b5fd,color:#fff
+  style C fill:#10b981,stroke:#6ee7b7,color:#fff
+            </script>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Another section</h2>
+        <p>Add more cards, tables, mini-grids, diagrams, and comparisons as needed.</p>
+      </div>
+
+      <article class="card pad good">
+        <h3><span class="badge">Table</span> Example comparison</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Column</th>
+                <th>Column</th>
+                <th>Column</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Row A</strong></td>
+                <td>Meaning</td>
+                <td>Trade-off</td>
+              </tr>
+              <tr>
+                <td><strong>Row B</strong></td>
+                <td>Meaning</td>
+                <td>Trade-off</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="footer-note">
+        <span>Open in a browser and scroll vertically through the document.</span>
+        <span>slide-document-template.html</span>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk/dist/mermaid-layout-elk.esm.min.mjs';
+
+    const config = {
+      fitPadding: 8,
+      minHeight: 420,
+      maxHeightPx: 1400,
+      maxHeightVh: 1,
+      maxInitialZoom: 1.8,
+      minZoom: 0.08,
+      maxZoom: 6.5,
+      zoomStep: 0.14,
+      readabilityFloor: 0
+    };
+
+    const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+    let activeDrag = null;
+
+    addEventListener('mousemove', (e) => activeDrag?.onMove(e));
+    addEventListener('mouseup', () => {
+      activeDrag?.onEnd();
+      activeDrag = null;
+    });
+
+    const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+
+    mermaid.registerLayoutLoaders(elkLayouts);
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      look: 'classic',
+      layout: 'elk',
+      themeVariables: {
+        fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
+        fontSize: '16px',
+        primaryColor: isDark ? '#115e59' : '#ccfbf1',
+        primaryBorderColor: isDark ? '#2dd4bf' : '#0d9488',
+        primaryTextColor: isDark ? '#ccfbf1' : '#134e4a',
+        secondaryColor: isDark ? '#0c4a6e' : '#e0f2fe',
+        secondaryBorderColor: isDark ? '#38bdf8' : '#0369a1',
+        secondaryTextColor: isDark ? '#ccfbf1' : '#134e4a',
+        tertiaryColor: isDark ? '#2e2618' : '#fffbeb',
+        tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
+        tertiaryTextColor: isDark ? '#ccfbf1' : '#134e4a',
+        lineColor: isDark ? '#5eead4' : '#5f8a85',
+        noteBkgColor: isDark ? '#115e59' : '#fefce8',
+        noteTextColor: isDark ? '#ccfbf1' : '#134e4a',
+        noteBorderColor: isDark ? '#fbbf24' : '#d97706'
+      }
+    });
+
+    function initDiagram(shell) {
+      const wrap = shell.querySelector('.mermaid-wrap');
+      const viewport = shell.querySelector('.mermaid-viewport');
+      const canvas = shell.querySelector('.mermaid-canvas');
+      const source = shell.querySelector('.diagram-source');
+      const label = shell.querySelector('.zoom-label');
+
+      if (!wrap || !viewport || !canvas || !source || !label) return;
+
+      let zoom = 1;
+      let fitMode = 'contain';
+      let panX = 0;
+      let panY = 0;
+      let svgW = 0;
+      let svgH = 0;
+      let sx = 0;
+      let sy = 0;
+      let spx = 0;
+      let spy = 0;
+      let touchDist = 0;
+      let touchCx = 0;
+      let touchCy = 0;
+
+      function constrainPan() {
+        const vpW = viewport.clientWidth;
+        const vpH = viewport.clientHeight;
+        const rW = svgW * zoom;
+        const rH = svgH * zoom;
+        const pad = config.fitPadding;
+
+        panX = (rW + pad * 2 <= vpW)
+          ? (vpW - rW) / 2
+          : clamp(panX, vpW - rW - pad, pad);
+        panY = (rH + pad * 2 <= vpH)
+          ? (vpH - rH) / 2
+          : clamp(panY, vpH - rH - pad, pad);
+      }
+
+      function applyTransform() {
+        const svg = canvas.querySelector('svg');
+        if (!svg || !svgW) return;
+
+        constrainPan();
+        svg.style.width = (svgW * zoom) + 'px';
+        svg.style.height = (svgH * zoom) + 'px';
+        canvas.style.transform = `translate(${panX}px, ${panY}px)`;
+        label.textContent = Math.round(zoom * 100) + '% — ' + fitMode;
+      }
+
+      function canPan() {
+        const rW = svgW * zoom;
+        const rH = svgH * zoom;
+        return rW + config.fitPadding * 2 > viewport.clientWidth
+          || rH + config.fitPadding * 2 > viewport.clientHeight;
+      }
+
+      function computeSmartFit() {
+        const vpW = viewport.clientWidth;
+        const vpH = viewport.clientHeight;
+        const aW = Math.max(80, vpW - config.fitPadding * 2);
+        const aH = Math.max(80, vpH - config.fitPadding * 2);
+        const contain = Math.min(aW / svgW, aH / svgH);
+        const z = contain;
+        const mode = 'contain';
+        return { zoom: clamp(z, config.minZoom, config.maxInitialZoom), mode };
+      }
+
+      function fitDiagram() {
+        if (!svgW) return;
+        const fit = computeSmartFit();
+        zoom = fit.zoom;
+        fitMode = fit.mode;
+        panX = (viewport.clientWidth - svgW * zoom) / 2;
+        panY = (viewport.clientHeight - svgH * zoom) / 2;
+        applyTransform();
+      }
+
+      function setOneToOne() {
+        zoom = clamp(1, config.minZoom, config.maxZoom);
+        fitMode = '1:1';
+        panX = (viewport.clientWidth - svgW * zoom) / 2;
+        panY = (viewport.clientHeight - svgH * zoom) / 2;
+        applyTransform();
+      }
+
+      function zoomAround(factor, cx, cy) {
+        const next = clamp(zoom * factor, config.minZoom, config.maxZoom);
+        const ratio = next / zoom;
+        panX = cx - ratio * (cx - panX);
+        panY = cy - ratio * (cy - panY);
+        zoom = next;
+        fitMode = 'custom';
+        applyTransform();
+      }
+
+      function readSvgNaturalSize(svg) {
+        let w = 0;
+        let h = 0;
+        if (svg.viewBox?.baseVal?.width > 0) {
+          w = svg.viewBox.baseVal.width;
+          h = svg.viewBox.baseVal.height;
+        }
+        if (!w) {
+          w = parseFloat(svg.getAttribute('width')) || 0;
+          h = parseFloat(svg.getAttribute('height')) || 0;
+        }
+        if (!w) {
+          const b = svg.getBBox();
+          w = b.width;
+          h = b.height;
+        }
+        if (!w) {
+          const r = svg.getBoundingClientRect();
+          w = r.width || 1000;
+          h = r.height || 700;
+        }
+        if (!svg.getAttribute('viewBox')) {
+          svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        }
+        return { w, h };
+      }
+
+      function setAdaptiveHeight() {
+        if (!svgW) return;
+        const usableW = Math.max(280, wrap.getBoundingClientRect().width - 2);
+        const idealH = (svgH / svgW) * usableW + config.fitPadding * 2;
+        const maxVp = Math.floor(innerHeight * config.maxHeightVh);
+        const hardMax = Math.min(config.maxHeightPx, Math.max(config.minHeight, maxVp));
+        wrap.style.height = Math.round(clamp(idealH, config.minHeight, hardMax)) + 'px';
+      }
+
+      function openInNewTab() {
+        const svg = canvas.querySelector('svg');
+        if (!svg) return;
+
+        const clone = svg.cloneNode(true);
+        clone.style.width = '';
+        clone.style.height = '';
+
+        const bg = isDark ? '#042f2e' : '#f0fdfa';
+        const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Diagram</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:${bg};padding:40px;box-sizing:border-box}svg{max-width:100%;max-height:90vh;height:auto}</style></head><body>${clone.outerHTML}</body></html>`;
+        open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank');
+      }
+
+      async function render() {
+        try {
+          const code = source.textContent.trim();
+          if (!code) {
+            label.textContent = 'Error: Empty source';
+            return;
+          }
+
+          const id = 'diagram-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+          const { svg } = await mermaid.render(id, code);
+          canvas.innerHTML = svg;
+
+          const svgNode = canvas.querySelector('svg');
+          if (!svgNode) {
+            label.textContent = 'Error: No SVG';
+            return;
+          }
+
+          const size = readSvgNaturalSize(svgNode);
+          svgW = size.w;
+          svgH = size.h;
+
+          svgNode.removeAttribute('width');
+          svgNode.removeAttribute('height');
+          svgNode.style.maxWidth = 'none';
+          svgNode.style.display = 'block';
+
+          setAdaptiveHeight();
+          fitDiagram();
+        } catch (err) {
+          console.error('Mermaid render failed:', err);
+          label.textContent = 'Error: ' + (err.message || 'Render failed');
+        }
+      }
+
+      const actions = {
+        'zoom-in': () => zoomAround(1 + config.zoomStep, viewport.clientWidth / 2, viewport.clientHeight / 2),
+        'zoom-out': () => zoomAround(1 / (1 + config.zoomStep), viewport.clientWidth / 2, viewport.clientHeight / 2),
+        'zoom-fit': fitDiagram,
+        'zoom-one': setOneToOne,
+        'zoom-expand': openInNewTab
+      };
+
+      Object.entries(actions).forEach(([action, handler]) => {
+        wrap.querySelector(`[data-action="${action}"]`)?.addEventListener('click', handler);
+      });
+
+      viewport.addEventListener('dblclick', fitDiagram);
+      viewport.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const rect = viewport.getBoundingClientRect();
+          const factor = e.deltaY < 0 ? 1 + config.zoomStep : 1 / (1 + config.zoomStep);
+          zoomAround(factor, e.clientX - rect.left, e.clientY - rect.top);
+          return;
+        }
+        if (canPan()) {
+          e.preventDefault();
+          panX -= e.deltaX;
+          panY -= e.deltaY;
+          applyTransform();
+        }
+      }, { passive: false });
+
+      viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.zoom-controls') || !canPan()) return;
+        wrap.classList.add('is-panning');
+        sx = e.clientX;
+        sy = e.clientY;
+        spx = panX;
+        spy = panY;
+        e.preventDefault();
+
+        activeDrag = {
+          onMove: (ev) => {
+            panX = spx + (ev.clientX - sx);
+            panY = spy + (ev.clientY - sy);
+            applyTransform();
+          },
+          onEnd: () => wrap.classList.remove('is-panning')
+        };
+      });
+
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          sx = e.touches[0].clientX;
+          sy = e.touches[0].clientY;
+          spx = panX;
+          spy = panY;
+        } else if (e.touches.length === 2) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          touchDist = Math.sqrt(dx * dx + dy * dy);
+          const r = viewport.getBoundingClientRect();
+          touchCx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+          touchCy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && canPan()) {
+          if (touchDist > 0) {
+            sx = e.touches[0].clientX;
+            sy = e.touches[0].clientY;
+            spx = panX;
+            spy = panY;
+            touchDist = 0;
+          }
+          e.preventDefault();
+          panX = spx + (e.touches[0].clientX - sx);
+          panY = spy + (e.touches[0].clientY - sy);
+          applyTransform();
+        } else if (e.touches.length === 2 && touchDist > 0) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          zoomAround(d / touchDist, touchCx, touchCy);
+          touchDist = d;
+        }
+      }, { passive: false });
+
+      new ResizeObserver(() => {
+        if (svgW) {
+          setAdaptiveHeight();
+          fitDiagram();
+        }
+      }).observe(wrap);
+
+      render();
+    }
+
+    document.querySelectorAll('.diagram-shell').forEach(initDiagram);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+{
+  "settings": "settings.json",
+  "themes": "themes",
+  "extensions": [
+    "cmux-diff",
+    "pi-usage"
+  ],
+  "skills": [
+    "slide-presentation"
+  ],
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-terminal-signals",
+    "npm:pi-answer",
+    "npm:pi-hashline-readmap",
+    "npm:@sherif-fanous/pi-rtk",
+    "npm:pi-cursor-provider",
+    "npm:@tmustier/pi-raw-paste",
+    "git:github.com/jonjonrankin/pi-caveman"
+  ]
+}

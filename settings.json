@@ -1,0 +1,45 @@
+{
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-terminal-signals",
+    "npm:pi-answer",
+    "npm:pi-hashline-readmap",
+    "npm:@sherif-fanous/pi-rtk",
+    "npm:pi-cursor-provider",
+    "npm:@tmustier/pi-raw-paste",
+    "git:github.com/jonjonrankin/pi-caveman"
+  ],
+  "lastChangelogVersion": "0.67.3",
+  "images": {
+    "blockImages": false
+  },
+  "autocompleteMaxVisible": 10,
+  "terminal": {
+    "clearOnShrink": false
+  },
+  "followUpMode": "one-at-a-time",
+  "steeringMode": "one-at-a-time",
+  "collapseChangelog": true,
+  "quietStartup": true,
+  "enableInstallTelemetry": false,
+  "doubleEscapeAction": "tree",
+  "treeFilterMode": "default",
+  "theme": "rose-pine-dawn",
+  "editorPaddingX": 0,
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.4-mini",
+  "defaultThinkingLevel": "medium",
+  "enabledModels": [
+    "cursor/gpt-5.3-codex",
+    "openai-codex/gpt-5.3-codex",
+    "openai-codex/gpt-5.4-mini",
+    "openai-codex/gpt-5.4",
+    "cursor/composer-2",
+    "opencode/kimi-k2.5",
+    "opencode/minimax-m2.5-free",
+    "opencode/glm-5.1",
+    "opencode/claude-opus-4-6",
+    "cursor/claude-4.6-opus-thinking",
+    "cursor/claude-4.6-sonnet-thinking"
+  ]
+}
