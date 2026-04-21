@@ -27,7 +27,7 @@
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
   "defaultProvider": "opencode",
-  "defaultModel": "minimax-m2.5-free",
+  "defaultModel": "kimi-k2.5",
   "defaultThinkingLevel": "medium",
   "enabledModels": [
     "cursor/gpt-5.3-codex",
