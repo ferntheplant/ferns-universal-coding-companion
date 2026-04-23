@@ -27,18 +27,24 @@
 
 - worktree/cmux workspace management
   - should be a standalone script outside of Pi
+    - [effect cli](https://github.com/Effect-TS/effect/tree/main/packages/cli)
+  - vercel [portless](https://github.com/vercel-labs/portless)
 - GH PR comments
   - should be a custom extension with slash-commands
 - compounding (session mining)
   - also a slash command?
+- [dev](https://dex.rip/guide)?
 
 ## Big boyz (in order)
 
-- browser dev tools
-- browser control (likely comes with dev tools)
+- browser
+  - [dev tools](https://github.com/ChromeDevTools/chrome-devtools-mcp)
+  - [agent browser](https://github.com/vercel-labs/agent-browser)
 - "profiles" (i.e. only load figma MCP when it's a frontend session)
 - time travel (i.e. tree + cwd snapshots)
 - sandbox runtimes (might be the solution to time-travel)
+  - [just bash](https://github.com/vercel-labs/just-bash)
+  - [zmx](https://erock.prose.sh/zmx-ai-portal)
 - remote runtimes
 - subagents
 - natives (see `omp`)
