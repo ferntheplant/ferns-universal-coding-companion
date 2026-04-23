@@ -13,6 +13,8 @@
 - [caveman](https://github.com/jonjonrankin/pi-caveman/tree/main)
 - [raw paste](https://github.com/tmustier/pi-extensions/tree/main/raw-paste)
 - observability via custom pi-context
+- [extension starter](https://github.com/ferntheplant/pi-extension-starter)
+  - TODO: make it NOT init a git repo
 
 ## Extensions
 
