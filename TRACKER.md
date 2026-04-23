@@ -22,6 +22,11 @@
   - did small changes to not register so many tools
   - need to make it give diagnostics in batches at end of string of edits instead of on every tool call
 - images
+- cmux
+  - [winter](https://github.com/w-winter/dot314)
+  - [sasha](https://github.com/sasha-computer/pi-cmux)
+  - [javier](https://github.com/javiermolinar/pi-cmux)
+- better session names (integrate with `pi-context`)
 
 ## Workflows
 
@@ -33,7 +38,10 @@
   - should be a custom extension with slash-commands
 - compounding (session mining)
   - also a slash command?
-- [dev](https://dex.rip/guide)?
+  - [breadcrumbs](https://github.com/aliou/pi-harness/tree/main/extensions/breadcrumbs)
+- [dex](https://dex.rip/guide)?
+- commit messages (likely a skill or command)
+- planning (blueprint -> plan; verification steps)
 
 ## Big boyz (in order)
 
