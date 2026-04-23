@@ -1,0 +1,22 @@
+{
+  "name": "pi-model-system-prompts",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "^0.67.2",
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  }
+}
