@@ -2,7 +2,12 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 
-export type PiOAuthProviderId = "openai-codex" | "anthropic" | "google-gemini-cli" | "google-antigravity";
+export type PiOAuthProviderId =
+  | "openai-codex"
+  | "anthropic"
+  | "google-gemini-cli"
+  | "google-antigravity"
+  | "cursor";
 
 export interface PiOAuthCredential {
   access?: string;

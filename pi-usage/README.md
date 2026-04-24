@@ -6,6 +6,7 @@ A Pi extension that provides unified usage visibility for supported providers.
 
 Current providers:
 - OpenAI Codex
+- Cursor
 - OpenCode Zen
 
 Commands:
@@ -59,6 +60,12 @@ Behavior:
 3. Confirm footer appears.
 4. Run `/usage` and confirm Codex appears with matching values.
 
+### Cursor
+1. Authenticate Cursor in Pi.
+2. Select a Cursor model.
+3. Confirm footer appears.
+4. Run `/usage` and confirm Cursor appears with matching values.
+
 ### Zen
 1. Run `/usage-zen-login` with malformed text and confirm actionable error.
 2. Run `/usage-zen-login` with a valid copied request.
@@ -67,7 +74,7 @@ Behavior:
 5. Run `/usage` and confirm Zen balance appears.
 
 ### Provider switching
-1. Switch between Codex, Zen, and an unsupported model.
+1. Switch between Codex, Cursor, Zen, and an unsupported model.
 2. Confirm footer updates for supported providers and clears for unsupported providers.
 
 ## Known Limitations (v1)

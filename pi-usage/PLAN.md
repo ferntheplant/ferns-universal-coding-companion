@@ -8,6 +8,9 @@ v1 includes only:
 - OpenAI Codex
 - OpenCode Zen
 
+Post-v1 additions:
+- Cursor (OAuth + DashboardService usage endpoint)
+
 v1 commands:
 - `/usage`
 - `/usage-zen-login`
