@@ -3,7 +3,9 @@
   "themes": "themes",
   "extensions": [
     "cmux-diff",
-    "pi-usage"
+    "pi-usage",
+    "pi-context",
+    "pi-model-system-prompts"
   ],
   "skills": [
     "slide-presentation"

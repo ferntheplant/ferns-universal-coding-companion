@@ -19,6 +19,24 @@ async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext):
     fragment.selectors.map((selector) => `${basename(fragment.path)} => ${selector}`),
   ) ?? [];
   const warningLines = snapshot.warnings.length > 0 ? snapshot.warnings : ["none"];
+  const lastApplied = status.lastApplied;
+  const lastAppliedLines = lastApplied
+    ? [
+        `lastAppliedAt: ${lastApplied.appliedAt}`,
+        `lastAppliedOutcome: ${lastApplied.outcome}`,
+        `lastAppliedDetail: ${lastApplied.detail}`,
+        `lastAppliedModel: ${lastApplied.modelKey ?? "none"}`,
+        `lastAppliedMatchedFiles: ${lastApplied.matchedFiles.length > 0 ? lastApplied.matchedFiles.join(", ") : "none"}`,
+        `lastAppliedAppendedCharacters: ${lastApplied.appendedCharacters}`,
+      ]
+    : [
+        "lastAppliedAt: never",
+        "lastAppliedOutcome: none",
+        "lastAppliedDetail: no prompt injection has run yet",
+        "lastAppliedModel: none",
+        "lastAppliedMatchedFiles: none",
+        "lastAppliedAppendedCharacters: 0",
+      ];
 
   notifyInfo(
     ctx,
@@ -34,7 +52,8 @@ async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext):
       `matched files: ${matchedFiles.length > 0 ? matchedFiles.join(", ") : "none"}`,
       `matched selectors: ${matchedSelectors.length > 0 ? matchedSelectors.join("; ") : "none"}`,
       `warnings: ${warningLines.join("; ")}`,
-      "phase 2 complete: prompt registry scans markdown files, parses frontmatter, validates selectors.",
+      ...lastAppliedLines,
+      "phase status: prompt registry, before_agent_start injection, and status reporting implemented.",
     ].join("\n"),
   );
 }

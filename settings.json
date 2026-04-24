@@ -27,7 +27,7 @@
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
   "defaultProvider": "cursor",
-  "defaultModel": "composer-2",
+  "defaultModel": "claude-4.6-sonnet-thinking",
   "defaultThinkingLevel": "medium",
   "enabledModels": [
     "cursor/gpt-5.3-codex",
