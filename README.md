@@ -27,7 +27,7 @@ ferns-universal-coding-companion/
 ├── package.json            # Workspaces + catalog + dev tooling
 ├── .oxlintrc.json          # oxlint config (defaults)
 ├── .oxfmtrc.json           # oxfmt config (defaults)
-└── install.sh              # Thin shim → bun scripts/install.ts
+└── install.sh              # Thin shim → bun scripts/install.ts (forwards argv)
 ```
 
 ## Architecture
@@ -80,10 +80,15 @@ Every workspace extends `tsconfig.base.json` and only declares the overrides it 
 `scripts/install.ts` reads it and:
 
 1. Symlinks `settings.json` into `~/.pi/agent/settings.json`.
-2. Expands each glob in `extensions` / `skills` / `themes` and creates one symlink per match under `~/.pi/agent/<key>/`.
-3. Runs `pi install <pkg>` for every third-party `packages` entry.
+2. Expands each glob in `extensions` / `skills` / `themes` and creates one symlink per match under `~/.pi/agent/<key>/` (skips work when an existing symlink already resolves to the same path).
+3. Runs `pi install <pkg>` for each `packages[]` entry **unless** that entry already appears in `pi list` output (full manifest string, or the `npm:` / `git:` payload).
 
-The installer is idempotent and `lstat`-aware, so re-running never recurses through an existing dir-symlink. Pi discovers extensions by reading `~/.pi/agent/extensions/<name>/index.ts` — symlinked back into this repo.
+Symlink targets under `~/.pi/agent/{extensions,skills,themes}` and `settings.json` (when set in the manifest) are **owned by this installer**: by default it refuses to delete or replace a non-symlink path or a symlink pointing elsewhere; pass `--force` to recover the previous overwrite behavior. It remains `lstat`-aware so it never recurses through an existing dir-symlink when removing a stale symlink. Pi discovers extensions by reading `~/.pi/agent/extensions/<name>/index.ts` — symlinked back into this repo.
+
+Flags (also accepted by `./install.sh`, which forwards argv):
+
+- `--skip-packages` — only create symlinks; do not run `pi install` (does not require `pi` on `PATH`).
+- `--force` — allow replacing blocking files, directories, or mismatched symlinks at install destinations.
 
 ### Extension shape
 
@@ -116,7 +121,7 @@ The `templates/extension/` workspace is a working copy of this skeleton; `bun ru
 ### Prerequisites
 
 - [Bun](https://bun.sh) ≥ 1.3
-- [Pi coding agent](https://www.npmjs.com/package/@mariozechner/pi-coding-agent) (`pi`) on `PATH`
+- [Pi coding agent](https://www.npmjs.com/package/@mariozechner/pi-coding-agent) (`pi`) on `PATH`, unless you run `./install.sh --skip-packages` (symlinks only)
 
 ### Steps
 
@@ -133,17 +138,17 @@ Then in Pi:
 /reload
 ```
 
-`./install.sh` is a 5-line bash shim that exec's `bun scripts/install.ts` — running the TS installer directly works too.
+`./install.sh` is a thin bash shim that exec's `bun scripts/install.ts` and forwards flags (for example `./install.sh --force` or `./install.sh --skip-packages`) — running the TS installer directly works too.
 
 ### What install does
 
 - Symlinks `settings.json` → `~/.pi/agent/settings.json`
 - Symlinks each extension dir → `~/.pi/agent/extensions/<name>/`
-- Symlinks each theme `.json` → `~/.pi/agent/themes/<name>.json`
+- Symlinks each theme `.json` → `~/.pi/agent/themes/<name>.json` (or symlinks a single themes tree when `themes` is a string path in the manifest)
 - Symlinks each skill dir → `~/.pi/agent/skills/<name>/`
-- Runs `pi install <pkg>` for each `packages[]` entry
+- Runs `pi install <pkg>` for each `packages[]` entry that is **not** already mentioned in `pi list` (skipped entirely with `--skip-packages`)
 
-Re-run any time `manifest.json` changes; the installer is idempotent.
+Re-run any time `manifest.json` changes. Repeat runs are safe: correct symlinks are left as-is, and third-party installs are skipped when `pi list` already shows the package. Use `--force` when you intentionally need to replace paths this script manages.
 
 ## Development
 

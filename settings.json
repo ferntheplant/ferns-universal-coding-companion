@@ -26,8 +26,8 @@
   "treeFilterMode": "default",
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
-  "defaultProvider": "opencode",
-  "defaultModel": "kimi-k2.6",
+  "defaultProvider": "cursor",
+  "defaultModel": "composer-2",
   "defaultThinkingLevel": "medium",
   "enabledModels": [
     "opencode/minimax-m2.5-free",
