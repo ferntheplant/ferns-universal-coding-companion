@@ -78,10 +78,7 @@ function definedToolNames(tools: Tool[]): Set<string> {
   return names;
 }
 
-function countUsedDefinedTools(
-  sessionToolsUsed: Set<string>,
-  definedNames: Set<string>,
-): number {
+function countUsedDefinedTools(sessionToolsUsed: Set<string>, definedNames: Set<string>): number {
   let usedCount = 0;
   for (const name of sessionToolsUsed) {
     if (definedNames.has(name)) usedCount++;
@@ -106,16 +103,12 @@ function scoreUtilization(totalTokens: number, contextLimit: number): number {
   ]);
 }
 
-function describeUtilization(
-  totalTokens: number,
-  contextLimit: number,
-): string {
+function describeUtilization(totalTokens: number, contextLimit: number): string {
   if (contextLimit <= 0) return "No context limit known.";
   const pct = Math.round((totalTokens / contextLimit) * 100);
   if (pct <= 50) return `Context ${pct}% full — plenty of room.`;
   if (pct <= 75) return `Context ${pct}% full — moderate usage.`;
-  if (pct <= 85)
-    return `Context ${pct}% full — approaching limit, compaction risk.`;
+  if (pct <= 85) return `Context ${pct}% full — approaching limit, compaction risk.`;
   return `Context ${pct}% full — near overflow, compaction imminent.`;
 }
 
@@ -131,10 +124,7 @@ function scoreToolResults(
   const totalTok = totalCompositionTokens(composition);
   if (totalTok === 0) return 100;
 
-  const toolResultTokens = compositionCategoryTokens(
-    composition,
-    "tool_results",
-  );
+  const toolResultTokens = compositionCategoryTokens(composition, "tool_results");
   const aggPct = (toolResultTokens / totalTok) * 100;
 
   const aggregateScore = lerp(aggPct, [
@@ -176,9 +166,7 @@ function describeToolResults(
   const largestResult = largestToolResultTokens(messages);
 
   const largestK =
-    largestResult > 1000
-      ? `${Math.round(largestResult / 1000)}K`
-      : `${largestResult}`;
+    largestResult > 1000 ? `${Math.round(largestResult / 1000)}K` : `${largestResult}`;
   const suffix =
     utilizationPct < 40
       ? " Plenty of room."
@@ -186,10 +174,8 @@ function describeToolResults(
         ? " Monitor as context grows."
         : " Context is filling up.";
 
-  if (pct <= 30 && largestResult <= 2000)
-    return "Tool results are a small part of context.";
-  if (pct > 60)
-    return `Tool results are ${pct}% of context, largest ${largestK} tokens.${suffix}`;
+  if (pct <= 30 && largestResult <= 2000) return "Tool results are a small part of context.";
+  if (pct > 60) return `Tool results are ${pct}% of context, largest ${largestK} tokens.${suffix}`;
   if (largestResult > 5000)
     return `Tool results are ${pct}% of context, largest ${largestK} tokens.${suffix}`;
   return `Tool results are ${pct}% of context.${suffix}`;
@@ -208,10 +194,7 @@ function scoreToolEfficiency(
   const totalTok = totalCompositionTokens(composition);
   if (totalTok === 0 || tools.length === 0) return 100;
 
-  const toolDefTokens = compositionCategoryTokens(
-    composition,
-    "tool_definitions",
-  );
+  const toolDefTokens = compositionCategoryTokens(composition, "tool_definitions");
   const overheadPct = (toolDefTokens / totalTok) * 100;
 
   const overheadScore = lerp(overheadPct, [
@@ -291,9 +274,7 @@ function describeGrowthRate(
   if (currentTokens < previousTokens * 0.7)
     return "Compaction detected — context was truncated or summarized.";
   if (contextLimit <= 0) return "Unknown context limit.";
-  const growthPct = Math.round(
-    ((currentTokens - previousTokens) / contextLimit) * 100,
-  );
+  const growthPct = Math.round(((currentTokens - previousTokens) / contextLimit) * 100);
   if (growthPct <= 5) return `Grew ${growthPct}% of limit — steady.`;
   if (growthPct <= 20) return `Grew ${growthPct}% of limit — moderate pace.`;
   return `Grew ${growthPct}% of limit — rapid expansion.`;
@@ -307,8 +288,7 @@ function scoreThinking(composition: CompositionEntry[]): number {
   const totalTok = totalCompositionTokens(composition);
   if (totalTok === 0) return 100;
 
-  const thinkingPct =
-    (compositionCategoryTokens(composition, "thinking") / totalTok) * 100;
+  const thinkingPct = (compositionCategoryTokens(composition, "thinking") / totalTok) * 100;
 
   return lerp(thinkingPct, [
     [5, 100],
@@ -380,29 +360,16 @@ export function computeHealthScore(
     {
       id: "tool-defs",
       name: "Tool Definitions",
-      score: scoreToolEfficiency(
-        composition,
-        tools,
-        sessionToolsUsed,
-        turnCount,
-      ),
+      score: scoreToolEfficiency(composition, tools, sessionToolsUsed, turnCount),
       weight: 20,
       description: describeToolEfficiency(composition, tools, sessionToolsUsed),
     },
     {
       id: "growth",
       name: "Growth Rate",
-      score: scoreGrowthRate(
-        contextInfo.totalTokens,
-        previousEntryTokens,
-        contextLimit,
-      ),
+      score: scoreGrowthRate(contextInfo.totalTokens, previousEntryTokens, contextLimit),
       weight: 15,
-      description: describeGrowthRate(
-        contextInfo.totalTokens,
-        previousEntryTokens,
-        contextLimit,
-      ),
+      description: describeGrowthRate(contextInfo.totalTokens, previousEntryTokens, contextLimit),
     },
     {
       id: "thinking",
@@ -414,9 +381,7 @@ export function computeHealthScore(
   ];
 
   const totalWeight = audits.reduce((s, a) => s + a.weight, 0);
-  const overall = Math.round(
-    audits.reduce((s, a) => s + a.score * a.weight, 0) / totalWeight,
-  );
+  const overall = Math.round(audits.reduce((s, a) => s + a.score * a.weight, 0) / totalWeight);
 
   return {
     overall,

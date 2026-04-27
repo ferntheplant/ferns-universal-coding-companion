@@ -1,12 +1,6 @@
 // --- Core domain types ---
 
-export type Provider =
-  | "anthropic"
-  | "openai"
-  | "chatgpt"
-  | "gemini"
-  | "vertex"
-  | "unknown";
+export type Provider = "anthropic" | "openai" | "chatgpt" | "gemini" | "vertex" | "unknown";
 
 export type ApiFormat =
   | "anthropic-messages"
@@ -57,12 +51,7 @@ export interface InputTextBlock {
   text: string;
 }
 
-export type ContentBlock =
-  | TextBlock
-  | ToolUseBlock
-  | ToolResultBlock
-  | ImageBlock
-  | InputTextBlock;
+export type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock | ImageBlock | InputTextBlock;
 
 // Tool definitions (union of Anthropic and OpenAI formats)
 export interface AnthropicTool {

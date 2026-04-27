@@ -7,10 +7,7 @@ import type { CapturedEntry, ContextInfo, ProjectedEntry } from "../types.js";
  * `contextInfo` can be either the raw `ContextInfo` or a compacted projection.
  * This avoids duplicating the same mapping logic across store + web UI.
  */
-export function projectEntry(
-  e: CapturedEntry,
-  contextInfo: ContextInfo,
-): ProjectedEntry {
+export function projectEntry(e: CapturedEntry, contextInfo: ContextInfo): ProjectedEntry {
   // Use the canonical response parser instead of ad-hoc field access
   const usage = parseResponseUsage(e.response);
 

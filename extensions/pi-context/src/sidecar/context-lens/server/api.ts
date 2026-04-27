@@ -29,20 +29,12 @@ function projectEntryForApi(e: CapturedEntry) {
   return projectEntry(e, e.contextInfo);
 }
 
-function getExportEntries(
-  store: Store,
-  conversation?: string,
-): CapturedEntry[] {
+function getExportEntries(store: Store, conversation?: string): CapturedEntry[] {
   if (!conversation) return store.getCapturedRequests();
-  return store
-    .getCapturedRequests()
-    .filter((e) => e.conversationId === conversation);
+  return store.getCapturedRequests().filter((e) => e.conversationId === conversation);
 }
 
-function sanitizeFilenamePart(
-  input: string | null | undefined,
-  fallback: string,
-): string {
+function sanitizeFilenamePart(input: string | null | undefined, fallback: string): string {
   const sanitized = String(input || "")
     .trim()
     .replace(/[^a-zA-Z0-9._-]+/g, "_")
@@ -75,8 +67,7 @@ function buildConversationGroups(store: Store): {
   const ungrouped: CapturedEntry[] = [];
   for (const entry of capturedRequests) {
     if (entry.conversationId) {
-      if (!grouped.has(entry.conversationId))
-        grouped.set(entry.conversationId, []);
+      if (!grouped.has(entry.conversationId)) grouped.set(entry.conversationId, []);
       grouped.get(entry.conversationId)?.push(entry);
     } else {
       ungrouped.push(entry);
@@ -125,8 +116,7 @@ function buildFullConversation(
   }
   agents.sort(
     (a, b) =>
-      new Date(b.entries[0].timestamp).getTime() -
-      new Date(a.entries[0].timestamp).getTime(),
+      new Date(b.entries[0].timestamp).getTime() - new Date(a.entries[0].timestamp).getTime(),
   );
   return {
     ...meta,
@@ -162,24 +152,16 @@ export function createApiApp(store: Store): Hono {
         source: data.source ?? "unknown",
         requestBody: (data.requestBody ?? null) as JsonValue | null,
       });
-      console.log(
-        `  📥 Ingested (capture): [${data.provider}] from ${data.source ?? "unknown"}`,
-      );
+      console.log(`  📥 Ingested (capture): [${data.provider}] from ${data.source ?? "unknown"}`);
       return c.json({ ok: true });
     }
 
     const legacyResult = v.safeParse(IngestLegacyPayloadSchema, raw);
     if (legacyResult.success) {
       const data = legacyResult.output;
-      const contextInfo = parseContextInfo(
-        data.provider,
-        data.body,
-        data.apiFormat,
-      );
+      const contextInfo = parseContextInfo(data.provider, data.body, data.apiFormat);
       store.storeRequest(contextInfo, data.response, data.source, data.body);
-      console.log(
-        `  📥 Ingested: [${data.provider}] ${contextInfo.model} from ${data.source}`,
-      );
+      console.log(`  📥 Ingested: [${data.provider}] ${contextInfo.model} from ${data.source}`);
       return c.json({ ok: true });
     }
 
@@ -217,8 +199,7 @@ export function createApiApp(store: Store): Hono {
       sessionId?: unknown;
       name?: unknown;
     }>();
-    const sessionId =
-      typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+    const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
     const name = typeof body?.name === "string" ? body.name.trim() : "";
 
     if (!sessionId || !name) {
@@ -293,18 +274,14 @@ export function createApiApp(store: Store): Hono {
     let latestId: string | null = null;
     let latestTime = 0;
     for (const [id, entries] of grouped) {
-      const t = Math.max(
-        ...entries.map((e) => new Date(e.timestamp).getTime()),
-      );
+      const t = Math.max(...entries.map((e) => new Date(e.timestamp).getTime()));
       if (t > latestTime) {
         latestTime = t;
         latestId = id;
       }
     }
 
-    console.log(
-      `  📋 Pasted: [${provider}/${apiFormat}] → session ${latestId}`,
-    );
+    console.log(`  📋 Pasted: [${provider}/${apiFormat}] → session ${latestId}`);
     return c.json({ ok: true, conversationId: latestId });
   });
 
@@ -346,9 +323,7 @@ export function createApiApp(store: Store): Hono {
       return c.json({ error: "Conversation not found" }, 404);
     }
 
-    return c.json(
-      buildFullConversation(convoId, entries, conversations, store),
-    );
+    return c.json(buildFullConversation(convoId, entries, conversations, store));
   });
 
   // --- Reset ---
@@ -476,10 +451,7 @@ export function createApiApp(store: Store): Hono {
     let conversationId: string | null = null;
     if (sessionId) {
       const { createHash } = await import("node:crypto");
-      conversationId = createHash("sha256")
-        .update(sessionId)
-        .digest("hex")
-        .slice(0, 16);
+      conversationId = createHash("sha256").update(sessionId).digest("hex").slice(0, 16);
     }
 
     // Fall back to fingerprint matching against known conversations
@@ -515,8 +487,7 @@ export function createApiApp(store: Store): Hono {
       for (const [id, rawEntries] of grouped) {
         // Sort newest-first for consistent access patterns
         const entries = [...rawEntries].sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
         const meta = conversations.get(id) || {
           id,
@@ -566,9 +537,7 @@ export function createApiApp(store: Store): Hono {
         });
       }
       summaries.sort(
-        (a, b) =>
-          new Date(b.latestTimestamp).getTime() -
-          new Date(a.latestTimestamp).getTime(),
+        (a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime(),
       );
       return c.json({
         revision: store.getRevision(),
@@ -584,8 +553,7 @@ export function createApiApp(store: Store): Hono {
     }
     convos.sort(
       (a, b) =>
-        new Date(b.entries[0].timestamp).getTime() -
-        new Date(a.entries[0].timestamp).getTime(),
+        new Date(b.entries[0].timestamp).getTime() - new Date(a.entries[0].timestamp).getTime(),
     );
     return c.json({
       revision: store.getRevision(),

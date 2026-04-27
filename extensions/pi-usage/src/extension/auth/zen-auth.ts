@@ -231,7 +231,9 @@ export function parseZenCurlCommand(input: string): ParsedZenCurlRequest {
   }
 
   if (!url) {
-    throw new Error("Could not find a URL in the pasted curl command. Copy the full request as curl from DevTools.");
+    throw new Error(
+      "Could not find a URL in the pasted curl command. Copy the full request as curl from DevTools.",
+    );
   }
 
   const resolvedUrl = ensureHttpUrl(url);
@@ -272,7 +274,11 @@ export async function validateZenDashboardAuth(
   });
 
   if (response.status === 401 || response.status === 403) {
-    return { ok: false, reason: "Zen dashboard rejected the cookies (unauthenticated).", status: response.status };
+    return {
+      ok: false,
+      reason: "Zen dashboard rejected the cookies (unauthenticated).",
+      status: response.status,
+    };
   }
 
   if (!response.ok) {
@@ -345,7 +351,9 @@ export async function getStoredZenAuthStatus(ctx: ExtensionContext): Promise<
   if (!validation.ok) {
     return {
       configured: false,
-      reason: validation.reason ?? "Stored Zen dashboard auth is no longer valid. Re-run /usage-zen-login.",
+      reason:
+        validation.reason ??
+        "Stored Zen dashboard auth is no longer valid. Re-run /usage-zen-login.",
     };
   }
 

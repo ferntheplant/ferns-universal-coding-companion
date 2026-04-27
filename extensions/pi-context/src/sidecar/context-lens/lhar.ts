@@ -8,10 +8,7 @@
 // Header redaction (re-exported for backward compatibility)
 export { redactHeaders, SENSITIVE_HEADERS } from "./http/headers.js";
 // Composition analysis
-export {
-  analyzeComposition,
-  normalizeComposition,
-} from "./lhar/composition.js";
+export { analyzeComposition, normalizeComposition } from "./lhar/composition.js";
 // Export serialization (JSONL / JSON)
 export { toLharJson, toLharJsonl } from "./lhar/export.js";
 export type { ParsedLhar } from "./lhar/reader.js";

@@ -1,8 +1,8 @@
 {
   "name": "@fuc/pi-context",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "module": "index.ts",
   "scripts": {
     "dev": "bun run index.ts",
     "typecheck": "tsc --noEmit",
@@ -10,6 +10,13 @@
     "spike:to-context-lens": "bun run scripts/spike-to-context-lens.ts",
     "spike:ingest-pi": "bun run scripts/ingest-spike-pi.ts",
     "export:lhar": "bun run scripts/export-lhar.ts"
+  },
+  "dependencies": {
+    "@contextio/core": "^0.3.2",
+    "@hono/node-server": "^2.0.0",
+    "hono": "^4.12.14",
+    "js-tiktoken": "^1.0.21",
+    "valibot": "^1.3.1"
   },
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "catalog:",
@@ -19,12 +26,5 @@
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "catalog:",
     "typescript": "catalog:"
-  },
-  "dependencies": {
-    "@contextio/core": "^0.3.2",
-    "@hono/node-server": "^2.0.0",
-    "hono": "^4.12.14",
-    "js-tiktoken": "^1.0.21",
-    "valibot": "^1.3.1"
   }
 }

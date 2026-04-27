@@ -34,7 +34,9 @@ async function handleUsageCommand(_args: string, ctx: ExtensionCommandContext): 
 
   const providers = await getConfiguredProviders(ctx);
   const activeProviderId = getActiveProviderId();
-  const cards = await Promise.all(providers.map((provider) => fetchProviderCard(provider, ctx, activeProviderId)));
+  const cards = await Promise.all(
+    providers.map((provider) => fetchProviderCard(provider, ctx, activeProviderId)),
+  );
 
   const dashboard = buildDashboardViewModel(cards);
   const lines = renderDashboardAsLines(dashboard);

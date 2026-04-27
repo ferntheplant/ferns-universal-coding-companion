@@ -21,10 +21,7 @@ export function headersForResolution(
   allowTargetOverride: boolean,
 ): Record<string, string | undefined> {
   const h = headers;
-  if (
-    h["x-target-url"] &&
-    !(allowTargetOverride && isLocalRemote(remoteAddr))
-  ) {
+  if (h["x-target-url"] && !(allowTargetOverride && isLocalRemote(remoteAddr))) {
     const { "x-target-url": _drop, ...rest } = h;
     return rest;
   }

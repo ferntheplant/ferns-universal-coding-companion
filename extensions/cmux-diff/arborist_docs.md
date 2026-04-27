@@ -68,7 +68,7 @@ const data = [
 Use all the defaults. The _initialData_ prop makes the tree an uncontrolled component. Create, move, rename, and delete will be handled internally.
 
 ```jsx
-import { Tree } from 'react-arborist';
+import { Tree } from "react-arborist";
 
 function App() {
   return <Tree initialData={data} />;
@@ -131,13 +131,7 @@ function App() {
   const onDelete = ({ ids }) => {};
 
   return (
-    <Tree
-      data={data}
-      onCreate={onCreate}
-      onRename={onRename}
-      onMove={onMove}
-      onDelete={onDelete}
-    />
+    <Tree data={data} onCreate={onCreate} onRename={onRename} onMove={onMove} onDelete={onDelete} />
   );
 }
 ```
@@ -254,7 +248,7 @@ const { ref, width, height } = useResizeObserver();
 
 <div className="parent" ref={ref}>
   <Tree height={height} width={width} />
-</div>
+</div>;
 ```
 
 ## API Reference
@@ -313,11 +307,7 @@ interface TreeProps<T> {
   disableDrop?:
     | string
     | boolean
-    | ((args: {
-        parentNode: NodeApi<T>;
-        dragNodes: NodeApi<T>[];
-        index: number;
-      }) => boolean);
+    | ((args: { parentNode: NodeApi<T>; dragNodes: NodeApi<T>[]; index: number }) => boolean);
 
   /* Event Handlers */
   onActivate?: (node: NodeApi<T>) => void;

@@ -43,12 +43,16 @@ process.on("SIGTERM", () => {
 });
 
 process.on("uncaughtException", (error) => {
-  void log(`uncaughtException: ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+  void log(
+    `uncaughtException: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+  );
   void shutdown(1);
 });
 
 process.on("unhandledRejection", (error) => {
-  void log(`unhandledRejection: ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+  void log(
+    `unhandledRejection: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+  );
   void shutdown(1);
 });
 

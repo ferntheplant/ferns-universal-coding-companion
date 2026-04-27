@@ -2,9 +2,11 @@
 name: slide-presentation
 description: create a presentation
 ---
+
 # Slide-document HTML guidance
 
 Use `templates/slides-doc-template.html` as the implementation base. It already contains:
+
 - full page shell
 - typography and color system
 - card/section layout
@@ -18,6 +20,7 @@ Your job is to replace the placeholder content with real sections/cards while pr
 ## Core idea
 
 This format is a **scrolling document that feels like a slide deck**:
+
 - each major section reads like a slide
 - each section can contain one or more cards
 - diagrams are embedded inline, not treated as separate apps
@@ -26,7 +29,9 @@ This format is a **scrolling document that feels like a slide deck**:
 ## Authoring rules
 
 ### 1. Keep the page shell
+
 Do not remove:
+
 - `<main class="page">`
 - `<header class="title-block">`
 - section wrappers: `<section class="section">`
@@ -34,6 +39,7 @@ Do not remove:
 - final `<script type="module">` Mermaid runtime
 
 ### 2. Use sections as slides
+
 Each slide-like unit should usually be:
 
 ```html
@@ -48,9 +54,11 @@ Each slide-like unit should usually be:
 ```
 
 ### 3. Put content inside cards
+
 Use cards for the actual payload.
 
 Common patterns:
+
 - `card pad decision`
 - `card pad tradeoff`
 - `card pad good`
@@ -58,6 +66,7 @@ Common patterns:
 - plain `card pad`
 
 Examples:
+
 - thesis card
 - comparison table card
 - diagram card
@@ -67,6 +76,7 @@ Examples:
 ## Supported content patterns
 
 ### Two-column synthesis card
+
 ```html
 <article class="card pad decision">
   <h3><span class="badge">Thesis</span> Card title</h3>
@@ -84,6 +94,7 @@ Examples:
 ```
 
 ### Stats row
+
 ```html
 <div class="stat-row">
   <div class="stat">
@@ -95,6 +106,7 @@ Examples:
 ```
 
 ### Mini-grid
+
 ```html
 <div class="mini-grid">
   <div class="mini-card card good">
@@ -105,13 +117,18 @@ Examples:
 ```
 
 ### Table card
+
 ```html
 <article class="card pad good">
   <h3><span class="badge">Table</span> Comparison</h3>
   <div class="table-wrap">
     <table>
-      <thead>...</thead>
-      <tbody>...</tbody>
+      <thead>
+        ...
+      </thead>
+      <tbody>
+        ...
+      </tbody>
     </table>
   </div>
 </article>
@@ -122,6 +139,7 @@ Examples:
 This is the most important part.
 
 ### Required structure
+
 A Mermaid card must use this exact nesting shape:
 
 ```html
@@ -144,8 +162,8 @@ A Mermaid card must use this exact nesting shape:
         <div class="mermaid mermaid-canvas"></div>
       </div>
       <script type="text/plain" class="diagram-source">
-flowchart LR
-  A[Start] --> B[End]
+        flowchart LR
+          A[Start] --> B[End]
       </script>
     </div>
   </div>
@@ -153,7 +171,9 @@ flowchart LR
 ```
 
 ### Critical constraint
+
 `.diagram-shell` must be the outer container for the diagram card, and all required descendants must live inside it:
+
 - `.mermaid-shell`
 - `.mermaid-wrap`
 - `.zoom-controls`
@@ -164,6 +184,7 @@ flowchart LR
 If this structure changes, the JS may not find the right nodes and the toolbar can get stuck on `Loading...`.
 
 ### Mermaid authoring tips
+
 - Prefer `flowchart LR` or `flowchart TB` for synthesis diagrams.
 - Use quoted HTML breaks instead of raw `\n` in labels:
   - good: `A["Strategy<br/>ReACT / RLM"]`
@@ -187,18 +208,23 @@ flowchart TB
 ## Writing guidance
 
 ### Title block
+
 Use the page header for:
+
 - source attribution
 - one strong headline
 - one lede paragraph
 
 Good pattern:
+
 - eyebrow = source or framing
 - h1 = strongest synthesized claim
 - lede = 2–3 sentence explanation
 
 ### Section style
+
 Each section should answer one question, such as:
+
 - what is the main thesis?
 - what layers or components matter?
 - what trade-offs shaped the conclusion?
@@ -206,7 +232,9 @@ Each section should answer one question, such as:
 - what build path or recommendation follows?
 
 ### Card style
+
 Each card should do one job:
+
 - summarize
 - compare
 - visualize
@@ -218,6 +246,7 @@ Avoid overloaded cards.
 ## Editing checklist
 
 Before finishing, verify:
+
 - page still scrolls vertically as a document
 - cards remain readable in light and dark mode
 - every Mermaid diagram renders on first load
@@ -227,7 +256,9 @@ Before finishing, verify:
 - tables remain horizontally scrollable if wide
 
 ## When to duplicate a diagram card
+
 If you need multiple diagrams, copy an entire `article.card.pad.diagram-shell` block and only change:
+
 - title
 - intro text
 - Mermaid source

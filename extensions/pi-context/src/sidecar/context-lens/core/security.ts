@@ -24,8 +24,7 @@ const TIER1_PATTERNS: PatternRule[] = [
   {
     id: "role_hijack_ignore",
     severity: "high",
-    pattern:
-      /ignore\s+(?:all\s+)?(?:previous|prior|above|earlier|preceding)\s+instructions/i,
+    pattern: /ignore\s+(?:all\s+)?(?:previous|prior|above|earlier|preceding)\s+instructions/i,
   },
   {
     id: "role_hijack_disregard",
@@ -102,8 +101,7 @@ const TIER1_PATTERNS: PatternRule[] = [
   {
     id: "html_hidden_text",
     severity: "medium",
-    pattern:
-      /<!--[\s\S]*?(?:ignore|instruction|system|prompt|override)[\s\S]*?-->/i,
+    pattern: /<!--[\s\S]*?(?:ignore|instruction|system|prompt|override)[\s\S]*?-->/i,
   },
   {
     id: "html_invisible_style",
@@ -147,10 +145,7 @@ const SUSPICIOUS_UNICODE: RegExp =
 // Scanner
 // ---------------------------------------------------------------------------
 
-function extractToolName(
-  msg: ParsedMessage,
-  allMessages: ParsedMessage[],
-): string | null {
+function extractToolName(msg: ParsedMessage, allMessages: ParsedMessage[]): string | null {
   if (!msg.contentBlocks) return null;
 
   // Build tool_use_id -> name map from all messages
@@ -240,9 +235,7 @@ function scanMessage(
   const unicodeMatch = SUSPICIOUS_UNICODE.exec(content);
   if (unicodeMatch) {
     // Count total suspicious chars
-    const count = (
-      content.match(new RegExp(SUSPICIOUS_UNICODE.source, "g")) || []
-    ).length;
+    const count = (content.match(new RegExp(SUSPICIOUS_UNICODE.source, "g")) || []).length;
     alerts.push({
       messageIndex,
       role: msg.role,
@@ -273,10 +266,7 @@ function scanMessage(
         });
         if (suppressed) continue;
       }
-      if (
-        rule.minEntropy !== undefined &&
-        shannonEntropy(capturedValue) < rule.minEntropy
-      ) {
+      if (rule.minEntropy !== undefined && shannonEntropy(capturedValue) < rule.minEntropy) {
         continue;
       }
       const redactedMatch = `[${rule.label} detected — value redacted]`;
@@ -305,11 +295,7 @@ export function scanSecurity(contextInfo: ContextInfo): SecurityResult {
   const alerts: SecurityAlert[] = [];
 
   for (let i = 0; i < contextInfo.messages.length; i++) {
-    const msgAlerts = scanMessage(
-      contextInfo.messages[i],
-      i,
-      contextInfo.messages,
-    );
+    const msgAlerts = scanMessage(contextInfo.messages[i], i, contextInfo.messages);
     alerts.push(...msgAlerts);
   }
 

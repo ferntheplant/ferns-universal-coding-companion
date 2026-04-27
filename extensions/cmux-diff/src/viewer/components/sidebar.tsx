@@ -60,7 +60,9 @@ export function Sidebar() {
             disableMultiSelection
             selection={activeFileId ?? undefined}
             searchTerm={filter.trim()}
-            searchMatch={(node, term) => node.data.path.toLowerCase().includes(term.trim().toLowerCase())}
+            searchMatch={(node, term) =>
+              node.data.path.toLowerCase().includes(term.trim().toLowerCase())
+            }
             onActivate={(node) => {
               if (node.data.kind === "file" && node.data.fileId) {
                 setActiveFileId(node.data.fileId);
@@ -118,9 +120,12 @@ function SidebarTreeRow({ node, style, dragHandle }: NodeRendererProps<SidebarTr
         <span className="sidebar-tree__icon" aria-hidden>
           📄
         </span>
-<span className="sidebar-tree__name">{data.name}</span>
+        <span className="sidebar-tree__name">{data.name}</span>
         {data.commentCount ? (
-          <span className="sidebar-tree__comment-count" title={`${data.commentCount} comment${data.commentCount === 1 ? "" : "s"}`}>
+          <span
+            className="sidebar-tree__comment-count"
+            title={`${data.commentCount} comment${data.commentCount === 1 ? "" : "s"}`}
+          >
             💬 {data.commentCount}
           </span>
         ) : null}
@@ -132,4 +137,3 @@ function SidebarTreeRow({ node, style, dragHandle }: NodeRendererProps<SidebarTr
     </div>
   );
 }
-

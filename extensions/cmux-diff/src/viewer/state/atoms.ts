@@ -32,7 +32,9 @@ export const submissionErrorAtom = atom<string | null>(null);
 export const reviewTokenAtom = atom((get) => get(bootstrapAtom)?.token ?? null);
 export const reviewStatusAtom = atom((get) => get(bootstrapAtom)?.status ?? "disposed");
 export const targetLabelAtom = atom((get) => get(bootstrapAtom)?.target ?? "Unknown target");
-export const fileCountAtom = atom((get) => get(reviewPayloadAtom)?.files.length ?? get(bootstrapAtom)?.fileCount ?? 0);
+export const fileCountAtom = atom(
+  (get) => get(reviewPayloadAtom)?.files.length ?? get(bootstrapAtom)?.fileCount ?? 0,
+);
 export const submitUrlAtom = atom((get) => get(bootstrapAtom)?.submitUrl ?? null);
 export const canSubmitAtom = atom((get) => {
   const status = get(reviewStatusAtom);

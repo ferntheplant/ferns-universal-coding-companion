@@ -58,7 +58,10 @@ function isTokenFresh(credential: PiOAuthCredential | undefined, nowMs = Date.no
   return nowMs + TOKEN_EXPIRY_SKEW_MS < credential.expires;
 }
 
-async function refreshOAuthAccessToken(providerId: PiOAuthProviderId, authData: PiAuthData): Promise<string | null> {
+async function refreshOAuthAccessToken(
+  providerId: PiOAuthProviderId,
+  authData: PiAuthData,
+): Promise<string | null> {
   try {
     const mod = await import("@mariozechner/pi-ai");
     const resolver = (mod as { getOAuthApiKey?: unknown }).getOAuthApiKey;
@@ -84,7 +87,9 @@ async function refreshOAuthAccessToken(providerId: PiOAuthProviderId, authData: 
   }
 }
 
-export async function resolveOAuthAccessToken(providerId: PiOAuthProviderId): Promise<OAuthAccessTokenResult> {
+export async function resolveOAuthAccessToken(
+  providerId: PiOAuthProviderId,
+): Promise<OAuthAccessTokenResult> {
   const auth = await readPiAuth();
   if (!auth) {
     return { accessToken: null, source: null };

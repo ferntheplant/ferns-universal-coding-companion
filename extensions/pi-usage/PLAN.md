@@ -5,23 +5,28 @@
 This plan supersedes the broad provider list in `BLUEPRINT.md` for the first autonomous implementation pass.
 
 v1 includes only:
+
 - OpenAI Codex
 - OpenCode Zen
 
 Post-v1 additions:
+
 - Cursor (OAuth + DashboardService usage endpoint)
 
 v1 commands:
+
 - `/usage`
 - `/usage-zen-login`
 
 v1 UX decisions:
+
 - `/usage` is a read-only overlay/dashboard
 - the dashboard shows all fetchable configured providers at once
 - the footer reflects only the currently active supported provider
 - unsupported active providers show no footer
 
 Deferred after v1:
+
 - Anthropic Claude
 - Google Gemini
 - Synthetic.new
@@ -30,10 +35,12 @@ Deferred after v1:
 ## Objectives
 
 Ship a Pi extension that proves the two main provider patterns cleanly:
+
 - OAuth-backed quota usage via Codex
 - extension-owned cookie auth plus HTML scraping via Zen
 
 The implementation should optimize for:
+
 - thin extension bootstrap
 - provider-specific logic isolated behind adapters
 - Node-compatible runtime behavior
@@ -42,6 +49,7 @@ The implementation should optimize for:
 ## Target File Layout
 
 Expected end-state layout:
+
 - `index.ts`
 - `src/extension/index.ts`
 - `src/extension/commands.ts`
@@ -65,6 +73,7 @@ Expected end-state layout:
 Use one adapter contract per provider. The command and footer layers must not know provider-specific auth or fetch details.
 
 Minimum adapter surface:
+
 - `id`
 - `label`
 - `detectActive(model): boolean`
@@ -80,6 +89,7 @@ Zen may also expose setup helpers through `zen-auth.ts`, but setup should stay o
 Use a normalized display model that supports both Codex and Zen without inventing percentages for Zen.
 
 Required section types for v1:
+
 - `percent_bar`
 - `amount_remaining`
 - `reset_timer`
@@ -89,6 +99,7 @@ Required section types for v1:
 ### 3. Runtime cache and polling
 
 Maintain in-memory state per provider:
+
 - last successful fetch time
 - last result
 - last auth error
@@ -96,6 +107,7 @@ Maintain in-memory state per provider:
 - in-flight fetch promise for deduplication
 
 Polling rules:
+
 - footer refresh interval: 2 minutes
 - refresh active provider immediately on `session_start`, `model_select`, and `turn_start`
 - `/usage` may fetch all configured providers on demand
@@ -112,9 +124,11 @@ Persist extension-owned Zen auth separately. Store only the minimum cookie field
 ### Milestone 0: Repo and runtime scaffold ✅ Complete (2026-04-16)
 
 Goal:
+
 - replace starter naming and starter command flow with `usage`-specific bootstrap
 
 Tasks:
+
 - update `src/extension/index.ts` to bootstrap the real extension lifecycle
 - replace starter commands in `src/extension/commands.ts` with `/usage` and `/usage-zen-login`
 - expand `src/extension/runtime.ts` from simple counters to extension runtime state
@@ -122,20 +136,24 @@ Tasks:
 - preserve `notifications.ts` as the shared user-facing notification layer
 
 Verification:
+
 - `bun run typecheck`
 - confirm the extension still loads in Pi with `/reload`
 - confirm `/usage` and `/usage-zen-login` are registered and callable, even if still stubbed
 
 Exit criteria:
+
 - no starter command names remain
 - the extension can load without runtime errors in Pi
 
 ### Milestone 1: Core provider framework ✅ Complete (2026-04-16)
 
 Goal:
+
 - establish the adapter system and runtime state before implementing provider details
 
 Tasks:
+
 - add `src/extension/providers/types.ts` for normalized result and section types
 - add `src/extension/providers/registry.ts` for provider registration and active-provider lookup
 - add runtime helpers for:
@@ -152,26 +170,31 @@ Tasks:
   - `session_shutdown`
 
 Verification:
+
 - `bun run typecheck`
 - manually trigger lifecycle events in Pi and confirm no crashes
 - confirm footer hide/show logic can be invoked with stub provider data
 
 Smoke test:
+
 1. Load the extension in Pi.
 2. Select an unsupported model.
 3. Confirm no footer remains visible.
 4. Switch to a stubbed supported provider path and confirm the footer can be set and cleared cleanly.
 
 Exit criteria:
+
 - provider-independent runtime and UI plumbing exist
 - event lifecycle and cleanup are explicit
 
 ### Milestone 2: Codex provider ✅ Complete (2026-04-16)
 
 Goal:
+
 - implement the OAuth-backed quota pattern cleanly for one supported provider
 
 Tasks:
+
 - add `src/extension/auth/pi-auth.ts` to read Pi auth material from `~/.pi/agent/auth.json`
 - add `src/extension/providers/codex.ts`
 - implement Codex auth detection using Pi OAuth storage for `openai-codex`
@@ -184,12 +207,14 @@ Tasks:
 - add defensive handling for missing auth, expired auth, and partial payloads
 
 Verification:
+
 - `bun run typecheck`
 - run `/usage` while authenticated to Codex and confirm Codex appears
 - run `/usage` while not authenticated to Codex and confirm Codex is omitted rather than shown as broken
 - switch to a Codex model and confirm footer appears and updates
 
 Smoke tests:
+
 1. Authenticate to Codex in Pi.
 2. Reload the extension.
 3. Select a Codex model.
@@ -200,15 +225,18 @@ Smoke tests:
 8. Confirm the footer refreshes without duplicate toasts or visible flicker.
 
 Exit criteria:
+
 - Codex works end to end in both footer and dashboard flows
 - missing Codex auth does not break `/usage`
 
 ### Milestone 3: Zen auth bootstrap and storage ✅ Complete (2026-04-16)
 
 Goal:
+
 - implement the extension-owned auth path needed for Zen balance scraping
 
 Tasks:
+
 - add `src/extension/auth/zen-auth.ts`
 - add `src/extension/storage.ts` for persistent extension-owned storage
 - implement `/usage-zen-login` flow:
@@ -222,12 +250,14 @@ Tasks:
 - provide clear user-facing failure reasons for malformed curl input or unauthenticated balance fetches
 
 Verification:
+
 - `bun run typecheck`
 - run `/usage-zen-login` with invalid text and confirm the error is actionable
 - run `/usage-zen-login` with a valid copied request and confirm storage occurs only after validation
 - restart or reload the extension and confirm persisted Zen auth is still usable
 
 Smoke tests:
+
 1. Run `/usage-zen-login`.
 2. Paste malformed text and confirm validation fails without saving auth.
 3. Run `/usage-zen-login` again with a real copied dashboard request.
@@ -236,15 +266,18 @@ Smoke tests:
 6. Confirm Zen remains configured without re-pasting credentials.
 
 Exit criteria:
+
 - Zen login flow is reliable enough for repeated setup and recovery
 - extension-owned storage is separate from Pi auth
 
 ### Milestone 4: Zen provider ✅ Complete (2026-04-16)
 
 Goal:
+
 - implement the HTML-scrape balance pattern and integrate it into footer/dashboard flows
 
 Tasks:
+
 - add `src/extension/providers/zen.ts`
 - fetch the Zen dashboard page using stored cookies
 - parse server-rendered HTML for `data-slot="balance-value"`
@@ -257,12 +290,14 @@ Tasks:
 - on unauthenticated responses, surface guidance to rerun `/usage-zen-login`
 
 Verification:
+
 - `bun run typecheck`
 - run `/usage` with valid Zen auth and confirm Zen appears with exact balance
 - activate a Zen model and confirm footer shows compact balance text
 - intentionally invalidate cookies and confirm `/usage` handles the auth failure without crashing
 
 Smoke tests:
+
 1. Complete `/usage-zen-login`.
 2. Select a Zen-backed model.
 3. Confirm the footer shows `Zen balance $...`.
@@ -273,14 +308,17 @@ Smoke tests:
 8. Confirm the dashboard shows a Zen-specific auth recovery message and the rest of the extension still works.
 
 Exit criteria:
+
 - Zen works end to end with setup, persistence, fetch, parse, and recovery messaging
 
 ### Milestone 5: `/usage` dashboard integration and release hardening ✅ Complete (2026-04-16)
 
 Goal:
+
 - make the two-provider dashboard the real user-facing surface and harden failure cases
 
 Tasks:
+
 - finish dashboard rendering for:
   - loading state
   - partial success
@@ -301,10 +339,12 @@ Tasks:
   - known limitations and deferred providers
 
 Verification:
+
 - `bun run typecheck`
 - do one full Pi verification pass covering both providers and unsupported models
 
 Smoke test:
+
 1. Configure Codex auth only.
 2. Run `/usage` and confirm only Codex appears.
 3. Configure Zen auth as well.
@@ -315,6 +355,7 @@ Smoke test:
 8. Confirm polling stops and the footer is cleared.
 
 Exit criteria:
+
 - `/usage` is usable as the primary dashboard
 - footer behavior is trustworthy
 - README contains enough setup and smoke-test guidance for future agents
@@ -322,6 +363,7 @@ Exit criteria:
 ## Implementation Order Inside Each Milestone
 
 Agents should follow this order unless blocked:
+
 1. add or reshape types
 2. add provider/auth/storage internals
 3. wire runtime lifecycle
@@ -333,10 +375,12 @@ Agents should follow this order unless blocked:
 ## Verification Strategy
 
 Primary verification:
+
 - `bun run typecheck`
 - real Pi smoke tests
 
 Do not spend early time building a broad automated test suite. If isolated helpers are created and trivially testable, the best candidates are:
+
 - Zen curl parsing
 - Zen balance HTML extraction
 - provider active-model detection
@@ -365,6 +409,7 @@ Even if helper tests are added later, they do not replace the required Pi smoke 
 ## Done Definition For v1
 
 v1 is done when all of the following are true:
+
 - `/usage` works as a read-only dashboard in Pi
 - Codex appears only when Pi auth is available and fetch succeeds
 - Zen appears only when extension-owned auth is present and fetch succeeds
@@ -376,6 +421,7 @@ v1 is done when all of the following are true:
 ## Post-v1 Follow-On Work
 
 Once v1 is stable, future milestones can add:
+
 - Anthropic Claude adapter
 - Google Gemini adapter
 - Synthetic.new adapter

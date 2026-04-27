@@ -36,10 +36,7 @@ export function extractResponseId(responseData: any): string | null {
         // carry the full response object including its id
         if (parsed.response?.id) return parsed.response.id;
         // Direct id on the event object (some streaming formats)
-        if (
-          parsed.type === "response.completed" ||
-          parsed.type === "response.created"
-        ) {
+        if (parsed.type === "response.completed" || parsed.type === "response.created") {
           if (parsed.id) return parsed.id;
         }
       } catch {
@@ -94,53 +91,35 @@ export function parseResponseUsage(responseData: any): ParsedResponseUsage {
   }
 
   // Gemini usageMetadata (direct or inside Code Assist wrapper .response)
-  const geminiResp = responseData.usageMetadata
-    ? responseData
-    : responseData.response;
+  const geminiResp = responseData.usageMetadata ? responseData : responseData.response;
   if (geminiResp?.usageMetadata) {
     const u = geminiResp.usageMetadata;
     const prompt = u.promptTokenCount || 0;
     const cached = u.cachedContentTokenCount || 0;
     // Gemini's promptTokenCount includes cached tokens; subtract to get non-cached input
     result.inputTokens = prompt - cached;
-    result.outputTokens =
-      u.candidatesTokenCount || u.totalTokenCount - prompt || 0;
+    result.outputTokens = u.candidatesTokenCount || u.totalTokenCount - prompt || 0;
     result.cacheReadTokens = cached;
     result.thinkingTokens = u.thoughtsTokenCount || 0;
   }
 
   result.model =
-    responseData.model ||
-    responseData.modelVersion ||
-    geminiResp?.modelVersion ||
-    null;
+    responseData.model || responseData.modelVersion || geminiResp?.modelVersion || null;
 
   if (responseData.stop_reason) {
     result.finishReasons = [responseData.stop_reason];
   } else if (responseData.choices && Array.isArray(responseData.choices)) {
-    result.finishReasons = responseData.choices
-      .map((c: any) => c.finish_reason)
-      .filter(Boolean);
-  } else if (
-    responseData.candidates &&
-    Array.isArray(responseData.candidates)
-  ) {
-    result.finishReasons = responseData.candidates
-      .map((c: any) => c.finishReason)
-      .filter(Boolean);
+    result.finishReasons = responseData.choices.map((c: any) => c.finish_reason).filter(Boolean);
+  } else if (responseData.candidates && Array.isArray(responseData.candidates)) {
+    result.finishReasons = responseData.candidates.map((c: any) => c.finishReason).filter(Boolean);
   } else if (geminiResp?.candidates && Array.isArray(geminiResp.candidates)) {
-    result.finishReasons = geminiResp.candidates
-      .map((c: any) => c.finishReason)
-      .filter(Boolean);
+    result.finishReasons = geminiResp.candidates.map((c: any) => c.finishReason).filter(Boolean);
   }
 
   return result;
 }
 
-function parseStreamingUsage(
-  chunks: string,
-  result: ParsedResponseUsage,
-): ParsedResponseUsage {
+function parseStreamingUsage(chunks: string, result: ParsedResponseUsage): ParsedResponseUsage {
   // Parse SSE events looking for usage data
   const lines = chunks.split("\n");
   for (const line of lines) {
@@ -156,10 +135,8 @@ function parseStreamingUsage(
         result.model = parsed.message.model || result.model;
         if (parsed.message.usage) {
           result.inputTokens = parsed.message.usage.input_tokens || 0;
-          result.cacheReadTokens =
-            parsed.message.usage.cache_read_input_tokens || 0;
-          result.cacheWriteTokens =
-            parsed.message.usage.cache_creation_input_tokens || 0;
+          result.cacheReadTokens = parsed.message.usage.cache_read_input_tokens || 0;
+          result.cacheWriteTokens = parsed.message.usage.cache_creation_input_tokens || 0;
         }
       }
 
@@ -169,25 +146,20 @@ function parseStreamingUsage(
           result.finishReasons = [parsed.delta.stop_reason];
         }
         if (parsed.usage) {
-          result.outputTokens =
-            parsed.usage.output_tokens || result.outputTokens;
+          result.outputTokens = parsed.usage.output_tokens || result.outputTokens;
         }
       }
 
       // OpenAI streaming: final chunk with usage
       if (parsed.usage && parsed.choices) {
         result.inputTokens = parsed.usage.prompt_tokens || result.inputTokens;
-        result.outputTokens =
-          parsed.usage.completion_tokens || result.outputTokens;
-        result.thinkingTokens =
-          parsed.usage.reasoning_tokens || result.thinkingTokens;
+        result.outputTokens = parsed.usage.completion_tokens || result.outputTokens;
+        result.thinkingTokens = parsed.usage.reasoning_tokens || result.thinkingTokens;
         if (parsed.usage.completion_tokens_details?.reasoning_tokens) {
-          result.thinkingTokens =
-            parsed.usage.completion_tokens_details.reasoning_tokens;
+          result.thinkingTokens = parsed.usage.completion_tokens_details.reasoning_tokens;
         }
         if (parsed.usage.prompt_tokens_details?.cached_tokens) {
-          result.cacheReadTokens =
-            parsed.usage.prompt_tokens_details.cached_tokens;
+          result.cacheReadTokens = parsed.usage.prompt_tokens_details.cached_tokens;
           // OpenAI's prompt_tokens includes cached tokens; subtract to normalize
           if (parsed.usage.prompt_tokens) {
             result.inputTokens -= result.cacheReadTokens;
@@ -206,10 +178,8 @@ function parseStreamingUsage(
           result.inputTokens = prompt - cached;
           result.cacheReadTokens = cached;
         }
-        result.outputTokens =
-          parsed.usageMetadata.candidatesTokenCount || result.outputTokens;
-        result.thinkingTokens =
-          parsed.usageMetadata.thoughtsTokenCount || result.thinkingTokens;
+        result.outputTokens = parsed.usageMetadata.candidatesTokenCount || result.outputTokens;
+        result.thinkingTokens = parsed.usageMetadata.thoughtsTokenCount || result.thinkingTokens;
       }
       if (parsed.candidates?.[0]?.finishReason) {
         result.finishReasons = [parsed.candidates[0].finishReason];

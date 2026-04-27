@@ -1,7 +1,16 @@
 import { randomUUID } from "node:crypto";
-import { estimateTokens, extractLastAssistantMessage, parseContextInfo } from "./context-lens/core.js";
+import {
+  estimateTokens,
+  extractLastAssistantMessage,
+  parseContextInfo,
+} from "./context-lens/core.js";
 import type { Store } from "./context-lens/server/store.js";
-import type { CapturedEntry, ContextInfo, RequestMeta, ResponseData } from "./context-lens/types.js";
+import type {
+  CapturedEntry,
+  ContextInfo,
+  RequestMeta,
+  ResponseData,
+} from "./context-lens/types.js";
 
 interface PiTurnLike {
   sessionId: string;
@@ -111,8 +120,9 @@ export class PiIngestPipeline {
         ...timings,
         tokens_per_second:
           timings.receive_ms > 0
-            ? Math.round((extractOutputTokens(turn.assistantMessage) / timings.receive_ms) * 1000 * 10) /
-              10
+            ? Math.round(
+                (extractOutputTokens(turn.assistantMessage) / timings.receive_ms) * 1000 * 10,
+              ) / 10
             : null,
       },
       requestBytes,
@@ -238,9 +248,7 @@ function normalizeSpikeTurnPayload(value: Record<string, unknown>): PiTurnLike {
     sessionId: String(session?.sessionId ?? randomUUID()),
     systemPrompt: asString(session?.systemPrompt),
     timestamp:
-      asIsoString(turn?.endedAt) ??
-      asIsoString(turn?.startedAt) ??
-      new Date().toISOString(),
+      asIsoString(turn?.endedAt) ?? asIsoString(turn?.startedAt) ?? new Date().toISOString(),
     sessionStartedAt: asIsoString(turn?.startedAt),
     model: {
       provider: asString(model?.provider),
@@ -628,9 +636,7 @@ function computeTimings(timestamps: {
   responseStartedAt: string | null;
   assistantCompletedAt: string | null;
 }): { send_ms: number; wait_ms: number; receive_ms: number; total_ms: number } {
-  const requestStart = timestamps.requestStartedAt
-    ? Date.parse(timestamps.requestStartedAt)
-    : null;
+  const requestStart = timestamps.requestStartedAt ? Date.parse(timestamps.requestStartedAt) : null;
   const responseStart = timestamps.responseStartedAt
     ? Date.parse(timestamps.responseStartedAt)
     : null;

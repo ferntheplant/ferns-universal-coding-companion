@@ -1,8 +1,4 @@
-import type {
-  ContextInfo,
-  HeaderSignature,
-  SourceSignature,
-} from "../types.js";
+import type { ContextInfo, HeaderSignature, SourceSignature } from "../types.js";
 
 /**
  * Header signatures used to infer which CLI/tool produced a request.
@@ -37,40 +33,28 @@ export const SOURCE_SIGNATURES: SourceSignature[] = [
  */
 // Provider names used as bare source tags are not tool identifiers.
 // When we see one, fall through to header/system-prompt detection.
-export const PROVIDER_NAMES = new Set([
-  "anthropic",
-  "openai",
-  "gemini",
-  "chatgpt",
-]);
+export const PROVIDER_NAMES = new Set(["anthropic", "openai", "gemini", "chatgpt"]);
 
 export function detectSource(
   contextInfo: ContextInfo,
   source: string | null,
   headers?: Record<string, string>,
 ): string {
-  if (source && source !== "unknown" && !PROVIDER_NAMES.has(source))
-    return source;
+  if (source && source !== "unknown" && !PROVIDER_NAMES.has(source)) return source;
 
   // Primary: check request headers
   if (headers) {
     for (const sig of HEADER_SIGNATURES) {
       const val = headers[sig.header];
       if (!val) continue;
-      if (
-        sig.pattern instanceof RegExp
-          ? sig.pattern.test(val)
-          : val.includes(sig.pattern)
-      ) {
+      if (sig.pattern instanceof RegExp ? sig.pattern.test(val) : val.includes(sig.pattern)) {
         return sig.source;
       }
     }
   }
 
   // Fallback: check system prompt content
-  const systemText = (contextInfo.systemPrompts || [])
-    .map((sp) => sp.content)
-    .join("\n");
+  const systemText = (contextInfo.systemPrompts || []).map((sp) => sp.content).join("\n");
   for (const sig of SOURCE_SIGNATURES) {
     if (systemText.includes(sig.pattern)) return sig.source;
   }

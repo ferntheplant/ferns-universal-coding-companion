@@ -136,7 +136,8 @@ export function fetchProviderUsageWithCache(
 
   const cachedResult = cache.lastResult;
   const isFresh =
-    cache.lastSuccessAt !== null && Date.now() - cache.lastSuccessAt < runtimeState.cacheFreshnessMs;
+    cache.lastSuccessAt !== null &&
+    Date.now() - cache.lastSuccessAt < runtimeState.cacheFreshnessMs;
 
   if (!forceRefresh && cachedResult && isFresh) {
     return Promise.resolve(cachedResult);

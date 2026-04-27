@@ -21,11 +21,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type {
-  ImportedMessage,
-  ImportedSession,
-  ImportedTurn,
-} from "./types.js";
+import type { ImportedMessage, ImportedSession, ImportedTurn } from "./types.js";
 
 interface CodexLine {
   timestamp: string;
@@ -43,9 +39,7 @@ function defaultCodexDir(): string {
   return path.join(os.homedir(), ".codex", "sessions");
 }
 
-export function discoverCodexSessions(
-  baseDir: string = defaultCodexDir(),
-): string[] {
+export function discoverCodexSessions(baseDir: string = defaultCodexDir()): string[] {
   if (!fs.existsSync(baseDir)) return [];
   const files: string[] = [];
 
@@ -94,9 +88,7 @@ export function parseCodexSession(filePath: string): ImportedSession | null {
   if (!sessionId) return null;
 
   const cwd = (meta.cwd as string) ?? null;
-  const gitBranch =
-    ((meta.git as Record<string, unknown> | undefined)?.branch as string) ??
-    null;
+  const gitBranch = ((meta.git as Record<string, unknown> | undefined)?.branch as string) ?? null;
 
   // Find model from turn_context lines
   let model = "gpt-4o";
@@ -141,8 +133,7 @@ export function parseCodexSession(filePath: string): ImportedSession | null {
   // Everything before the first assistant message is the initial user context.
   const turns: ImportedTurn[] = [];
   let currentItems: Record<string, unknown>[] = [];
-  let currentTimestamp =
-    responseItems[0]?.timestamp ?? new Date().toISOString();
+  let currentTimestamp = responseItems[0]?.timestamp ?? new Date().toISOString();
   let tokenCountIndex = 0;
 
   // Accumulated messages across all turns (context window snapshot per turn)

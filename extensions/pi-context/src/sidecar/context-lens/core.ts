@@ -17,10 +17,7 @@ export {
 } from "./core/conversation.js";
 
 export { computeHealthScore } from "./core/health.js";
-export {
-  estimateCost,
-  getContextLimit,
-} from "./core/models.js";
+export { estimateCost, getContextLimit } from "./core/models.js";
 export { extractLastAssistantMessage, parseContextInfo } from "./core/parse.js";
 export {
   detectApiFormat,

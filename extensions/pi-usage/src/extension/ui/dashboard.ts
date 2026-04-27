@@ -46,7 +46,10 @@ export function createErrorCard(
   };
 }
 
-export function createReadyCard(result: ProviderUsageResult, isActive: boolean): DashboardProviderCard {
+export function createReadyCard(
+  result: ProviderUsageResult,
+  isActive: boolean,
+): DashboardProviderCard {
   return {
     providerId: result.providerId,
     providerLabel: result.providerLabel,
@@ -80,7 +83,9 @@ export function renderDashboardAsLines(model: DashboardViewModel): string[] {
   const ready = model.providers.filter((provider) => provider.status === "ready").length;
   const errored = model.providers.filter((provider) => provider.status === "error").length;
   const lines: string[] = [];
-  lines.push(`Usage dashboard (${ready}/${model.providers.length} healthy${errored > 0 ? `, ${errored} error` : ""})`);
+  lines.push(
+    `Usage dashboard (${ready}/${model.providers.length} healthy${errored > 0 ? `, ${errored} error` : ""})`,
+  );
   for (const provider of model.providers) {
     const activeTag = provider.isActive ? " [active]" : "";
     lines.push(`${provider.providerLabel}${activeTag}`);
@@ -107,7 +112,9 @@ export function renderDashboardAsLines(model: DashboardViewModel): string[] {
           break;
         }
         case "amount_remaining":
-          lines.push(`  - ${section.label}: ${section.value}${section.detail ? ` (${section.detail})` : ""}`);
+          lines.push(
+            `  - ${section.label}: ${section.value}${section.detail ? ` (${section.detail})` : ""}`,
+          );
           break;
         case "reset_timer": {
           const baseLabel = baseLabelForResetTimer(section.label);

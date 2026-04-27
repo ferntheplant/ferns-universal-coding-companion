@@ -81,7 +81,10 @@ async function handleNodeHttpRequest(req: IncomingMessage, res: ServerResponse):
     const path = req.url ?? "/";
     const url = `http://${host}${path}`;
 
-    const body = method === "GET" || method === "HEAD" ? undefined : Buffer.from(await withNodeRequestBody(req));
+    const body =
+      method === "GET" || method === "HEAD"
+        ? undefined
+        : Buffer.from(await withNodeRequestBody(req));
 
     const request = new Request(url, {
       method,

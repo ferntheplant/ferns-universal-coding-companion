@@ -1,11 +1,14 @@
 {
   "name": "@fuc/pi-model-system-prompts",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "module": "index.ts",
   "scripts": {
     "dev": "bun run index.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "catalog:",
@@ -15,8 +18,5 @@
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "catalog:",
     "typescript": "catalog:"
-  },
-  "dependencies": {
-    "gray-matter": "^4.0.3"
   }
 }

@@ -22,7 +22,8 @@ interface CursorUsagePayload {
   };
 }
 
-const CURSOR_USAGE_URL = "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage";
+const CURSOR_USAGE_URL =
+  "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage";
 
 function clampPercent(value: number): number {
   if (!Number.isFinite(value)) {
@@ -130,7 +131,9 @@ function toCursorSections(payload: CursorUsagePayload): DashboardSection[] {
 
   const demandLimit = toDollarsLabel(payload.spendLimitUsage?.individualLimit);
   if (demandLimit) {
-    const limitType = payload.spendLimitUsage?.limitType ? ` (${payload.spendLimitUsage.limitType})` : "";
+    const limitType = payload.spendLimitUsage?.limitType
+      ? ` (${payload.spendLimitUsage.limitType})`
+      : "";
     sections.push({
       type: "info_line",
       label: "On-demand limit",
@@ -207,15 +210,21 @@ export const cursorProvider: ProviderAdapter = {
     const payload = await fetchCursorPayload(ctx);
     const sections = toCursorSections(payload);
 
-    const totalSection = sections.find((section) => section.type === "percent_bar" && section.label === "Included total");
-    const apiSection = sections.find((section) => section.type === "percent_bar" && section.label === "API included");
+    const totalSection = sections.find(
+      (section) => section.type === "percent_bar" && section.label === "Included total",
+    );
+    const apiSection = sections.find(
+      (section) => section.type === "percent_bar" && section.label === "API included",
+    );
     const resetSection = sections.find(
       (section) => section.type === "reset_timer" && section.label === "Billing cycle resets in",
     );
 
-    const totalPercent = totalSection?.type === "percent_bar" ? Math.round(totalSection.percent) : 0;
+    const totalPercent =
+      totalSection?.type === "percent_bar" ? Math.round(totalSection.percent) : 0;
     const apiPercent = apiSection?.type === "percent_bar" ? Math.round(apiSection.percent) : 0;
-    const resetCompact = resetSection?.type === "reset_timer" ? compactDurationLabel(resetSection.value) : "";
+    const resetCompact =
+      resetSection?.type === "reset_timer" ? compactDurationLabel(resetSection.value) : "";
 
     return {
       providerId: "cursor",

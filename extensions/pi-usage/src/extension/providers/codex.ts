@@ -147,8 +147,12 @@ export const codexProvider: ProviderAdapter = {
     const payload = await fetchCodexPayload(ctx);
     const sections = toCodexSections(payload);
 
-    const session = sections.find((section) => section.type === "percent_bar" && section.label === "Session");
-    const weekly = sections.find((section) => section.type === "percent_bar" && section.label === "Weekly");
+    const session = sections.find(
+      (section) => section.type === "percent_bar" && section.label === "Session",
+    );
+    const weekly = sections.find(
+      (section) => section.type === "percent_bar" && section.label === "Weekly",
+    );
 
     const sessionPercent = session?.type === "percent_bar" ? Math.round(session.percent) : 0;
     const weeklyPercent = weekly?.type === "percent_bar" ? Math.round(weekly.percent) : 0;

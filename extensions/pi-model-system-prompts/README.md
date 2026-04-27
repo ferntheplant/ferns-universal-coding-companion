@@ -29,6 +29,7 @@ Example exact match:
 models:
   - anthropic/claude-sonnet-4-5
 ---
+
 Use concise plans. Prefer anchored edits. Re-read before multi-file refactors.
 ```
 
@@ -39,6 +40,7 @@ Example provider wildcard:
 models:
   - anthropic/*
 ---
+
 Prefer explicit progress narration only when a task spans multiple files.
 ```
 
@@ -47,8 +49,9 @@ Example model-id wildcard across providers:
 ```md
 ---
 models:
-  - '*/gpt-5'
+  - "*/gpt-5"
 ---
+
 Bias toward direct action over long speculative planning.
 ```
 

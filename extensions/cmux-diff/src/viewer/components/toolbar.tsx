@@ -12,7 +12,11 @@ import {
   setSubmissionErrorAtom,
   reviewTokenAtom,
 } from "../state/atoms";
-import { totalDraftCommentCountAtom, buildSubmissionPayloadAtom, clearAllCommentsAtom } from "../state/comments";
+import {
+  totalDraftCommentCountAtom,
+  buildSubmissionPayloadAtom,
+  clearAllCommentsAtom,
+} from "../state/comments";
 import { reviewPayloadAtom } from "../state/atoms";
 import { diffViewModeAtom, sidebarOpenAtom, wordWrapAtom } from "../state/ui";
 import { submitReviewComments } from "../lib/api";

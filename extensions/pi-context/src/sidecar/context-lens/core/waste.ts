@@ -38,11 +38,7 @@ import { estimateCost } from "./models.js";
 
 export interface WasteCategory {
   /** Machine key */
-  id:
-    | "unused_tools"
-    | "oversized_results"
-    | "repeated_system"
-    | "thinking_spill";
+  id: "unused_tools" | "oversized_results" | "repeated_system" | "thinking_spill";
   /** Human label */
   label: string;
   /** Total wasted tokens across all turns */
@@ -209,9 +205,7 @@ function analyseUnusedTools(
  * per-result breakdowns (that would require message-level analysis). We use
  * the excess above the threshold as a conservative lower bound.
  */
-function analyseOversizedResults(
-  entries: ProjectedEntry[],
-): Array<[number, number]> {
+function analyseOversizedResults(entries: ProjectedEntry[]): Array<[number, number]> {
   return entries.map((e, i) => {
     const resultTokens = categoryTokens(e.composition, "tool_results");
     const waste = Math.max(0, resultTokens - OVERSIZED_RESULT_THRESHOLD);
@@ -231,9 +225,7 @@ function analyseOversizedResults(
  * first turn is where the system prompt is genuinely needed. Subsequent
  * repetitions are structural overhead.
  */
-function analyseRepeatedSystem(
-  entries: ProjectedEntry[],
-): Array<[number, number]> {
+function analyseRepeatedSystem(entries: ProjectedEntry[]): Array<[number, number]> {
   return entries.map((e, i) => {
     if (i === 0) return [i, 0] as [number, number];
     const sysTokens =
@@ -249,16 +241,13 @@ function analyseRepeatedSystem(
  * Thinking blocks beyond 40% of context are counted as spill. At that ratio
  * the thinking cost likely exceeds the value it adds (pure heuristic).
  */
-function analyseThinkingSpill(
-  entries: ProjectedEntry[],
-): Array<[number, number]> {
+function analyseThinkingSpill(entries: ProjectedEntry[]): Array<[number, number]> {
   return entries.map((e, i) => {
     const total = totalTokens(e.composition);
     if (total === 0) return [i, 0] as [number, number];
     const thinkTokens = categoryTokens(e.composition, "thinking");
     const thinkFraction = thinkTokens / total;
-    if (thinkFraction <= THINKING_SPILL_THRESHOLD)
-      return [i, 0] as [number, number];
+    if (thinkFraction <= THINKING_SPILL_THRESHOLD) return [i, 0] as [number, number];
     const spill = Math.round(thinkTokens - total * THINKING_SPILL_THRESHOLD);
     return [i, spill] as [number, number];
   });
@@ -322,10 +311,7 @@ export function computeWasteAnalysis(entries: ProjectedEntry[]): WasteAnalysis {
   }
 
   // Run per-category analysers
-  const { perTurn: unusedPerTurn, unusedNames } = analyseUnusedTools(
-    good,
-    sessionCalledTools,
-  );
+  const { perTurn: unusedPerTurn, unusedNames } = analyseUnusedTools(good, sessionCalledTools);
   const oversizedPerTurn = analyseOversizedResults(good);
   const systemPerTurn = analyseRepeatedSystem(good);
   const thinkingPerTurn = analyseThinkingSpill(good);
@@ -377,8 +363,7 @@ export function computeWasteAnalysis(entries: ProjectedEntry[]): WasteAnalysis {
     return s + c.costUsd;
   }, 0);
 
-  const wasteRatio =
-    totalInputTokens > 0 ? totalWasteTokens / totalInputTokens : 0;
+  const wasteRatio = totalInputTokens > 0 ? totalWasteTokens / totalInputTokens : 0;
 
   return {
     totalInputTokens,

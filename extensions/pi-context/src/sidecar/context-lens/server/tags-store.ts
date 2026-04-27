@@ -59,10 +59,7 @@ export class TagsStore {
       fs.writeFileSync(this.tagsFile, JSON.stringify(obj, null, 2));
       this.dirty = false;
     } catch (err: unknown) {
-      console.error(
-        "Tags save error:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("Tags save error:", err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -75,15 +72,12 @@ export class TagsStore {
   setTags(conversationId: string, tags: string[]): void {
     // Normalize tags
     const normalized = [
-      ...new Set(
-        tags.map((t) => t.trim().toLowerCase()).filter((t) => t.length > 0),
-      ),
+      ...new Set(tags.map((t) => t.trim().toLowerCase()).filter((t) => t.length > 0)),
     ];
 
     const existing = this.tags.get(conversationId) ?? [];
     const changed =
-      normalized.length !== existing.length ||
-      !normalized.every((t, i) => t === existing[i]);
+      normalized.length !== existing.length || !normalized.every((t, i) => t === existing[i]);
 
     if (!changed) return;
 

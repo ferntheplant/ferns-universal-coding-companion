@@ -70,7 +70,9 @@ function parseZenAuth(value: unknown): ZenAuthRecord | null {
   };
 }
 
-export async function readExtensionStorage(storageFile = EXTENSION_STORAGE_FILE): Promise<ExtensionStorageData> {
+export async function readExtensionStorage(
+  storageFile = EXTENSION_STORAGE_FILE,
+): Promise<ExtensionStorageData> {
   try {
     const raw = await readFile(storageFile, "utf-8");
     const parsed = JSON.parse(raw) as unknown;
@@ -88,12 +90,17 @@ export async function readExtensionStorage(storageFile = EXTENSION_STORAGE_FILE)
   }
 }
 
-export async function writeExtensionStorage(data: ExtensionStorageData, storageFile = EXTENSION_STORAGE_FILE): Promise<void> {
+export async function writeExtensionStorage(
+  data: ExtensionStorageData,
+  storageFile = EXTENSION_STORAGE_FILE,
+): Promise<void> {
   await mkdir(path.dirname(storageFile), { recursive: true });
   await writeFile(storageFile, JSON.stringify(data, null, 2), "utf-8");
 }
 
-export async function getZenAuthRecord(storageFile = EXTENSION_STORAGE_FILE): Promise<ZenAuthRecord | null> {
+export async function getZenAuthRecord(
+  storageFile = EXTENSION_STORAGE_FILE,
+): Promise<ZenAuthRecord | null> {
   const storage = await readExtensionStorage(storageFile);
   if (storage.zenAuth) {
     return storage.zenAuth;
@@ -112,7 +119,10 @@ export async function getZenAuthRecord(storageFile = EXTENSION_STORAGE_FILE): Pr
   return legacy.zenAuth;
 }
 
-export async function setZenAuthRecord(record: ZenAuthRecord, storageFile = EXTENSION_STORAGE_FILE): Promise<void> {
+export async function setZenAuthRecord(
+  record: ZenAuthRecord,
+  storageFile = EXTENSION_STORAGE_FILE,
+): Promise<void> {
   const storage = await readExtensionStorage(storageFile);
   await writeExtensionStorage(
     {

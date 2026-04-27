@@ -61,10 +61,7 @@ function callKey(name: string, input: Record<string, unknown>): string {
 }
 
 /** Extract a path/command string from a tool_use input for re-fetch detection */
-function extractPathArg(
-  _toolName: string,
-  input: Record<string, unknown>,
-): string | null {
+function extractPathArg(_toolName: string, input: Record<string, unknown>): string | null {
   const PATH_KEYS = ["path", "file", "filename", "filepath", "command", "cmd"];
   for (const key of PATH_KEYS) {
     if (typeof input[key] === "string") return input[key] as string;
@@ -81,14 +78,7 @@ function extractPathArg(
  * Excludes bash/shell/execute: running the same command twice is often
  * intentional (e.g. checking filesystem state after an action).
  */
-const PURE_READ_TOOLS = new Set([
-  "read",
-  "read_file",
-  "readfile",
-  "cat",
-  "view",
-  "open",
-]);
+const PURE_READ_TOOLS = new Set(["read", "read_file", "readfile", "cat", "view", "open"]);
 
 function isReadLikeTool(name: string): boolean {
   return PURE_READ_TOOLS.has(name.toLowerCase());
@@ -115,9 +105,7 @@ function isErrorResult(content: string): boolean {
 function resultContent(block: ToolResultBlock): string {
   if (typeof block.content === "string") return block.content;
   if (Array.isArray(block.content)) {
-    return block.content
-      .map((b) => ("text" in b ? (b as { text: string }).text : ""))
-      .join("\n");
+    return block.content.map((b) => ("text" in b ? (b as { text: string }).text : "")).join("\n");
   }
   return "";
 }
@@ -335,10 +323,7 @@ export function detectToolPatterns(
   const results = extractToolResults(messages);
   const resultMap = buildResultMap(results);
 
-  const { findings: refetchFindings, fetchedPaths } = detectRefetches(
-    calls,
-    resultMap,
-  );
+  const { findings: refetchFindings, fetchedPaths } = detectRefetches(calls, resultMap);
 
   const findings: ToolPatternFinding[] = [
     ...detectRedundantCalls(calls),
@@ -347,9 +332,7 @@ export function detectToolPatterns(
   ];
 
   if (previousContext?.fetchedPaths.size) {
-    findings.push(
-      ...detectCrossTurnRefetches(calls, previousContext.fetchedPaths),
-    );
+    findings.push(...detectCrossTurnRefetches(calls, previousContext.fetchedPaths));
   }
 
   // Merge current fetched paths with previous for the accumulated set

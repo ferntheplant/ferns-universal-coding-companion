@@ -98,7 +98,6 @@ body {
   background: var(--accent-weak);
 }
 
-
 .toolbar__toggle-group {
   display: inline-flex;
   gap: 0.35rem;
@@ -328,7 +327,6 @@ body {
   min-height: 220px;
 }
 
-
 .git-diff-file-view {
   flex: 1;
   min-height: 220px;
@@ -461,7 +459,9 @@ body {
   line-height: 1;
   padding: 0;
   margin: 0 0.25rem;
-  transition: transform 0.1s ease, opacity 0.15s ease;
+  transition:
+    transform 0.1s ease,
+    opacity 0.15s ease;
   z-index: 100;
   visibility: visible !important;
   opacity: 1 !important;

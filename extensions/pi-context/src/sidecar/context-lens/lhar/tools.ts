@@ -1,7 +1,4 @@
-import type {
-  ToolCallEntry,
-  ToolDefinitionEntry,
-} from "../lhar-types.generated.js";
+import type { ToolCallEntry, ToolDefinitionEntry } from "../lhar-types.generated.js";
 import type { AnthropicTool, ContextInfo, OpenAITool } from "../types.js";
 
 /**
@@ -10,9 +7,7 @@ import type { AnthropicTool, ContextInfo, OpenAITool } from "../types.js";
  * Returns one entry per tool schema available to the model, with name and
  * description only (no full input_schema, keeping the LHAR lightweight).
  */
-export function extractToolDefinitions(
-  contextInfo: ContextInfo,
-): ToolDefinitionEntry[] {
+export function extractToolDefinitions(contextInfo: ContextInfo): ToolDefinitionEntry[] {
   return contextInfo.tools.map((tool) => {
     if ("function" in tool) {
       // OpenAI format: { type: "function", function: { name, description } }

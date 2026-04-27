@@ -17,9 +17,7 @@ import { SENSITIVE_HEADERS } from "@contextio/core";
  * Unlike `selectHeaders`, this does not filter non-string values —
  * it assumes all values are already strings (as in LHAR export).
  */
-export function redactHeaders(
-  headers: Record<string, string>,
-): Record<string, string> {
+export function redactHeaders(headers: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, val] of Object.entries(headers)) {
     if (SENSITIVE_HEADERS.has(key.toLowerCase())) continue;

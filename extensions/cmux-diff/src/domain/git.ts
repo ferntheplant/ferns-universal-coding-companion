@@ -94,7 +94,11 @@ function isUnsupportedPath(path: string): boolean {
     return true;
   }
 
-  if (lowered.endsWith(".lock") || lowered.endsWith("pnpm-lock.yaml") || lowered.endsWith("bun.lock")) {
+  if (
+    lowered.endsWith(".lock") ||
+    lowered.endsWith("pnpm-lock.yaml") ||
+    lowered.endsWith("bun.lock")
+  ) {
     return true;
   }
 
@@ -140,7 +144,10 @@ function parseDiffBlobPair(patch: string): DiffBlobPair {
   };
 }
 
-async function loadBlobContent(repoRoot: string, blobId: string | undefined): Promise<string | undefined> {
+async function loadBlobContent(
+  repoRoot: string,
+  blobId: string | undefined,
+): Promise<string | undefined> {
   if (!blobId) {
     return undefined;
   }
@@ -166,7 +173,11 @@ async function validateTargetExists(repoRoot: string, target: DiffTarget): Promi
   }
 
   const verifySpec = `${target.value}^{commit}`;
-  const result = await runCommand("git", ["rev-parse", "--verify", "--quiet", verifySpec], repoRoot);
+  const result = await runCommand(
+    "git",
+    ["rev-parse", "--verify", "--quiet", verifySpec],
+    repoRoot,
+  );
   if (result.code !== 0) {
     throw new Error(`Unable to resolve ${target.kind} target: ${target.value}`);
   }
@@ -174,8 +185,7 @@ async function validateTargetExists(repoRoot: string, target: DiffTarget): Promi
 
 async function getHeadRef(repoRoot: string): Promise<string | undefined> {
   try {
-    const branch = (await runGit(repoRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"]))
-      .trim();
+    const branch = (await runGit(repoRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"])).trim();
     if (branch.length > 0) {
       return branch;
     }
@@ -184,8 +194,7 @@ async function getHeadRef(repoRoot: string): Promise<string | undefined> {
   }
 
   try {
-    const commit = (await runGit(repoRoot, ["rev-parse", "--short", "HEAD"]))
-      .trim();
+    const commit = (await runGit(repoRoot, ["rev-parse", "--short", "HEAD"])).trim();
     return commit.length > 0 ? commit : undefined;
   } catch {
     return undefined;
@@ -209,7 +218,10 @@ export async function resolveRepoMetadata(repoRoot: string): Promise<RepoMetadat
   };
 }
 
-export async function computeReviewFiles(repoRoot: string, target: DiffTarget): Promise<ReviewFile[]> {
+export async function computeReviewFiles(
+  repoRoot: string,
+  target: DiffTarget,
+): Promise<ReviewFile[]> {
   await validateTargetExists(repoRoot, target);
 
   const diffBaseArgs = getDiffBaseArgs(target);
@@ -248,7 +260,9 @@ export async function computeReviewFiles(repoRoot: string, target: DiffTarget): 
     const oldContent = oldContentFromBlob;
     const newContent =
       newContentFromBlob ??
-      (target.kind === "uncommitted" ? await loadWorkingTreeContent(repoRoot, entry.path) : undefined);
+      (target.kind === "uncommitted"
+        ? await loadWorkingTreeContent(repoRoot, entry.path)
+        : undefined);
     files.push({
       id: makeFileId(entry.path),
       path: entry.path,
@@ -264,7 +278,10 @@ export async function computeReviewFiles(repoRoot: string, target: DiffTarget): 
   return files;
 }
 
-export async function buildReviewPayload(repoRoot: string, target: DiffTarget): Promise<ReviewPayload> {
+export async function buildReviewPayload(
+  repoRoot: string,
+  target: DiffTarget,
+): Promise<ReviewPayload> {
   const [repo, files] = await Promise.all([
     resolveRepoMetadata(repoRoot),
     computeReviewFiles(repoRoot, target),

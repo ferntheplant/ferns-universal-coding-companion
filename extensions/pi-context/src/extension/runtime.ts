@@ -195,7 +195,8 @@ export function markPostFailure(): void {
 export function setSidecarState(state: SidecarLifecycleState, errorMessage?: string | null): void {
   runtimeState.sidecarState = state;
   runtimeState.sidecarLastTransitionAtMs = Date.now();
-  runtimeState.sidecarLastError = state === "error" ? errorMessage ?? "Unknown sidecar error" : null;
+  runtimeState.sidecarLastError =
+    state === "error" ? (errorMessage ?? "Unknown sidecar error") : null;
 }
 
 function asIso(timestampMs: number): string {
@@ -365,11 +366,7 @@ function getCurrentTurn(ctx: ExtensionContext): PendingTurnState | null {
 
 export function captureContextSnapshot(event: ContextEvent, ctx: ExtensionContext): void {
   const state = getOrCreateSessionState(ctx);
-  updateSessionSystemPrompt(
-    state,
-    extractSystemPromptFromMessages(event.messages),
-    "context",
-  );
+  updateSessionSystemPrompt(state, extractSystemPromptFromMessages(event.messages), "context");
 
   const turn = getCurrentTurn(ctx);
   if (!turn) return;
@@ -379,7 +376,10 @@ export function captureContextSnapshot(event: ContextEvent, ctx: ExtensionContex
   });
 }
 
-export function captureProviderRequest(event: BeforeProviderRequestEvent, ctx: ExtensionContext): void {
+export function captureProviderRequest(
+  event: BeforeProviderRequestEvent,
+  ctx: ExtensionContext,
+): void {
   const turn = getCurrentTurn(ctx);
   if (!turn) return;
 
@@ -392,7 +392,10 @@ export function captureProviderRequest(event: BeforeProviderRequestEvent, ctx: E
   turn.model = getModelSnapshot(ctx);
 }
 
-export function captureProviderResponse(event: ProviderResponseEventLike, ctx: ExtensionContext): void {
+export function captureProviderResponse(
+  event: ProviderResponseEventLike,
+  ctx: ExtensionContext,
+): void {
   const turn = getCurrentTurn(ctx);
   if (!turn) return;
 
@@ -411,7 +414,10 @@ function getMessageRole(message: unknown): string | null {
   return typeof role === "string" ? role : null;
 }
 
-export function captureAssistantMessageUpdate(event: MessageUpdateEventLike, ctx: ExtensionContext): void {
+export function captureAssistantMessageUpdate(
+  event: MessageUpdateEventLike,
+  ctx: ExtensionContext,
+): void {
   const turn = getCurrentTurn(ctx);
   if (!turn) return;
   if (getMessageRole(event.message) !== "assistant") return;
@@ -459,13 +465,19 @@ export function captureTurnEnd(event: TurnEndEvent, ctx: ExtensionContext): Spik
   return finalizeTurn(state, "turn_end");
 }
 
-export function flushPendingTurn(ctx: ExtensionContext, reason: "session_shutdown" | "reset"): SpikeTurnRecord | null {
+export function flushPendingTurn(
+  ctx: ExtensionContext,
+  reason: "session_shutdown" | "reset",
+): SpikeTurnRecord | null {
   const state = getOrCreateSessionState(ctx);
   if (!state.currentTurn) return null;
   return finalizeTurn(state, reason);
 }
 
-function finalizeTurn(state: SessionState, reason: "turn_end" | "session_shutdown" | "reset"): SpikeTurnRecord {
+function finalizeTurn(
+  state: SessionState,
+  reason: "turn_end" | "session_shutdown" | "reset",
+): SpikeTurnRecord {
   const turn = state.currentTurn!;
   const outputPath = buildFixturePath(state.session.sessionId, turn.turnIndex, turn.startedAtMs);
   const record: SpikeTurnRecord = {

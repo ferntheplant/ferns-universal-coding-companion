@@ -337,9 +337,10 @@ function normalizeAssistantContent(message: PiAssistantMessage | null): unknown[
       return {
         type: "tool_result",
         tool_use_id: String(raw.tool_use_id ?? raw.toolUseId ?? raw.toolCallId ?? ""),
-        content: typeof raw.content === "string" || Array.isArray(raw.content)
-          ? raw.content
-          : JSON.stringify(raw.content ?? ""),
+        content:
+          typeof raw.content === "string" || Array.isArray(raw.content)
+            ? raw.content
+            : JSON.stringify(raw.content ?? ""),
       };
     }
     if (type === "image" || type === "image_url") {
@@ -414,9 +415,15 @@ function bytesForJson(value: unknown): number {
 }
 
 function computeTimings(record: SpikeTurnRecord): TimingSummary {
-  const requestStart = record.timestamps.requestStartedAt ? Date.parse(record.timestamps.requestStartedAt) : null;
-  const responseStart = record.timestamps.responseStartedAt ? Date.parse(record.timestamps.responseStartedAt) : null;
-  const assistantDone = record.timestamps.assistantCompletedAt ? Date.parse(record.timestamps.assistantCompletedAt) : null;
+  const requestStart = record.timestamps.requestStartedAt
+    ? Date.parse(record.timestamps.requestStartedAt)
+    : null;
+  const responseStart = record.timestamps.responseStartedAt
+    ? Date.parse(record.timestamps.responseStartedAt)
+    : null;
+  const assistantDone = record.timestamps.assistantCompletedAt
+    ? Date.parse(record.timestamps.assistantCompletedAt)
+    : null;
 
   const waitMs =
     requestStart !== null && responseStart !== null && responseStart >= requestStart
@@ -443,7 +450,9 @@ function cloneRequestBody(body: Record<string, unknown>): Record<string, unknown
   return JSON.parse(JSON.stringify(body)) as Record<string, unknown>;
 }
 
-function bodyHasMessages(body: Record<string, unknown> | null): body is Record<string, unknown> & { messages: unknown[] } {
+function bodyHasMessages(
+  body: Record<string, unknown> | null,
+): body is Record<string, unknown> & { messages: unknown[] } {
   return body !== null && Array.isArray(body.messages);
 }
 
@@ -463,14 +472,19 @@ function buildRequestBodyForTurn(
     return directBody;
   }
 
-  const fallbackTemplate = rollingState?.templateBody ? cloneRequestBody(rollingState.templateBody) : {};
+  const fallbackTemplate = rollingState?.templateBody
+    ? cloneRequestBody(rollingState.templateBody)
+    : {};
   fallbackTemplate.model = record.model.id ?? fallbackTemplate.model ?? "unknown";
   fallbackTemplate.stream = true;
   fallbackTemplate.messages = rollingState?.messages ? [...rollingState.messages] : [];
   return fallbackTemplate;
 }
 
-function advanceRollingState(requestBody: Record<string, unknown>, record: SpikeTurnRecord): RollingSessionState {
+function advanceRollingState(
+  requestBody: Record<string, unknown>,
+  record: SpikeTurnRecord,
+): RollingSessionState {
   const nextMessages = Array.isArray(requestBody.messages) ? [...requestBody.messages] : [];
   const assistantMessage = pickAssistantMessage(record);
 
@@ -519,7 +533,11 @@ function classifyBlock(
   counts: Map<CompositionCategory, { tokens: number; count: number }>,
 ): void {
   if (!block || typeof block !== "object") {
-    addComposition(counts, role === "assistant" ? "assistant_text" : "user_text", estimateTokens(block));
+    addComposition(
+      counts,
+      role === "assistant" ? "assistant_text" : "user_text",
+      estimateTokens(block),
+    );
     return;
   }
 
@@ -530,12 +548,20 @@ function classifyBlock(
     addComposition(counts, "tool_calls", estimateTokens(block));
     return;
   }
-  if (type === "tool_result" || type === "function_call_output" || type === "custom_tool_call_output") {
+  if (
+    type === "tool_result" ||
+    type === "function_call_output" ||
+    type === "custom_tool_call_output"
+  ) {
     addComposition(counts, "tool_results", estimateTokens(value.content ?? value.output ?? ""));
     return;
   }
   if (type === "thinking" || type === "reasoning") {
-    addComposition(counts, "thinking", estimateTokens(value.thinking ?? value.text ?? value.summary ?? block));
+    addComposition(
+      counts,
+      "thinking",
+      estimateTokens(value.thinking ?? value.text ?? value.summary ?? block),
+    );
     return;
   }
   if (type === "image" || type === "image_url") {
@@ -586,7 +612,8 @@ function classifyMessage(
   }
 
   if (Array.isArray(value.parts)) {
-    for (const part of value.parts) classifyBlock(part, role === "model" ? "assistant" : role, counts);
+    for (const part of value.parts)
+      classifyBlock(part, role === "model" ? "assistant" : role, counts);
     return;
   }
 
@@ -648,7 +675,8 @@ function normalizeComposition(
     }
   }
 
-  const finalDenominator = inputTokens > 0 ? inputTokens : scaled.reduce((sum, entry) => sum + entry.tokens, 0);
+  const finalDenominator =
+    inputTokens > 0 ? inputTokens : scaled.reduce((sum, entry) => sum + entry.tokens, 0);
   scaled.sort((left, right) => right.tokens - left.tokens);
   return scaled.map((entry) => ({
     category: entry.category,
@@ -658,7 +686,10 @@ function normalizeComposition(
   }));
 }
 
-function analyzeRequestComposition(record: SpikeTurnRecord, inputTokens: number): CompositionEntry[] {
+function analyzeRequestComposition(
+  record: SpikeTurnRecord,
+  inputTokens: number,
+): CompositionEntry[] {
   const body = record.providerRequest?.payload ?? {};
   const counts = new Map<CompositionCategory, { tokens: number; count: number }>();
 
@@ -722,7 +753,11 @@ function pickAssistantMessage(record: SpikeTurnRecord): PiAssistantMessage | nul
   return record.turnEnd?.message ?? record.finalAssistantMessage?.message ?? null;
 }
 
-function convertTurn(record: SpikeTurnRecord, sequence: number, requestBody: Record<string, unknown>): ConvertedTurn {
+function convertTurn(
+  record: SpikeTurnRecord,
+  sequence: number,
+  requestBody: Record<string, unknown>,
+): ConvertedTurn {
   const assistantMessage = pickAssistantMessage(record);
   const syntheticResponse = buildSyntheticResponse(record);
   const apiFormat = record.model.api ?? "unknown";
@@ -821,7 +856,9 @@ function convertTurn(record: SpikeTurnRecord, sequence: number, requestBody: Rec
         .filter((entry) => entry.category === "tool_definitions")
         .reduce((sum, entry) => sum + entry.tokens, 0),
       messages_tokens: composition
-        .filter((entry) => entry.category !== "system_prompt" && entry.category !== "tool_definitions")
+        .filter(
+          (entry) => entry.category !== "system_prompt" && entry.category !== "tool_definitions",
+        )
         .reduce((sum, entry) => sum + entry.tokens, 0),
       composition,
       security: {
@@ -844,7 +881,9 @@ function convertTurn(record: SpikeTurnRecord, sequence: number, requestBody: Rec
     composition,
     toolDefinitionsCount: toolDefinitionsCount(requestBody),
     toolCallCount: countAssistantToolCalls(assistantMessage),
-    toolResultCount: Array.isArray(record.turnEnd?.toolResults) ? record.turnEnd.toolResults.length : 0,
+    toolResultCount: Array.isArray(record.turnEnd?.toolResults)
+      ? record.turnEnd.toolResults.length
+      : 0,
     thinkingBlockCount: countThinkingBlocks(assistantMessage),
     inputTokens,
   };
@@ -890,7 +929,11 @@ async function maybeResetContextLens(ingestUrl: string): Promise<void> {
   }
 }
 
-async function ingestTurns(ingestUrl: string, turns: ConvertedTurn[], resetFirst: boolean): Promise<void> {
+async function ingestTurns(
+  ingestUrl: string,
+  turns: ConvertedTurn[],
+  resetFirst: boolean,
+): Promise<void> {
   if (resetFirst) {
     await maybeResetContextLens(ingestUrl);
   }
@@ -919,7 +962,11 @@ function defaultOutputPath(inputPath: string, turns: ConvertedTurn[]): string {
   return join(DEFAULT_OUTPUT_DIR, `pi-context-${sessionPart}.lhar.json`);
 }
 
-function buildSummary(turns: ConvertedTurn[], outputPath: string | null, ingestUrl: string | null): Summary {
+function buildSummary(
+  turns: ConvertedTurn[],
+  outputPath: string | null,
+  ingestUrl: string | null,
+): Summary {
   let latestModel: string | null = null;
   let maxUtilizationPct = 0;
   let toolDefinitions = 0;
@@ -975,7 +1022,9 @@ async function main(): Promise<void> {
     return converted;
   });
 
-  const outputPath = options.outputPath ? resolve(options.outputPath) : defaultOutputPath(options.inputPath, convertedTurns);
+  const outputPath = options.outputPath
+    ? resolve(options.outputPath)
+    : defaultOutputPath(options.inputPath, convertedTurns);
   await mkdir(dirname(outputPath), { recursive: true });
   await writeLharFile(outputPath, convertedTurns);
 

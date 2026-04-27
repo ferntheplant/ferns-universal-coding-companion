@@ -5,11 +5,7 @@
  * returns structured analysis results.
  */
 
-import type {
-  CompositionEntry,
-  LharRecord,
-  LharSessionLine,
-} from "../lhar-types.generated.js";
+import type { CompositionEntry, LharRecord, LharSessionLine } from "../lhar-types.generated.js";
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -211,10 +207,7 @@ export function findGrowthBlocks(entries: LharRecord[]): GrowthBlock[] {
   return findGrowthBlocksFromSlice(main, mainIndices);
 }
 
-function findGrowthBlocksFromSlice(
-  slice: LharRecord[],
-  originalIndices: number[],
-): GrowthBlock[] {
+function findGrowthBlocksFromSlice(slice: LharRecord[], originalIndices: number[]): GrowthBlock[] {
   const blocks: GrowthBlock[] = [];
   let blockStart = 0;
 
@@ -281,14 +274,7 @@ export function identifyUserTurns(entries: LharRecord[]): UserTurn[] {
     }
 
     if (isNewTurn) {
-      turns.push(
-        buildUserTurn(
-          turnNumber,
-          currentStart,
-          i - 1,
-          entries.slice(currentStart, i),
-        ),
-      );
+      turns.push(buildUserTurn(turnNumber, currentStart, i - 1, entries.slice(currentStart, i)));
       turnNumber++;
       currentStart = i;
       lastMainEndTurnIdx = null;
@@ -301,12 +287,7 @@ export function identifyUserTurns(entries: LharRecord[]): UserTurn[] {
 
   // Final turn
   turns.push(
-    buildUserTurn(
-      turnNumber,
-      currentStart,
-      entries.length - 1,
-      entries.slice(currentStart),
-    ),
+    buildUserTurn(turnNumber, currentStart, entries.length - 1, entries.slice(currentStart)),
   );
 
   return turns;
@@ -348,15 +329,9 @@ function buildUserTurn(
 // Agent path trace
 // ---------------------------------------------------------------------------
 
-export function buildAgentPaths(
-  entries: LharRecord[],
-  userTurns: UserTurn[],
-): AgentPathStep[][] {
+export function buildAgentPaths(entries: LharRecord[], userTurns: UserTurn[]): AgentPathStep[][] {
   return userTurns.map((turn) => {
-    const turnEntries = entries.slice(
-      turn.startEntryIndex,
-      turn.endEntryIndex + 1,
-    );
+    const turnEntries = entries.slice(turn.startEntryIndex, turn.endEntryIndex + 1);
     return turnEntries.map((e, i) => {
       let action: string;
       if (isCompaction(e)) {
@@ -421,22 +396,17 @@ function computeTimingStats(entries: LharRecord[]): TimingStats {
 
   // Median duration
   durations.sort((a, b) => a - b);
-  const medianApiTimeMs =
-    durations.length > 0 ? durations[Math.floor(durations.length / 2)] : 0;
+  const medianApiTimeMs = durations.length > 0 ? durations[Math.floor(durations.length / 2)] : 0;
 
   // Tokens per second
   const tpsList: number[] = [];
   for (const e of entries) {
-    if (
-      e.timings?.tokens_per_second != null &&
-      e.timings.tokens_per_second > 0
-    ) {
+    if (e.timings?.tokens_per_second != null && e.timings.tokens_per_second > 0) {
       tpsList.push(e.timings.tokens_per_second);
     }
   }
   tpsList.sort((a, b) => a - b);
-  const medianTokensPerSecond =
-    tpsList.length > 0 ? tpsList[Math.floor(tpsList.length / 2)] : null;
+  const medianTokensPerSecond = tpsList.length > 0 ? tpsList[Math.floor(tpsList.length / 2)] : null;
 
   // Total I/O tokens
   let totalOutputTokens = 0;
@@ -466,15 +436,11 @@ function computeCacheStats(entries: LharRecord[]): CacheStats {
     totalCacheWriteTokens += e.usage_ext.cache_write_tokens;
     // Effective input = base input + cache read + cache write
     totalInputTokens +=
-      e.gen_ai.usage.input_tokens +
-      e.usage_ext.cache_read_tokens +
-      e.usage_ext.cache_write_tokens;
+      e.gen_ai.usage.input_tokens + e.usage_ext.cache_read_tokens + e.usage_ext.cache_write_tokens;
   }
 
   const cacheHitRate =
-    totalInputTokens > 0
-      ? Math.round((totalCacheReadTokens / totalInputTokens) * 1000) / 1000
-      : 0;
+    totalInputTokens > 0 ? Math.round((totalCacheReadTokens / totalInputTokens) * 1000) / 1000 : 0;
 
   return { totalCacheReadTokens, totalCacheWriteTokens, cacheHitRate };
 }
@@ -494,9 +460,7 @@ export function analyzeSession(
   filename: string,
   opts: AnalyzeOptions = {},
 ): SessionAnalysis {
-  const entries = opts.mainOnly
-    ? allEntries.filter((e) => agentRole(e) === "main")
-    : allEntries;
+  const entries = opts.mainOnly ? allEntries.filter((e) => agentRole(e) === "main") : allEntries;
 
   if (entries.length === 0) {
     return emptyAnalysis(filename, session);
@@ -528,9 +492,7 @@ export function analyzeSession(
   const startedAt = session?.started_at || entries[0].timestamp;
 
   const mainCount = allEntries.filter((e) => agentRole(e) === "main").length;
-  const subagentCount = allEntries.filter(
-    (e) => agentRole(e) === "subagent",
-  ).length;
+  const subagentCount = allEntries.filter((e) => agentRole(e) === "subagent").length;
 
   // Context timeline: main agent only
   let timelineEntries = entries.filter((e) => agentRole(e) === "main");
@@ -559,8 +521,7 @@ export function analyzeSession(
   // Composition: last main agent entry
   let lastMain = entries.filter((e) => agentRole(e) === "main");
   if (lastMain.length === 0) lastMain = entries;
-  const compositionLast =
-    lastMain[lastMain.length - 1].context_lens.composition;
+  const compositionLast = lastMain[lastMain.length - 1].context_lens.composition;
 
   // Composition: entry right before each compaction (same agent role)
   const compositionsPreCompaction: Array<[number, CompositionEntry[]]> = [];
@@ -569,10 +530,7 @@ export function analyzeSession(
     const role = agentRole(compactedEntry);
     for (let j = comp.entryIndex - 1; j >= 0; j--) {
       const prev = entries[j];
-      if (
-        agentRole(prev) === role &&
-        cumTokens(prev) >= cumTokens(compactedEntry)
-      ) {
+      if (agentRole(prev) === role && cumTokens(prev) >= cumTokens(compactedEntry)) {
         compositionsPreCompaction.push([j, prev.context_lens.composition]);
         break;
       }
@@ -607,10 +565,7 @@ export function analyzeSession(
   };
 }
 
-function emptyAnalysis(
-  filename: string,
-  session: LharSessionLine | null,
-): SessionAnalysis {
+function emptyAnalysis(filename: string, session: LharSessionLine | null): SessionAnalysis {
   return {
     filename,
     tool: session?.tool || "",

@@ -27,10 +27,7 @@
       "properties": {
         "name": { "type": "string" },
         "description": {
-          "oneOf": [
-            { "type": "string" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "null" }]
         }
       },
       "required": ["name", "description"],
@@ -43,18 +40,11 @@
       "properties": {
         "name": { "type": "string" },
         "call_id": {
-          "oneOf": [
-            { "type": "string" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "null" }]
         },
         "arguments": {
           "description": "The arguments passed to the tool. Object when parsed, string when raw/unparsed.",
-          "oneOf": [
-            { "type": "object" },
-            { "type": "string" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "type": "object" }, { "type": "string" }, { "type": "null" }]
         }
       },
       "required": ["name", "call_id", "arguments"],
@@ -81,10 +71,7 @@
         "receive_ms": { "type": "number" },
         "total_ms": { "type": "number" },
         "tokens_per_second": {
-          "oneOf": [
-            { "type": "number" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "type": "number" }, { "type": "null" }]
         }
       },
       "required": ["send_ms", "wait_ms", "receive_ms", "total_ms", "tokens_per_second"],
@@ -112,10 +99,7 @@
         "trace_id": { "type": "string" },
         "span_id": { "type": "string" },
         "parent_span_id": {
-          "oneOf": [
-            { "type": "string" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "null" }]
         },
         "timestamp": { "type": "string" },
         "sequence": { "type": "number" },
@@ -125,10 +109,7 @@
           "properties": {
             "tool": { "type": "string" },
             "tool_version": {
-              "oneOf": [
-                { "type": "string" },
-                { "type": "null" }
-              ]
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
             },
             "agent_role": { "type": "string" },
             "collector": { "type": "string" },
@@ -147,22 +128,13 @@
               "properties": {
                 "model": { "type": "string" },
                 "max_tokens": {
-                  "oneOf": [
-                    { "type": "number" },
-                    { "type": "null" }
-                  ]
+                  "oneOf": [{ "type": "number" }, { "type": "null" }]
                 },
                 "temperature": {
-                  "oneOf": [
-                    { "type": "number" },
-                    { "type": "null" }
-                  ]
+                  "oneOf": [{ "type": "number" }, { "type": "null" }]
                 },
                 "top_p": {
-                  "oneOf": [
-                    { "type": "number" },
-                    { "type": "null" }
-                  ]
+                  "oneOf": [{ "type": "number" }, { "type": "null" }]
                 },
                 "stop_sequences": {
                   "type": "array",
@@ -176,10 +148,7 @@
               "type": "object",
               "properties": {
                 "model": {
-                  "oneOf": [
-                    { "type": "string" },
-                    { "type": "null" }
-                  ]
+                  "oneOf": [{ "type": "string" }, { "type": "null" }]
                 },
                 "finish_reasons": {
                   "type": "array",
@@ -211,10 +180,7 @@
             "cache_write_tokens": { "type": "number" },
             "thinking_tokens": { "type": "number" },
             "cost_usd": {
-              "oneOf": [
-                { "type": "number" },
-                { "type": "null" }
-              ]
+              "oneOf": [{ "type": "number" }, { "type": "null" }]
             }
           },
           "required": ["cache_read_tokens", "cache_write_tokens", "thinking_tokens", "cost_usd"],
@@ -226,16 +192,10 @@
           "properties": {
             "method": { "type": "string" },
             "url": {
-              "oneOf": [
-                { "type": "string" },
-                { "type": "null" }
-              ]
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
             },
             "status_code": {
-              "oneOf": [
-                { "type": "number" },
-                { "type": "null" }
-              ]
+              "oneOf": [{ "type": "number" }, { "type": "null" }]
             },
             "api_format": { "type": "string" },
             "stream": { "type": "boolean" },
@@ -248,15 +208,20 @@
               "additionalProperties": { "type": "string" }
             }
           },
-          "required": ["method", "url", "status_code", "api_format", "stream", "request_headers", "response_headers"],
+          "required": [
+            "method",
+            "url",
+            "status_code",
+            "api_format",
+            "stream",
+            "request_headers",
+            "response_headers"
+          ],
           "additionalProperties": false
         },
 
         "timings": {
-          "oneOf": [
-            { "$ref": "#/definitions/Timings" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "$ref": "#/definitions/Timings" }, { "type": "null" }]
         },
 
         "transfer": {
@@ -286,10 +251,7 @@
               "type": "object",
               "properties": {
                 "tokens_added_this_turn": {
-                  "oneOf": [
-                    { "type": "number" },
-                    { "type": "null" }
-                  ]
+                  "oneOf": [{ "type": "number" }, { "type": "null" }]
                 },
                 "cumulative_tokens": { "type": "number" },
                 "compaction_detected": { "type": "boolean" }
@@ -318,10 +280,7 @@
                       "message_index": { "type": "number" },
                       "role": { "type": "string" },
                       "tool_name": {
-                        "oneOf": [
-                          { "type": "string" },
-                          { "type": "null" }
-                        ]
+                        "oneOf": [{ "type": "string" }, { "type": "null" }]
                       },
                       "severity": {
                         "type": "string",
@@ -332,7 +291,16 @@
                       "offset": { "type": "number" },
                       "length": { "type": "number" }
                     },
-                    "required": ["message_index", "role", "tool_name", "severity", "pattern", "match", "offset", "length"],
+                    "required": [
+                      "message_index",
+                      "role",
+                      "tool_name",
+                      "severity",
+                      "pattern",
+                      "match",
+                      "offset",
+                      "length"
+                    ],
                     "additionalProperties": false
                   }
                 },
@@ -351,7 +319,16 @@
               "additionalProperties": false
             }
           },
-          "required": ["window_size", "utilization", "system_tokens", "tools_tokens", "messages_tokens", "composition", "growth", "security"],
+          "required": [
+            "window_size",
+            "utilization",
+            "system_tokens",
+            "tools_tokens",
+            "messages_tokens",
+            "composition",
+            "growth",
+            "security"
+          ],
           "additionalProperties": false
         },
 
@@ -359,17 +336,10 @@
           "type": "object",
           "properties": {
             "request_body": {
-              "oneOf": [
-                { "type": "object" },
-                { "type": "null" }
-              ]
+              "oneOf": [{ "type": "object" }, { "type": "null" }]
             },
             "response_body": {
-              "oneOf": [
-                { "type": "object" },
-                { "type": "string" },
-                { "type": "null" }
-              ]
+              "oneOf": [{ "type": "object" }, { "type": "string" }, { "type": "null" }]
             }
           },
           "required": ["request_body", "response_body"],
@@ -377,9 +347,21 @@
         }
       },
       "required": [
-        "type", "id", "trace_id", "span_id", "parent_span_id",
-        "timestamp", "sequence", "source", "gen_ai", "usage_ext",
-        "http", "timings", "transfer", "context_lens", "raw"
+        "type",
+        "id",
+        "trace_id",
+        "span_id",
+        "parent_span_id",
+        "timestamp",
+        "sequence",
+        "source",
+        "gen_ai",
+        "usage_ext",
+        "http",
+        "timings",
+        "transfer",
+        "context_lens",
+        "raw"
       ],
       "additionalProperties": false
     },

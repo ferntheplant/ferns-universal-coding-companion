@@ -95,9 +95,7 @@ export const zenProvider: ProviderAdapter = {
     });
 
     if (!validation.ok || !validation.html) {
-      return buildUnauthenticatedResult(
-        validation.reason ?? "Zen dashboard auth failed.",
-      );
+      return buildUnauthenticatedResult(validation.reason ?? "Zen dashboard auth failed.");
     }
 
     const balance = extractBalanceFromHtml(validation.html);

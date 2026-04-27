@@ -5,11 +5,7 @@
  * runs the full analysis pipeline, then stores the result.
  */
 
-import {
-  estimateTokens,
-  extractLastAssistantMessage,
-  parseContextInfo,
-} from "../core.js";
+import { estimateTokens, extractLastAssistantMessage, parseContextInfo } from "../core.js";
 import type { CaptureData } from "../proxy/capture.js";
 import type { Store } from "../server/store.js";
 import type { ContextInfo, RequestMeta, ResponseData } from "../types.js";
@@ -22,11 +18,7 @@ export function ingestCapture(store: Store, capture: CaptureData): void {
 
   // Build contextInfo from the request body
   let contextInfo: ContextInfo;
-  if (
-    requestBody &&
-    typeof requestBody === "object" &&
-    !Array.isArray(requestBody)
-  ) {
+  if (requestBody && typeof requestBody === "object" && !Array.isArray(requestBody)) {
     const body = { ...(requestBody as Record<string, unknown>) };
     // Gemini: model is in the URL path, not in the body
     if (apiFormat === "gemini" && !body.model) {
@@ -71,10 +63,7 @@ export function ingestCapture(store: Store, capture: CaptureData): void {
 
   // Append the assistant's response as the final message so the full
   // conversation is visible even when the session ends on an agent turn.
-  const lastAssistant = extractLastAssistantMessage(
-    responseData,
-    contextInfo.model,
-  );
+  const lastAssistant = extractLastAssistantMessage(responseData, contextInfo.model);
   if (lastAssistant) {
     contextInfo.messages.push(lastAssistant);
     contextInfo.messagesTokens += lastAssistant.tokens;
@@ -100,9 +89,7 @@ export function ingestCapture(store: Store, capture: CaptureData): void {
     contextInfo,
     responseData,
     capture.source,
-    requestBody &&
-      typeof requestBody === "object" &&
-      !Array.isArray(requestBody)
+    requestBody && typeof requestBody === "object" && !Array.isArray(requestBody)
       ? (requestBody as Record<string, any>)
       : undefined,
     meta,

@@ -47,9 +47,7 @@ function parseResponsesItem(
     const content =
       name +
       "(" +
-      (typeof args === "string"
-        ? args.slice(0, 200)
-        : JSON.stringify(args).slice(0, 200)) +
+      (typeof args === "string" ? args.slice(0, 200) : JSON.stringify(args).slice(0, 200)) +
       ")";
     const tokens = estimateTokens(item, model);
     // Parse stringified arguments (OpenAI Responses API sends JSON strings)
@@ -83,9 +81,7 @@ function parseResponsesItem(
   // function_call_output → user tool_result
   if (type === "function_call_output" || type === "custom_tool_call_output") {
     const output =
-      typeof item.output === "string"
-        ? item.output
-        : JSON.stringify(item.output || "");
+      typeof item.output === "string" ? item.output : JSON.stringify(item.output || "");
     const tokens = estimateTokens(output, model);
     const block: ContentBlock = {
       type: "tool_result",
@@ -226,10 +222,7 @@ export function parseContextInfo(
         const contentBlocks = Array.isArray(msg.content) ? msg.content : null;
         return {
           role: msg.role,
-          content:
-            typeof msg.content === "string"
-              ? msg.content
-              : JSON.stringify(msg.content),
+          content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
           contentBlocks,
           tokens: estimateTokens(msg.content, model),
         };
@@ -279,11 +272,7 @@ export function parseContextInfo(
       info.tools = body.tools;
       info.toolsTokens = estimateTokens(JSON.stringify(body.tools), model);
     }
-  } else if (
-    provider === "gemini" ||
-    provider === "vertex" ||
-    apiFormat === "gemini"
-  ) {
+  } else if (provider === "gemini" || provider === "vertex" || apiFormat === "gemini") {
     // Gemini API: contents[], systemInstruction, tools[{functionDeclarations}]
     // Code Assist wraps everything inside body.request: {contents, systemInstruction, tools, ...}
     const geminiBody = body.request || body;
@@ -294,14 +283,9 @@ export function parseContextInfo(
       info.systemTokens = estimateTokens(systemText, model);
     }
     if (geminiBody.tools && Array.isArray(geminiBody.tools)) {
-      const allDecls = geminiBody.tools.flatMap(
-        (t: any) => t.functionDeclarations || [],
-      );
+      const allDecls = geminiBody.tools.flatMap((t: any) => t.functionDeclarations || []);
       info.tools = allDecls;
-      info.toolsTokens = estimateTokens(
-        JSON.stringify(geminiBody.tools),
-        model,
-      );
+      info.toolsTokens = estimateTokens(JSON.stringify(geminiBody.tools), model);
     }
     if (geminiBody.contents && Array.isArray(geminiBody.contents)) {
       info.messages = geminiBody.contents.map((turn: any): ParsedMessage => {
@@ -377,12 +361,9 @@ export function parseContextInfo(
             contentStr = msg.content;
             contentBlocks.push({ type: "text", text: msg.content });
           } else if (Array.isArray(msg.content)) {
-            contentStr = msg.content
-              .map((b: { text?: string }) => b.text || "")
-              .join("\n");
+            contentStr = msg.content.map((b: { text?: string }) => b.text || "").join("\n");
             for (const part of msg.content) {
-              if (part.type === "text")
-                contentBlocks.push({ type: "text", text: part.text || "" });
+              if (part.type === "text") contentBlocks.push({ type: "text", text: part.text || "" });
             }
           } else {
             contentStr = "";
@@ -486,9 +467,7 @@ export function extractLastAssistantMessage(
       const msg = first.message as Record<string, unknown> | undefined;
       if (msg?.role === "assistant") {
         const content =
-          typeof msg.content === "string"
-            ? msg.content
-            : JSON.stringify(msg.content ?? "");
+          typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content ?? "");
         return {
           role: "assistant",
           content,
@@ -507,10 +486,7 @@ export function extractLastAssistantMessage(
   return null;
 }
 
-function extractAssistantFromStream(
-  chunks: string,
-  model?: string,
-): ParsedMessage | null {
+function extractAssistantFromStream(chunks: string, model?: string): ParsedMessage | null {
   // Accumulated text and blocks across all SSE events
   const textByIndex: Record<number, string> = {};
   const blocksByIndex: Record<number, ContentBlock> = {};
@@ -553,14 +529,10 @@ function extractAssistantFromStream(
         const delta = parsed.delta as Record<string, unknown>;
         if (delta?.type === "text_delta" && typeof delta.text === "string") {
           textByIndex[idx] = (textByIndex[idx] ?? "") + delta.text;
-        } else if (
-          delta?.type === "input_json_delta" &&
-          typeof delta.partial_json === "string"
-        ) {
+        } else if (delta?.type === "input_json_delta" && typeof delta.partial_json === "string") {
           const block = blocksByIndex[idx];
           if (block?.type === "tool_use") {
-            (block as any)._rawInput =
-              ((block as any)._rawInput ?? "") + delta.partial_json;
+            (block as any)._rawInput = ((block as any)._rawInput ?? "") + delta.partial_json;
           }
         }
       }
@@ -579,16 +551,9 @@ function extractAssistantFromStream(
     // OpenAI Responses API streaming (ChatGPT/Codex backend) ───────────────
     // Events use response.* type names; text arrives via response.output_text.delta,
     // function calls via response.output_item.added + response.function_call_arguments.delta.
-    if (
-      typeof parsed.type === "string" &&
-      parsed.type.startsWith("response.")
-    ) {
-      const idx =
-        typeof parsed.output_index === "number" ? parsed.output_index : 0;
-      if (
-        parsed.type === "response.output_text.delta" &&
-        typeof parsed.delta === "string"
-      ) {
+    if (typeof parsed.type === "string" && parsed.type.startsWith("response.")) {
+      const idx = typeof parsed.output_index === "number" ? parsed.output_index : 0;
+      if (parsed.type === "response.output_text.delta" && typeof parsed.delta === "string") {
         textByIndex[idx] = (textByIndex[idx] ?? "") + parsed.delta;
         hasContent = true;
       } else if (parsed.type === "response.output_item.added") {
@@ -608,8 +573,7 @@ function extractAssistantFromStream(
       ) {
         const block = blocksByIndex[idx];
         if (block?.type === "tool_use") {
-          (block as any)._rawInput =
-            ((block as any)._rawInput ?? "") + parsed.delta;
+          (block as any)._rawInput = ((block as any)._rawInput ?? "") + parsed.delta;
         }
       }
     }
@@ -655,9 +619,6 @@ function extractAssistantFromStream(
     role: "assistant",
     content: textContent,
     contentBlocks: finalBlocks.length > 0 ? finalBlocks : null,
-    tokens: estimateTokens(
-      finalBlocks.length > 0 ? finalBlocks : textContent,
-      model,
-    ),
+    tokens: estimateTokens(finalBlocks.length > 0 ? finalBlocks : textContent, model),
   };
 }

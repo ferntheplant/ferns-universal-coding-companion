@@ -60,10 +60,7 @@ function pad(s: string, width: number, right = false): string {
 // Composition table
 // ---------------------------------------------------------------------------
 
-function formatComposition(
-  composition: CompositionEntry[],
-  indent: string,
-): string[] {
+function formatComposition(composition: CompositionEntry[], indent: string): string[] {
   if (composition.length === 0) return [`${indent}(no composition data)`];
 
   const total = composition.reduce((s, c) => s + c.tokens, 0);
@@ -76,8 +73,7 @@ function formatComposition(
   const sorted = [...composition].sort((a, b) => b.tokens - a.tokens);
   for (const c of sorted) {
     if (c.tokens === 0) continue;
-    const pct =
-      c.pct || (total > 0 ? Math.round((c.tokens / total) * 1000) / 10 : 0);
+    const pct = c.pct || (total > 0 ? Math.round((c.tokens / total) * 1000) / 10 : 0);
     lines.push(
       `${indent}${pad(c.category, 22)} ${pad(fmtTokens(c.tokens), 10, true)} ${pad(`${pct.toFixed(1)}%`, 7, true)} ${pad(String(c.count), 6, true)}`,
     );
@@ -98,10 +94,7 @@ export interface FormatOptions {
   entries?: LharRecord[];
 }
 
-export function formatSessionAnalysis(
-  a: SessionAnalysis,
-  opts: FormatOptions = {},
-): string {
+export function formatSessionAnalysis(a: SessionAnalysis, opts: FormatOptions = {}): string {
   const { showPath = true, composition: compositionArg } = opts;
   const lines: string[] = [];
 
@@ -122,9 +115,7 @@ export function formatSessionAnalysis(
     lines.push(`  Wall time:       ${fmtDuration(a.timing.wallTimeMs)}`);
   }
   if (a.cache.totalCacheReadTokens > 0 || a.cache.totalCacheWriteTokens > 0) {
-    lines.push(
-      `  Cache hit rate:  ${(a.cache.cacheHitRate * 100).toFixed(1)}%`,
-    );
+    lines.push(`  Cache hit rate:  ${(a.cache.cacheHitRate * 100).toFixed(1)}%`);
   }
   lines.push("");
 
@@ -164,9 +155,7 @@ export function formatSessionAnalysis(
 
   // Growth blocks
   if (a.growthBlocks.length > 0) {
-    lines.push(
-      `GROWTH BLOCKS (${a.growthBlocks.length} contiguous increasing stretches)`,
-    );
+    lines.push(`GROWTH BLOCKS (${a.growthBlocks.length} contiguous increasing stretches)`);
     lines.push("-".repeat(70));
     const interesting = a.growthBlocks.filter((b) => b.numEntries > 1);
     if (interesting.length > 0) {
@@ -180,9 +169,7 @@ export function formatSessionAnalysis(
         );
       }
     } else {
-      lines.push(
-        "  (no multi-entry growth blocks; context fluctuates rapidly)",
-      );
+      lines.push("  (no multi-entry growth blocks; context fluctuates rapidly)");
     }
     lines.push("");
   }
@@ -270,9 +257,7 @@ export function formatSessionAnalysis(
   }
 
   if (showPreCompaction && a.compositionsPreCompaction.length > 0) {
-    lines.push(
-      `COMPOSITION BEFORE COMPACTIONS (${a.compositionsPreCompaction.length} snapshots)`,
-    );
+    lines.push(`COMPOSITION BEFORE COMPACTIONS (${a.compositionsPreCompaction.length} snapshots)`);
     lines.push("-".repeat(70));
     for (const [entryIdx, comp] of a.compositionsPreCompaction) {
       lines.push(`  Entry #${entryIdx}:`);
@@ -293,9 +278,7 @@ export function formatSessionAnalysis(
         lines.push("");
       }
     } else {
-      lines.push(
-        `Turn ${specificTurn} is out of range (session has ${a.userTurns.length} turns)`,
-      );
+      lines.push(`Turn ${specificTurn} is out of range (session has ${a.userTurns.length} turns)`);
     }
   }
 
@@ -304,12 +287,8 @@ export function formatSessionAnalysis(
   lines.push("-".repeat(70));
   if (a.contextTimeline.length > 0) {
     const tokensList = a.contextTimeline.map((t) => t[1]);
-    lines.push(
-      `  Peak context:          ${fmtTokens(Math.max(...tokensList))}`,
-    );
-    lines.push(
-      `  Final context:         ${fmtTokens(tokensList[tokensList.length - 1])}`,
-    );
+    lines.push(`  Peak context:          ${fmtTokens(Math.max(...tokensList))}`);
+    lines.push(`  Final context:         ${fmtTokens(tokensList[tokensList.length - 1])}`);
     const rates = a.growthBlocks
       .filter((b) => b.numEntries > 1 && b.ratePerTurn > 0)
       .map((b) => b.ratePerTurn);
@@ -318,16 +297,13 @@ export function formatSessionAnalysis(
       lines.push(
         `  Avg growth rate:       ${fmtTokens(Math.round(avg))}/turn (across ${rates.length} growth blocks)`,
       );
-      lines.push(
-        `  Max growth rate:       ${fmtTokens(Math.round(Math.max(...rates)))}/turn`,
-      );
+      lines.push(`  Max growth rate:       ${fmtTokens(Math.round(Math.max(...rates)))}/turn`);
     }
   }
   if (a.compactions.length > 0) {
     const totalLost = a.compactions.reduce((s, c) => s + c.tokensLost, 0);
     lines.push(`  Total tokens compacted:${fmtTokens(totalLost)}`);
-    const avgPct =
-      a.compactions.reduce((s, c) => s + c.pctLost, 0) / a.compactions.length;
+    const avgPct = a.compactions.reduce((s, c) => s + c.pctLost, 0) / a.compactions.length;
     lines.push(`  Avg compaction size:   ${avgPct.toFixed(1)}% of context`);
   }
   if (a.userTurns.length > 0) {
@@ -350,9 +326,7 @@ export function formatSessionAnalysis(
       lines.push(`  Median API call:       ${fmtDuration(t.medianApiTimeMs)}`);
     }
     if (t.medianTokensPerSecond != null) {
-      lines.push(
-        `  Median tok/s (output): ${t.medianTokensPerSecond.toFixed(1)}`,
-      );
+      lines.push(`  Median tok/s (output): ${t.medianTokensPerSecond.toFixed(1)}`);
     }
     if (t.totalInputTokens > 0 || t.totalOutputTokens > 0) {
       lines.push(`  Total input tokens:    ${fmtTokens(t.totalInputTokens)}`);
@@ -367,12 +341,8 @@ export function formatSessionAnalysis(
     lines.push("CACHE");
     lines.push("-".repeat(70));
     lines.push(`  Cache read tokens:     ${fmtTokens(c.totalCacheReadTokens)}`);
-    lines.push(
-      `  Cache write tokens:    ${fmtTokens(c.totalCacheWriteTokens)}`,
-    );
-    lines.push(
-      `  Cache hit rate:        ${(c.cacheHitRate * 100).toFixed(1)}%`,
-    );
+    lines.push(`  Cache write tokens:    ${fmtTokens(c.totalCacheWriteTokens)}`);
+    lines.push(`  Cache hit rate:        ${(c.cacheHitRate * 100).toFixed(1)}%`);
     lines.push("");
   }
 

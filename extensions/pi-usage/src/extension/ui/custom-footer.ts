@@ -97,7 +97,11 @@ export function installUsageCustomFooter(pi: ExtensionAPI, ctx: ExtensionContext
 
         const line1Left = theme.fg("dim", cwdWithBranch);
         const line1Right = theme.fg("dim", getThinkingSummary(ctx, pi));
-        const line1 = truncateToWidth(alignLeftRight(width, line1Left, line1Right), width, theme.fg("dim", "..."));
+        const line1 = truncateToWidth(
+          alignLeftRight(width, line1Left, line1Right),
+          width,
+          theme.fg("dim", "..."),
+        );
 
         const usage = sumAssistantUsage(ctx);
         const usingSubscription = ctx.model ? ctx.modelRegistry.isUsingOAuth(ctx.model) : false;

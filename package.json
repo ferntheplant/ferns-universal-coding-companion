@@ -1,9 +1,12 @@
 {
   "name": "ferns-universal-coder",
   "private": true,
-  "type": "module",
   "workspaces": {
-    "packages": ["extensions/*", "skills/*", "templates/*"],
+    "packages": [
+      "extensions/*",
+      "skills/*",
+      "templates/*"
+    ],
     "catalog": {
       "@mariozechner/pi-coding-agent": "^0.67.2",
       "@mariozechner/pi-ai": "^0.70.2",
@@ -12,12 +15,19 @@
       "typescript": "^5.9.3"
     }
   },
+  "type": "module",
   "scripts": {
     "typecheck": "bun run --filter '*' typecheck",
-    "test": "bun run --filter '*' test"
+    "test": "bun run --filter '*' test",
+    "lint": "oxlint",
+    "format": "oxfmt --write",
+    "format:check": "oxfmt --check",
+    "check": "bun run typecheck && bun run lint && bun run format:check"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
+    "oxfmt": "0.46.0",
+    "oxlint": "1.61.0",
     "typescript": "catalog:"
   }
 }

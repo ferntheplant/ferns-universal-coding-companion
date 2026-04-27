@@ -1,11 +1,23 @@
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { registerCommands } from "./commands";
 import { detectActiveProvider } from "./providers/registry";
-import { fetchProviderUsageWithCache, markLifecycleEvent, resetRuntimeState, setActiveModelProvider, setActiveProviderId, startPolling, startSession, stopPolling } from "./runtime";
+import {
+  fetchProviderUsageWithCache,
+  markLifecycleEvent,
+  resetRuntimeState,
+  setActiveModelProvider,
+  setActiveProviderId,
+  startPolling,
+  startSession,
+  stopPolling,
+} from "./runtime";
 import { clearUsageFooter, updateFooterFromUsage } from "./ui/footer";
 import { installUsageCustomFooter, uninstallUsageCustomFooter } from "./ui/custom-footer";
 
-async function refreshActiveProviderFooter(ctx: ExtensionContext, forceRefresh = false): Promise<void> {
+async function refreshActiveProviderFooter(
+  ctx: ExtensionContext,
+  forceRefresh = false,
+): Promise<void> {
   const activeAdapter = detectActiveProvider(ctx.model?.provider);
   setActiveProviderId(activeAdapter?.id ?? null);
 
@@ -25,7 +37,7 @@ async function refreshActiveProviderFooter(ctx: ExtensionContext, forceRefresh =
     updateFooterFromUsage(ctx, activeAdapter, result);
   } catch {
     clearUsageFooter(ctx);
-}
+  }
 }
 
 export default function usageExtension(pi: ExtensionAPI): void {

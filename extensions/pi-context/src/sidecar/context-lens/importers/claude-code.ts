@@ -18,22 +18,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type {
-  ImportedMessage,
-  ImportedSession,
-  ImportedTurn,
-} from "./types.js";
+import type { ImportedMessage, ImportedSession, ImportedTurn } from "./types.js";
 
 interface ClaudeCodeLine {
   uuid: string;
   parentUuid: string | null;
-  type:
-    | "user"
-    | "assistant"
-    | "system"
-    | "progress"
-    | "queue-operation"
-    | "file-history-snapshot";
+  type: "user" | "assistant" | "system" | "progress" | "queue-operation" | "file-history-snapshot";
   isMeta?: boolean;
   sessionId: string;
   timestamp: string;
@@ -133,9 +123,7 @@ function chainToTurns(chain: ClaudeCodeLine[]): ImportedTurn[] {
   return turns;
 }
 
-export function discoverClaudeCodeSessions(
-  baseDir: string = defaultClaudeDir(),
-): string[] {
+export function discoverClaudeCodeSessions(baseDir: string = defaultClaudeDir()): string[] {
   if (!fs.existsSync(baseDir)) return [];
   const files: string[] = [];
   for (const project of fs.readdirSync(baseDir)) {
@@ -150,9 +138,7 @@ export function discoverClaudeCodeSessions(
   return files;
 }
 
-export function parseClaudeCodeSession(
-  filePath: string,
-): ImportedSession | null {
+export function parseClaudeCodeSession(filePath: string): ImportedSession | null {
   let raw: string;
   try {
     raw = fs.readFileSync(filePath, "utf8");

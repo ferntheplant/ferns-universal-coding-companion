@@ -62,7 +62,10 @@ export class PromptRegistry {
     return {
       modelKey,
       fragments,
-      combinedContent: fragments.map((fragment) => fragment.content).join("\n\n").trim(),
+      combinedContent: fragments
+        .map((fragment) => fragment.content)
+        .join("\n\n")
+        .trim(),
     };
   }
 
@@ -146,7 +149,9 @@ export class PromptRegistry {
     };
   }
 
-  private async readPromptFile(filePath: string): Promise<{ fragment?: PromptFragment; warnings: string[] }> {
+  private async readPromptFile(
+    filePath: string,
+  ): Promise<{ fragment?: PromptFragment; warnings: string[] }> {
     const warnings: string[] = [];
     const fileName = basename(filePath);
 

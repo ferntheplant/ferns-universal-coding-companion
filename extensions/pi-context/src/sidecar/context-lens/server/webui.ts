@@ -27,11 +27,7 @@ export function loadHtmlUI(): string {
 /**
  * Create the combined Hono app: API routes + static file serving.
  */
-export function createApp(
-  store: Store,
-  htmlUI: string,
-  baseDir?: string,
-): Hono {
+export function createApp(store: Store, htmlUI: string, baseDir?: string): Hono {
   const app = new Hono();
 
   // Mount API routes

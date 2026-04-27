@@ -5,6 +5,7 @@
 Build Pi extension that appends model-specific system prompt fragments to Pi's normal system prompt chain.
 
 Key requirement:
+
 - never replace Pi default/system/user prompt stack
 - only append extra instructions for active model
 - keep custom prompt files in this repo
@@ -15,6 +16,7 @@ Key requirement:
 ### Pi hooks and resource model
 
 Findings from Pi docs:
+
 - `before_agent_start` can modify per-turn system prompt by returning `{ systemPrompt }`.
 - `event.systemPrompt` already contains Pi-built prompt stack for turn.
 - `ctx.model` exposes currently active model.
@@ -22,6 +24,7 @@ Findings from Pi docs:
 - project/global `.pi/SYSTEM.md` replaces Pi default prompt, while append sources like `APPEND_SYSTEM.md` and `--append-system-prompt` are already folded into Pi prompt build.
 
 Implication:
+
 - correct hook for this feature = `before_agent_start`
 - correct behavior = start from `event.systemPrompt`, append model fragment, return new string
 - no need to rebuild system prompt manually
@@ -32,11 +35,13 @@ Implication:
 Current starter scaffold stale against installed Pi API.
 
 `bun run typecheck` currently fails with:
+
 - `Property 'command' does not exist on type 'ExtensionAPI'.`
 - `Property 'toast' does not exist on type 'ExtensionUIContext'.`
 - command-only notification helpers typed against `ExtensionCommandContext` but used from session events
 
 Implication:
+
 - first implementation step must update scaffold to current Pi API (`registerCommand`, `ctx.ui.notify`, shared `ExtensionContext`-safe notification helpers, etc.) before feature work.
 
 ## Product Spec
@@ -48,6 +53,7 @@ As Pi user, I want repo-local prompt files that declare, in YAML frontmatter, wh
 ### Non-goals
 
 Not in MVP:
+
 - replacing Pi base system prompt
 - provider payload rewriting via `before_provider_request`
 - remote prompt fetching
@@ -89,6 +95,7 @@ Example exact model match:
 models:
   - anthropic/claude-sonnet-4-5
 ---
+
 Use concise plans. Prefer anchored edits. Re-read before multi-file refactors.
 ```
 
@@ -99,6 +106,7 @@ Example provider-wide match:
 models:
   - anthropic/*
 ---
+
 Anthropic models in this workflow should prefer explicit progress narration only when task spans multiple files.
 ```
 
@@ -107,8 +115,9 @@ Example model-id-across-providers match:
 ```md
 ---
 models:
-  - '*/gpt-5'
+  - "*/gpt-5"
 ---
+
 For GPT-5, bias toward direct action over long speculative planning.
 ```
 
@@ -121,10 +130,12 @@ models:
   - openai/gpt-5
   - google/gemini-2.5-pro
 ---
+
 When editing architecture docs, preserve section order and decision rationale.
 ```
 
 Rules:
+
 - only `.md` files loaded
 - prompt files live directly under `model-prompts/` for MVP
 - each file may target one or many model selectors via frontmatter `models`
@@ -133,6 +144,7 @@ Rules:
 - frontmatter required for matching; file without valid `models` list is skipped with warning
 
 Why flat dir + frontmatter:
+
 - one prompt can target many models
 - easier authoring when prompts cut across providers
 - avoids exploding filepath hierarchy
@@ -141,6 +153,7 @@ Why flat dir + frontmatter:
 ### Runtime behavior
 
 On each user prompt:
+
 1. extension reads active `ctx.model`
 2. extension forms active model key as `<provider>/<model-id>`
 3. extension scans cached prompt registry
@@ -150,6 +163,7 @@ On each user prompt:
 7. Pi continues with full existing prompt + extra model instructions
 
 If no model or no matching fragments:
+
 - no-op
 
 ### Example appended block
@@ -171,10 +185,12 @@ Do not include file path list in prompt by default. Save tokens. Expose file pro
 ### Model key
 
 Use exact Pi active model identifier:
+
 - active key = `<provider>/<model-id>`
 - source values from `ctx.model.provider` and `ctx.model.id`
 
 Examples:
+
 - `anthropic/claude-sonnet-4-5`
 - `openai/gpt-5`
 - `google/gemini-2.5-pro`
@@ -182,16 +198,19 @@ Examples:
 ### Allowed selector syntax
 
 Each selector in frontmatter `models` list may be one of:
+
 - exact model: `<provider>/<model-id>`
 - provider wildcard: `<provider>/*`
 - model-id wildcard across providers: `*/<model-id>`
 
 Examples:
+
 - `anthropic/claude-sonnet-4-5` = exact only
 - `anthropic/*` = every Anthropic model
 - `*/gpt-5` = every provider's `gpt-5` model id
 
 Out of scope for MVP:
+
 - `*/*`
 - partial wildcards like `claude-*`
 - regex/glob matching
@@ -202,6 +221,7 @@ Out of scope for MVP:
 Prompt file matches active model if any selector in its `models` frontmatter list matches.
 
 Matching rules:
+
 - exact selector matches exact active key
 - `<provider>/*` matches same provider, any model id
 - `*/<model-id>` matches same model id, any provider
@@ -211,15 +231,18 @@ Matching rules:
 Multiple prompt files may match same model. All matches compose.
 
 Ordering rule:
+
 - matched files sort by filename lexicographically
 - contents concatenate in that order
 
 Reason:
+
 - deterministic
 - simple mental model
 - no hidden specificity sorting surprises
 
 Optional future enhancement:
+
 - explicit `priority` field in frontmatter if filename ordering becomes too limiting
 
 ## Technical Design
@@ -229,6 +252,7 @@ Optional future enhancement:
 Use `pi.on("before_agent_start", ...)`.
 
 Reason:
+
 - docs explicitly support system prompt modification here
 - happens after Pi builds normal prompt chain
 - extension can append safely
@@ -239,11 +263,13 @@ Reason:
 Resolve extension repo root from module location, not cwd.
 
 Proposed helper:
+
 - `src/extension/paths.ts`
 - derive repo root from `import.meta.url`
 - base prompt dir = `<repoRoot>/model-prompts`
 
 Reason:
+
 - repo may be symlinked into Pi extension dir
 - prompt files live with extension source, not target project cwd
 
@@ -263,10 +289,12 @@ Only `models` required for matching. `description` optional for status/debug out
 Need YAML parser strategy.
 
 Preferred options:
+
 - minimal dependency like `gray-matter`
 - or tiny custom parser if we want to keep runtime deps near zero
 
 Recommendation:
+
 - use `gray-matter` for correctness and less parser edge-case pain
 - list under `dependencies`, not `devDependencies`, since extension runs in Node via Pi
 
@@ -290,6 +318,7 @@ interface ResolvedPromptSet {
 ```
 
 Responsibilities:
+
 - scan `model-prompts/`
 - read `.md` files
 - parse YAML frontmatter
@@ -303,11 +332,13 @@ Responsibilities:
 Need validator for supported selectors.
 
 Valid forms:
+
 - `^[^*/\s]+/[^*/\s]+$` exact
 - `^[^*/\s]+/\*$` provider wildcard
 - `^\*/[^*/\s]+$` model-id wildcard
 
 Invalid selectors:
+
 - empty strings
 - `*/*`
 - multiple `*`
@@ -315,6 +346,7 @@ Invalid selectors:
 - embedded whitespace
 
 Invalid file behavior:
+
 - skip entire file if `models` missing, empty, or contains only invalid selectors
 - record warning for status command and one-time UI notify
 
@@ -323,17 +355,20 @@ Invalid file behavior:
 MVP cache should be simple, safe, low-thrash.
 
 Proposed approach:
+
 - keep in-memory registry with prompt dir fingerprint
 - fingerprint = latest `mtimeMs` across loaded `.md` files and prompt dir
 - on each `before_agent_start`, call `ensureFresh()`
 - if tree changed, rebuild cache
 
 Preferred bias:
+
 - favor correctness and small code over clever watch logic
 - no file watcher in MVP
 - edits should apply next turn without requiring Pi `/reload` if cheap reload logic feasible
 
 If hot refresh without `/reload` adds too much complexity, acceptable fallback:
+
 - require `/reload` after editing prompt files
 - document this clearly
 
@@ -344,6 +379,7 @@ Add at least one debug command.
 ### `/model-system-prompts-status`
 
 Show:
+
 - active model key
 - prompt dir base path
 - matched fragment files
@@ -353,23 +389,27 @@ Show:
 - last scan errors/warnings
 
 Reason:
+
 - easy smoke testing
 - easy debugging when prompt not applied
 - aligns with extension-guide advice: recovery/status commands worth adding early
 
 Optional later:
+
 - `/model-system-prompts-list` to dump all discovered prompt files + selectors
 - `/model-system-prompts-reload` to force registry refresh without full Pi `/reload`
 
 ## Error Handling
 
 Failure policy:
+
 - never block agent run because prompt fragment missing or unreadable
 - on read/parse/frontmatter failure, skip bad file and keep base prompt intact
 - surface warning via `ctx.ui.notify(..., "error" | "warning")` once per distinct failure per session
 - include latest failure details in status command
 
 Reason:
+
 - extension additive only
 - safe failure mode = no extra prompt, not broken Pi session
 
@@ -432,11 +472,13 @@ src/
 ## Implementation Plan
 
 ### Phase 0: fix scaffold — COMPLETE
+
 1. Replace stale command API usage with current Pi API.
 2. Replace `toast` helpers with `ctx.ui.notify` helpers.
 3. Make notification helpers accept `ExtensionContext`, not only `ExtensionCommandContext`.
 4. Run `bun run typecheck` until clean.
-Status:
+   Status:
+
 - complete
 - `registerCommand` now used instead of stale command API
 - notifications now use `ctx.ui.notify`
@@ -444,28 +486,36 @@ Status:
 - `bun run typecheck` passing
 
 Deliverable:
+
 - repo compiles against installed Pi version before feature work starts
+
 ### Phase 1: prompt path and model-key helpers — COMPLETE
+
 1. Add repo-root resolution from `import.meta.url`.
 2. Add `modelPromptsDir` constant.
 3. Add helper to build active model key as `<provider>/<model-id>`.
 4. Add selector validation/matching helpers.
 5. Document expected frontmatter format in comments and README if needed.
-Status:
+   Status:
+
 - complete
 - `src/extension/paths.ts` added
 - `repoRoot`, `modelPromptsDir`, `toModelKey()`, `isValidModelSelector()`, and `matchesModelSelector()` implemented
 
 Deliverable:
+
 - deterministic model key + selector matching primitives
+
 ### Phase 2: prompt registry — COMPLETE
+
 1. Implement scan for `.md` files directly under `model-prompts/`.
 2. Parse frontmatter and markdown body.
 3. Validate `models` selectors.
 4. Read contents and sort files lexicographically by filename.
 5. Record scan metadata and non-fatal errors.
 6. Add cache invalidation strategy.
-Status:
+   Status:
+
 - complete
 - `gray-matter` added as runtime dependency
 - `src/extension/prompt-registry.ts` implemented
@@ -473,6 +523,7 @@ Status:
 - `/model-system-prompts-status` now surfaces registry state, matches, and warnings
 
 Deliverable:
+
 - `getResolvedPromptSet(modelKey)` returns ordered fragments + combined content
 
 ### Phase 3: prompt injection hook
@@ -486,6 +537,7 @@ Deliverable:
 7. Persist last applied result in runtime state for command/debug use.
 
 Deliverable:
+
 - active model gets additive prompt text each turn
 
 ### Phase 4: debug/status command
@@ -495,6 +547,7 @@ Deliverable:
 3. Ensure command works even before first prompt.
 
 Deliverable:
+
 - user can verify extension behavior without guessing
 
 ### Phase 5: docs and smoke test checklist
@@ -506,6 +559,7 @@ Deliverable:
 5. Add failure/reload notes.
 
 Deliverable:
+
 - extension usable by future agent/user without reverse engineering
 
 ## Smoke Test Plan
@@ -526,6 +580,7 @@ Deliverable:
 models:
   - anthropic/*
 ---
+
 Anthropic provider-wide instructions.
 ```
 
@@ -534,8 +589,9 @@ Anthropic provider-wide instructions.
 ```md
 ---
 models:
-  - '*/gpt-5'
+  - "*/gpt-5"
 ---
+
 Applies to any provider's gpt-5 model id.
 ```
 
@@ -546,6 +602,7 @@ Applies to any provider's gpt-5 model id.
 models:
   - anthropic/claude-sonnet-4-5
 ---
+
 Exact-model instructions.
 ```
 
@@ -554,6 +611,7 @@ Exact-model instructions.
 6. Confirm status command shows matching exact file + provider-wide file, but not `*/gpt-5`
 
 Then:
+
 1. Select `openai/gpt-5`
 2. Send prompt again
 3. Confirm status shows `20-gpt5.md` and not Anthropic-only files
@@ -582,6 +640,7 @@ User asked for model-specific prompt alongside existing system prompts. Pi alrea
 ### Why flat files + frontmatter
 
 Benefits:
+
 - one file can target many models
 - cross-provider matching easy
 - explicit matching near prompt text
@@ -589,12 +648,14 @@ Benefits:
 - future metadata fields fit naturally in frontmatter
 
 Tradeoff:
+
 - requires YAML parser/validation
 - matching rules move from filesystem into file metadata
 
 ### Why limited wildcard syntax
 
 User need clear:
+
 - exact `<provider>/<model-id>`
 - provider family `<provider>/*`
 - cross-provider model-id `*/<model-id>`
@@ -636,6 +697,7 @@ Need user clarification on these before final implementation or during review:
 ## Recommended MVP Decision Set
 
 If no further clarification, default to:
+
 - exact string model keys in format `<provider>/<model-id>`
 - selector support only for exact, `<provider>/*`, and `*/<model-id>`
 - flat `model-prompts/*.md` layout
@@ -648,6 +710,7 @@ If no further clarification, default to:
 ## Success Criteria
 
 Extension done when:
+
 - `bun run typecheck` passes
 - Pi loads extension from symlinked repo
 - active model gets matching prompt fragments appended to existing system prompt

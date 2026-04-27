@@ -104,7 +104,9 @@ async function main(): Promise<void> {
   const response = await fetch(url);
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Export failed: ${response.status} ${response.statusText}${body ? `: ${body}` : ""}`);
+    throw new Error(
+      `Export failed: ${response.status} ${response.statusText}${body ? `: ${body}` : ""}`,
+    );
   }
 
   const data = Buffer.from(await response.arrayBuffer());

@@ -112,7 +112,11 @@ async function notifySidecarOfName(ctx: ExtensionContext, name: string): Promise
   }
 }
 
-async function handleNameCommand(args: string, ctx: ExtensionCommandContext, pi: ExtensionAPI): Promise<void> {
+async function handleNameCommand(
+  args: string,
+  ctx: ExtensionCommandContext,
+  pi: ExtensionAPI,
+): Promise<void> {
   const name = args.trim();
   if (!name) {
     const current = getSessionName(pi);

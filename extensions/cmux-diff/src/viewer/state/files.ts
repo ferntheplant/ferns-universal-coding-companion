@@ -16,7 +16,9 @@ export interface SidebarTreeNode {
   children?: SidebarTreeNode[];
 }
 
-export const fileIdsAtom = atom((get) => get(reviewPayloadAtom)?.files.map((file) => file.id) ?? []);
+export const fileIdsAtom = atom(
+  (get) => get(reviewPayloadAtom)?.files.map((file) => file.id) ?? [],
+);
 
 export const filesByIdAtom = atom<Record<string, ReviewFile>>((get) => {
   const files = get(reviewPayloadAtom)?.files ?? [];

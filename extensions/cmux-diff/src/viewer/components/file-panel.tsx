@@ -3,7 +3,12 @@ import { useAtom, useAtomValue } from "jotai";
 import { Comments } from "./comments";
 import { GitDiffFileView } from "./git-diff-file-view";
 import { fileByIdAtomFamily } from "../state/files";
-import { activeFileIdAtom, diffViewModeAtom, showUnchangedContextAtom, wordWrapAtom } from "../state/ui";
+import {
+  activeFileIdAtom,
+  diffViewModeAtom,
+  showUnchangedContextAtom,
+  wordWrapAtom,
+} from "../state/ui";
 import { lineCommentsByKeyAtom } from "../state/comments";
 
 export function FilePanel() {
@@ -57,13 +62,19 @@ function ActiveFilePanel({ fileId }: { fileId: string }) {
     return map;
   }, [lineComments, fileId]);
 
-  const handleAddLineComment = useCallback((lineNumber: number, side: "deletions" | "additions") => {
-    setActiveCommentLine({ lineNumber, side });
-  }, []);
+  const handleAddLineComment = useCallback(
+    (lineNumber: number, side: "deletions" | "additions") => {
+      setActiveCommentLine({ lineNumber, side });
+    },
+    [],
+  );
 
-  const handleEditLineComment = useCallback((lineNumber: number, side: "deletions" | "additions") => {
-    setActiveCommentLine({ lineNumber, side });
-  }, []);
+  const handleEditLineComment = useCallback(
+    (lineNumber: number, side: "deletions" | "additions") => {
+      setActiveCommentLine({ lineNumber, side });
+    },
+    [],
+  );
 
   const handleCloseLineComment = useCallback(() => {
     setActiveCommentLine(null);

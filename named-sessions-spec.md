@@ -7,6 +7,7 @@ Unified session naming between Pi's native session system and pi-context.
 Completed on 2026-04-21.
 
 Implemented as specified, with one command-name adjustment to avoid a built-in Pi command conflict:
+
 - shipped command: `/pi-context-name <label>`
 - equivalent behavior to the originally proposed `/name <label>`
 
@@ -121,6 +122,7 @@ Use `ctx.ui.setStatus(id, text)` to show the session name in Pi's footer area.
 ### Current behavior (to be replaced)
 
 `store.ts:361-394` uses a heuristic to group Pi turns into conversations:
+
 - Fingerprint = hash of system prompt + working directory
 - Split on 5-minute inactivity TTL or >50% context token shrinkage
 - Conversation ID = `SHA256(fingerprint + timestamp).slice(0, 16)` — a synthetic 16-char hex string
@@ -144,8 +146,8 @@ const entry = this.store.storeRequest(
   requestBody as Record<string, any>,
   meta,
   {},
-  traceId,          // keep for LHAR trace derivation
-  turn.sessionId,   // NEW: pass Pi session UUID as conversationId hint
+  traceId, // keep for LHAR trace derivation
+  turn.sessionId, // NEW: pass Pi session UUID as conversationId hint
 );
 ```
 
@@ -174,9 +176,9 @@ Add an optional `name` field to `types.ts`:
 
 ```typescript
 export interface Conversation {
-  id: string;                     // Pi session UUID (for Pi source)
-  label: string;                  // Auto-extracted from first message
-  name?: string | null;           // User-given name via /name
+  id: string; // Pi session UUID (for Pi source)
+  label: string; // Auto-extracted from first message
+  name?: string | null; // User-given name via /name
   source: string;
   workingDirectory: string | null;
   firstSeen: string;
@@ -301,6 +303,7 @@ This works naturally with the new model:
 Pi sessions support a tree structure: users can `/tree` to navigate back to an earlier entry and branch from there. A single `.jsonl` file can contain multiple divergent conversation paths. The active path at any moment is determined by following the `parentId` chain from the current head entry back to root.
 
 pi-context currently only sees turns as they happen on the active branch. It has no visibility into:
+
 - Which branch is active
 - When the user switches branches
 - The full tree topology

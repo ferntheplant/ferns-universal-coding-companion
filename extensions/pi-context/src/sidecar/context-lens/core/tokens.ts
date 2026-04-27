@@ -176,8 +176,7 @@ export function rescaleContextTokens(
   // Fix rounding residual so both invariants hold:
   //   totalTokens === systemTokens + toolsTokens + messagesTokens
   //   messagesTokens === sum(msg.tokens)
-  const residual =
-    authoritative - (ci.systemTokens + ci.toolsTokens + ci.messagesTokens);
+  const residual = authoritative - (ci.systemTokens + ci.toolsTokens + ci.messagesTokens);
   if (residual !== 0) {
     ci.messagesTokens += residual;
     // Push the residual into the largest per-message entry (or first if tied)

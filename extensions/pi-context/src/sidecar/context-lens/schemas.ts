@@ -238,10 +238,7 @@ export const EntryLineSchema = v.object({
 /**
  * A single line in state.jsonl is either a conversation or an entry.
  */
-export const StateLineSchema = v.variant("type", [
-  ConversationLineSchema,
-  EntryLineSchema,
-]);
+export const StateLineSchema = v.variant("type", [ConversationLineSchema, EntryLineSchema]);
 
 // ---------------------------------------------------------------------------
 // Ingest API (POST /api/ingest)
@@ -424,10 +421,7 @@ export const IngestPiAnyPayloadSchema = v.union([
 /**
  * Union: accept either capture-format or legacy format.
  */
-export const IngestPayloadSchema = v.union([
-  IngestCapturePayloadSchema,
-  IngestLegacyPayloadSchema,
-]);
+export const IngestPayloadSchema = v.union([IngestCapturePayloadSchema, IngestLegacyPayloadSchema]);
 
 // ---------------------------------------------------------------------------
 // Inferred types for convenience

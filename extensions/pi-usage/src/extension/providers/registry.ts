@@ -14,7 +14,9 @@ export function getProviderById(providerId: ProviderId): ProviderAdapter | undef
   return PROVIDERS.find((provider) => provider.id === providerId);
 }
 
-export function detectActiveProvider(modelProvider: string | undefined): ProviderAdapter | undefined {
+export function detectActiveProvider(
+  modelProvider: string | undefined,
+): ProviderAdapter | undefined {
   return PROVIDERS.find((provider) => provider.detectActive(modelProvider));
 }
 

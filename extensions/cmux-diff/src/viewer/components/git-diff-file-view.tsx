@@ -53,7 +53,9 @@ class RenderErrorBoundary extends Component<RenderErrorBoundaryProps, RenderErro
 
   override render() {
     if (this.state.error) {
-      return <div className="git-diff-file-view__empty">Unable to render diff: {this.state.error}</div>;
+      return (
+        <div className="git-diff-file-view__empty">Unable to render diff: {this.state.error}</div>
+      );
     }
 
     return this.props.children;
@@ -61,7 +63,8 @@ class RenderErrorBoundary extends Component<RenderErrorBoundaryProps, RenderErro
 }
 
 function parseCachedFileDiff(file: ReviewFile): ParsedReviewFileDiff {
-  const fingerprint = typeof file.fingerprint === "string" ? file.fingerprint : `unknown:${file.path ?? "file"}`;
+  const fingerprint =
+    typeof file.fingerprint === "string" ? file.fingerprint : `unknown:${file.path ?? "file"}`;
   const cacheKey = buildParsedDiffCacheKey(fingerprint);
   const cached = getCachedDiff<ParsedReviewFileDiff>(cacheKey);
   if (cached) {

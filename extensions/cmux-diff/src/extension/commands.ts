@@ -17,8 +17,17 @@ import {
 } from "../domain/cmux";
 import { formatDiffTarget, validateDiffTarget } from "../domain/diff-target";
 import { buildReviewPayload, resolveRepoRoot } from "../domain/git";
-import { promptForCmuxMode, promptForDiffTarget, type CmuxModePromptResult, type DiffTargetPromptResult } from "./prompts";
-import { createReviewContext, disposeReviewContext, listActiveReviewContexts } from "../server/review-registry";
+import {
+  promptForCmuxMode,
+  promptForDiffTarget,
+  type CmuxModePromptResult,
+  type DiffTargetPromptResult,
+} from "./prompts";
+import {
+  createReviewContext,
+  disposeReviewContext,
+  listActiveReviewContexts,
+} from "../server/review-registry";
 import { buildReviewRoute, buildSubmitRoute } from "../server/routes";
 import { getServerStatus, startServer, stopServer } from "../server";
 import type { ReviewPayload, CommentSubmitPayload } from "../domain/types";
@@ -75,11 +84,14 @@ async function renderStatusMessage(_pi: ExtensionAPI): Promise<string> {
 
   const tokens = server.activeTokens.length > 0 ? server.activeTokens.join(",") : "none";
 
-  const activeDetails = runtime.activeReviews.map((review) => {
-    const context = activeContexts.find((c) => c.token === review.token);
-    const lastAccess = context ? formatElapsedTime(context.lastAccessedAt) : "unknown";
-    return `${review.token}:${review.target} (created ${formatElapsedTime(review.createdAt)}, last access ${lastAccess})`;
-  }).join(" | ") || "none";
+  const activeDetails =
+    runtime.activeReviews
+      .map((review) => {
+        const context = activeContexts.find((c) => c.token === review.token);
+        const lastAccess = context ? formatElapsedTime(context.lastAccessedAt) : "unknown";
+        return `${review.token}:${review.target} (created ${formatElapsedTime(review.createdAt)}, last access ${lastAccess})`;
+      })
+      .join(" | ") || "none";
 
   return `server: running on ${server.host}:${server.port}; uptime: ${formatUptime(server.uptimeMs)}; active tokens: ${tokens}; active reviews: ${activeDetails}`;
 }
@@ -101,7 +113,11 @@ async function fetchAvailablePanes(pi: ExtensionAPI): Promise<PaneInfo[]> {
   }
 }
 
-async function handleCmuxDiff(_args: string, ctx: ExtensionCommandContext, pi: ExtensionAPI): Promise<void> {
+async function handleCmuxDiff(
+  _args: string,
+  ctx: ExtensionCommandContext,
+  pi: ExtensionAPI,
+): Promise<void> {
   if (hasReachedActiveReviewLimit()) {
     notifyError(ctx, renderActiveReviewError());
     return;
@@ -186,7 +202,10 @@ async function handleCmuxDiff(_args: string, ctx: ExtensionCommandContext, pi: E
     onSubmit: async (submitPayload: CommentSubmitPayload) => {
       try {
         await injectCommentsIntoPi(pi, submitPayload, ctx);
-        notifySuccess(ctx, `Review submitted: ${submitPayload.comments.length} comments added to Pi.`);
+        notifySuccess(
+          ctx,
+          `Review submitted: ${submitPayload.comments.length} comments added to Pi.`,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         notifyError(ctx, `Failed to inject comments into Pi: ${message}`);
@@ -235,12 +254,20 @@ async function handleCmuxDiff(_args: string, ctx: ExtensionCommandContext, pi: E
   notifyInfo(ctx, `Internal submit endpoint (do not open in browser): ${submitUrl}`);
 }
 
-async function handleCmuxDiffStatus(_args: string, ctx: ExtensionCommandContext, pi: ExtensionAPI): Promise<void> {
+async function handleCmuxDiffStatus(
+  _args: string,
+  ctx: ExtensionCommandContext,
+  pi: ExtensionAPI,
+): Promise<void> {
   const message = await renderStatusMessage(pi);
   notifyInfo(ctx, `status: ${message}`);
 }
 
-async function handleCmuxDiffKill(_args: string, ctx: ExtensionCommandContext, _pi: ExtensionAPI): Promise<void> {
+async function handleCmuxDiffKill(
+  _args: string,
+  ctx: ExtensionCommandContext,
+  _pi: ExtensionAPI,
+): Promise<void> {
   const statusBeforeKill = getServerStatus();
   const runtimeBeforeKill = getRuntimeStatusSnapshot();
 
@@ -251,7 +278,10 @@ async function handleCmuxDiffKill(_args: string, ctx: ExtensionCommandContext, _
 
   // Report what we're about to clean up
   const activeTokens = runtimeBeforeKill.activeReviews.map((r) => r.token).join(", ") || "none";
-  notifyInfo(ctx, `Stopping server and clearing ${runtimeBeforeKill.activeReviewCount} active review(s) (${activeTokens})...`);
+  notifyInfo(
+    ctx,
+    `Stopping server and clearing ${runtimeBeforeKill.activeReviewCount} active review(s) (${activeTokens})...`,
+  );
 
   setServerState("stopping");
 
@@ -270,9 +300,15 @@ async function handleCmuxDiffKill(_args: string, ctx: ExtensionCommandContext, _
   if (stopResult.stopped && stopResult.contextsCleared) {
     notifyWarning(ctx, "Review server stopped and all review contexts cleared.");
   } else if (!stopResult.stopped) {
-    notifyWarning(ctx, "No server process was running, but review registry/runtime state was cleared.");
+    notifyWarning(
+      ctx,
+      "No server process was running, but review registry/runtime state was cleared.",
+    );
   } else {
-    notifyWarning(ctx, "Server stopped but context cleanup may be incomplete. Runtime state reset.");
+    notifyWarning(
+      ctx,
+      "Server stopped but context cleanup may be incomplete. Runtime state reset.",
+    );
   }
 }
 

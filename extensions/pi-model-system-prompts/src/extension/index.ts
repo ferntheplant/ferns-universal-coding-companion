@@ -1,9 +1,18 @@
-import type { BeforeAgentStartEvent, ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type {
+  BeforeAgentStartEvent,
+  ExtensionAPI,
+  ExtensionContext,
+} from "@mariozechner/pi-coding-agent";
 import { registerCommands } from "./commands";
 import { notifyError, notifyInfo, notifyWarning } from "./notifications";
 import { modelPromptsDir } from "./paths";
 import { appendPromptWrapper, buildPromptWrapper, listMatchedFileNames } from "./prompt-resolver";
-import { resetRuntimeState, getPromptRegistry, recordWarnings, setLastAppliedPromptState } from "./runtime";
+import {
+  resetRuntimeState,
+  getPromptRegistry,
+  recordWarnings,
+  setLastAppliedPromptState,
+} from "./runtime";
 import { toModelKey } from "./paths";
 
 async function handleBeforeAgentStart(

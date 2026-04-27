@@ -1,8 +1,5 @@
 import { estimateTokens } from "../core.js";
-import type {
-  CompositionCategory,
-  CompositionEntry,
-} from "../lhar-types.generated.js";
+import type { CompositionCategory, CompositionEntry } from "../lhar-types.generated.js";
 import type { ContextInfo } from "../types.js";
 
 export function analyzeComposition(
@@ -10,10 +7,7 @@ export function analyzeComposition(
   rawBody: Record<string, any> | undefined,
 ): CompositionEntry[] {
   const model = contextInfo.model;
-  const counts = new Map<
-    CompositionCategory,
-    { tokens: number; count: number }
-  >();
+  const counts = new Map<CompositionCategory, { tokens: number; count: number }>();
 
   function add(category: CompositionCategory, tokens: number): void {
     const existing = counts.get(category);
@@ -27,12 +21,9 @@ export function analyzeComposition(
 
   if (!rawBody) {
     // Fallback to contextInfo aggregates
-    if (contextInfo.systemTokens > 0)
-      add("system_prompt", contextInfo.systemTokens);
-    if (contextInfo.toolsTokens > 0)
-      add("tool_definitions", contextInfo.toolsTokens);
-    if (contextInfo.messagesTokens > 0)
-      add("other", contextInfo.messagesTokens);
+    if (contextInfo.systemTokens > 0) add("system_prompt", contextInfo.systemTokens);
+    if (contextInfo.toolsTokens > 0) add("tool_definitions", contextInfo.toolsTokens);
+    if (contextInfo.messagesTokens > 0) add("other", contextInfo.messagesTokens);
     return buildCompositionArray(counts, contextInfo.totalTokens);
   }
 
@@ -55,10 +46,7 @@ export function analyzeComposition(
 
   // Tool definitions
   if (rawBody.tools && Array.isArray(rawBody.tools)) {
-    add(
-      "tool_definitions",
-      estimateTokens(JSON.stringify(rawBody.tools), model),
-    );
+    add("tool_definitions", estimateTokens(JSON.stringify(rawBody.tools), model));
   }
 
   // Gemini/Code Assist: unwrap .request wrapper if present
@@ -66,10 +54,7 @@ export function analyzeComposition(
   // Gemini systemInstruction
   if (geminiBody.systemInstruction) {
     const parts = geminiBody.systemInstruction.parts || [];
-    add(
-      "system_prompt",
-      estimateTokens(parts.map((p: any) => p.text || "").join("\n"), model),
-    );
+    add("system_prompt", estimateTokens(parts.map((p: any) => p.text || "").join("\n"), model));
   }
 
   // Gemini contents[] or standard messages[]/input[]
@@ -283,20 +268,14 @@ function buildCompositionArray(
  * largest entry so `sum(composition[].tokens) === authoritative` exactly.
  * Also recomputes `pct` fields.
  */
-export function normalizeComposition(
-  composition: CompositionEntry[],
-  authoritative: number,
-): void {
+export function normalizeComposition(composition: CompositionEntry[], authoritative: number): void {
   if (composition.length === 0) return;
   const rawSum = composition.reduce((s, c) => s + c.tokens, 0);
   if (rawSum === 0 || authoritative === 0) return;
   if (rawSum === authoritative) {
     // Already matches; just recompute pct for consistency
     for (const c of composition) {
-      c.pct =
-        authoritative > 0
-          ? Math.round((c.tokens / authoritative) * 1000) / 10
-          : 0;
+      c.pct = authoritative > 0 ? Math.round((c.tokens / authoritative) * 1000) / 10 : 0;
     }
     return;
   }
@@ -313,9 +292,6 @@ export function normalizeComposition(
   }
   // Recompute pct
   for (const c of composition) {
-    c.pct =
-      authoritative > 0
-        ? Math.round((c.tokens / authoritative) * 1000) / 10
-        : 0;
+    c.pct = authoritative > 0 ? Math.round((c.tokens / authoritative) * 1000) / 10 : 0;
   }
 }

@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/node_modules",
+    "**/dist",
+    "**/tmp",
+    "**/*.generated.ts",
+    "extensions/pi-context/src/sidecar/context-lens/ui/dist",
+    "bun.lock",
+    "MONOREPO_MIGRATION.md"
+  ]
+}

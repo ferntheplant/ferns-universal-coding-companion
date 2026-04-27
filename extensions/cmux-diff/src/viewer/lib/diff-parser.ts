@@ -1,4 +1,9 @@
-import { parsePatchFiles, processFile, type FileDiffMetadata, type ParsedPatch } from "@pierre/diffs";
+import {
+  parsePatchFiles,
+  processFile,
+  type FileDiffMetadata,
+  type ParsedPatch,
+} from "@pierre/diffs";
 import type { ReviewFile } from "../../domain/types";
 
 export interface ParsedReviewFileDiff {
@@ -55,7 +60,11 @@ function buildPatchCandidates(path: string, patchText: string): string[] {
   return dedupe(candidates);
 }
 
-function parseWithProcessFile(file: ReviewFile, normalizedPath: string, patchText: string): FileDiffMetadata | null {
+function parseWithProcessFile(
+  file: ReviewFile,
+  normalizedPath: string,
+  patchText: string,
+): FileDiffMetadata | null {
   const cacheKey = typeof file.fingerprint === "string" ? file.fingerprint : normalizedPath;
   const oldFile =
     typeof file.oldContent === "string"
@@ -92,14 +101,20 @@ function parseWithProcessFile(file: ReviewFile, normalizedPath: string, patchTex
   );
 }
 
-function parseWithPatchFiles(path: string, cacheKey: string, patchText: string): FileDiffMetadata | null {
+function parseWithPatchFiles(
+  path: string,
+  cacheKey: string,
+  patchText: string,
+): FileDiffMetadata | null {
   const patches = parsePatchFiles(patchText, cacheKey, false);
   const fileDiffs = flattenPatchFiles(patches);
   if (fileDiffs.length === 0) {
     return null;
   }
 
-  const exact = fileDiffs.find((candidate) => candidate.name === path || candidate.prevName === path);
+  const exact = fileDiffs.find(
+    (candidate) => candidate.name === path || candidate.prevName === path,
+  );
   if (exact) {
     return exact;
   }

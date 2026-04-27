@@ -1,22 +1,22 @@
 {
   "name": "@fuc/pi-usage",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "module": "index.ts",
   "scripts": {
     "dev": "bun run index.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@mariozechner/pi-coding-agent": "catalog:",
     "@mariozechner/pi-ai": "catalog:",
+    "@mariozechner/pi-coding-agent": "catalog:",
     "@mariozechner/pi-tui": "catalog:",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "catalog:",
     "@mariozechner/pi-ai": "catalog:",
+    "@mariozechner/pi-coding-agent": "catalog:",
     "@mariozechner/pi-tui": "catalog:",
     "typescript": "catalog:"
   }

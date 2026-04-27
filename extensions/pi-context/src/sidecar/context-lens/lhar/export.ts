@@ -1,11 +1,7 @@
 import type { LharJsonWrapper } from "../lhar-types.generated.js";
 import type { CapturedEntry, Conversation, PrivacyLevel } from "../types.js";
 import { VERSION } from "../version.generated.js";
-import {
-  buildLharRecord,
-  buildSessionLine,
-  traceIdFromConversation,
-} from "./record.js";
+import { buildLharRecord, buildSessionLine, traceIdFromConversation } from "./record.js";
 
 const COLLECTOR_NAME = "context-lens";
 const COLLECTOR_VERSION = VERSION;
@@ -30,17 +26,11 @@ export function toLharJsonl(
     // Emit session preamble on first occurrence of each trace_id
     if (!emittedSessions.has(record.trace_id)) {
       emittedSessions.add(record.trace_id);
-      const convo = entry.conversationId
-        ? conversations.get(entry.conversationId)
-        : undefined;
+      const convo = entry.conversationId ? conversations.get(entry.conversationId) : undefined;
       if (convo) {
         lines.push(
           JSON.stringify(
-            buildSessionLine(
-              entry.conversationId ?? "",
-              convo,
-              record.gen_ai.request.model,
-            ),
+            buildSessionLine(entry.conversationId ?? "", convo, record.gen_ai.request.model),
           ),
         );
       }
@@ -61,9 +51,7 @@ export function toLharJson(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 
-  const records = sorted.map((entry) =>
-    buildLharRecord(entry, entries, privacy),
-  );
+  const records = sorted.map((entry) => buildLharRecord(entry, entries, privacy));
 
   // Build sessions from conversations map
   const sessions: LharJsonWrapper["lhar"]["sessions"] = [];

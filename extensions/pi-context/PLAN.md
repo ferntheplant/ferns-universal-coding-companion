@@ -7,6 +7,7 @@ It is written for handoff to other coding agents. Each milestone is intended to 
 ## Scope
 
 v1 scope:
+
 - Pi-native capture only
 - one shared local sidecar on `127.0.0.1:4041`
 - reuse the Context Lens analysis/UI stack where practical
@@ -16,6 +17,7 @@ v1 scope:
 - preserve LHAR export and the existing analysis experience as closely as Pi-native capture allows
 
 Explicitly out of scope for v1:
+
 - MITM or `https_proxy` capture
 - exact raw response replay fidelity
 - subagent/span reconstruction beyond a single main-agent attribution
@@ -31,6 +33,7 @@ Explicitly out of scope for v1:
 ## Target End State
 
 Expected end-state layout:
+
 - `index.ts`
 - `src/extension/index.ts`
 - `src/extension/commands.ts`
@@ -55,6 +58,7 @@ Expected end-state layout:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - `package.json`
 - `README.md`
 - `index.ts`
@@ -64,9 +68,11 @@ Primary write scope:
 - `src/extension/notifications.ts`
 
 Goal:
+
 - replace the spike framing with a production extension scaffold and lock the v1 command surface
 
 Tasks:
+
 - add any missing package scripts needed for implementation and verification:
   - `typecheck`
   - `dev`
@@ -85,12 +91,14 @@ Tasks:
 - update `README.md` to describe the v1 architecture and manual smoke flow at a high level
 
 Verification:
+
 - `bun run typecheck`
 - reload the extension in Pi
 - confirm all production commands register successfully
 - run `/pi-context-status` before the sidecar exists and confirm it reports a clean idle/stopped state
 
 Exit criteria:
+
 - no spike-only wording remains in the main command UX
 - runtime state is ready for sidecar + collector integration
 
@@ -99,6 +107,7 @@ Exit criteria:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - `src/sidecar/index.ts`
 - `src/sidecar/app.ts`
 - `src/sidecar/paths.ts`
@@ -106,9 +115,11 @@ Primary write scope:
 - `src/extension/server-manager.ts`
 
 Goal:
+
 - stand up a reusable sidecar process with explicit ownership and health checks
 
 Tasks:
+
 - create shared paths under `~/.pi-context/`:
   - `data/`
   - `logs/`
@@ -125,6 +136,7 @@ Tasks:
   - avoid double-start races across Pi instances
 
 Verification:
+
 - `bun run typecheck`
 - start the sidecar via the extension or direct dev entry
 - `curl http://127.0.0.1:4041/health` returns success
@@ -132,6 +144,7 @@ Verification:
 - stop the sidecar and confirm `/health` fails afterwards
 
 Exit criteria:
+
 - one stable shared local sidecar process can be started, reused, and stopped
 
 ## Milestone 2 - Lift Context Lens Server, Store, UI, and LHAR Stack
@@ -139,14 +152,17 @@ Exit criteria:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - lifted Context Lens modules under `src/sidecar/context-lens/**` or equivalent
 - any import adapters needed in `src/sidecar/app.ts`
 - `THIRD_PARTY_NOTICES.md`
 
 Goal:
+
 - bring over the reusable analysis/UI stack without proxy-era assumptions
 
 Tasks:
+
 - copy the reusable Context Lens modules identified in `BLUEPRINT.md`
 - remove capture-directory watcher and proxy-specific bootstrap assumptions
 - wire the lifted frontend, API routes, store, projection, and LHAR export into the new sidecar app
@@ -155,12 +171,14 @@ Tasks:
 - mark substantially imported modules with short provenance comments where appropriate
 
 Verification:
+
 - `bun run typecheck`
 - load `http://127.0.0.1:4041` in a browser and confirm the UI shell renders
 - confirm the sidecar serves the API routes expected by the lifted frontend without runtime errors
 - verify license and notice files exist and reference Context Lens reuse clearly
 
 Exit criteria:
+
 - the sidecar can serve the reused analysis/UI stack independently of proxy capture
 
 ## Milestone 3 - Pi-Native Ingest Contract and Conversion Pipeline
@@ -168,14 +186,17 @@ Exit criteria:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - `src/sidecar/pi-ingest.ts`
 - conversion helpers under `src/sidecar/**`
 - optional refactor or partial reuse of `scripts/spike-to-context-lens.ts`
 
 Goal:
+
 - define the production `POST /api/ingest/pi` path and convert Pi-native captures into store writes and LHAR-compatible records
 
 Tasks:
+
 - define the Pi ingest payload shape for:
   - session identity
   - model/provider metadata
@@ -195,6 +216,7 @@ Tasks:
 - support ingesting sample spike fixtures into the live sidecar for parity checks
 
 Verification:
+
 - `bun run typecheck`
 - start the sidecar and ingest existing spike-derived sample data
 - confirm sessions appear in the UI
@@ -207,6 +229,7 @@ Verification:
   - tool result volume
 
 Exit criteria:
+
 - manual ingest of Pi-native captures produces useful sessions in the reused frontend
 - rolling-history reconstruction works for split tool loops
 
@@ -215,16 +238,19 @@ Exit criteria:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - `src/extension/collector.ts`
 - `src/extension/capture-session.ts`
 - `src/extension/runtime.ts`
 - `src/extension/index.ts`
 
 Goal:
+
 - replace fixture-writing spike behavior with production event correlation and normalized capture assembly
 - use Pi-native turn semantics where each model-control cycle is a first-class turn; tool-loop continuation turns that begin with `tool_results` are expected and correct
 
 Tasks:
+
 - move per-session and per-turn capture logic into explicit capture-session structures
 - capture and correlate:
   - `session_start`
@@ -246,6 +272,7 @@ Tasks:
 - emit one normalized Pi-native capture payload per finalized turn/user-visible step to the sidecar client layer
 
 Verification:
+
 - `bun run typecheck`
 - run a real Pi session with a short tool loop
 - confirm finalized captures are posted instead of written only to the spike directory
@@ -255,6 +282,7 @@ Verification:
   - session shutdown with an in-flight pending turn
 
 Exit criteria:
+
 - the extension produces production ingest payloads reliably from real Pi events
 - UI turn timelines reflect the intended semantics for tool-loop turns without collapsing them into a single synthetic user turn
 
@@ -263,15 +291,18 @@ Exit criteria:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - `src/extension/commands.ts`
 - `src/extension/server-manager.ts`
 - `src/extension/notifications.ts`
 - small integration edits in `src/extension/index.ts`
 
 Goal:
+
 - make the extension usable day to day from Pi without manual sidecar management
 
 Tasks:
+
 - implement `/pi-context` as the primary “ensure sidecar running and summarize status” command
 - implement `/pi-context-open` to open the browser UI
 - implement `/pi-context-status` to report:
@@ -287,6 +318,7 @@ Tasks:
   - stop/restart behavior
 
 Verification:
+
 - `bun run typecheck`
 - reload the extension in Pi
 - run `/pi-context` from a clean state and confirm it starts or reuses the sidecar
@@ -294,6 +326,7 @@ Verification:
 - run `/pi-context-stop` twice and confirm the second call is a no-op, not an error
 
 Exit criteria:
+
 - the extension has a production-ready command flow for starting, opening, checking, and stopping the shared service
 
 ## Milestone 6 - Privacy, Export, Persistence, and Multi-Instance Hardening
@@ -301,14 +334,17 @@ Exit criteria:
 Status: Completed on 2026-04-21
 
 Primary write scope:
+
 - sidecar persistence/export modules
 - `README.md`
 - any privacy/config surfaces added in `src/extension/**` or `src/sidecar/**`
 
 Goal:
+
 - finish the production edges that make the extension safe and usable across real Pi terminals
 
 Tasks:
+
 - persist session data under `~/.pi-context/data`
 - verify LHAR export routes and file outputs in the new sidecar architecture
 - add privacy controls mirroring Context Lens where practical for v1
@@ -323,6 +359,7 @@ Tasks:
 - update `README.md` with operator-facing setup, commands, storage paths, and limitations
 
 Verification:
+
 - `bun run typecheck`
 - capture sessions from two separate Pi terminals against one shared sidecar
 - confirm both sessions appear in one UI
@@ -330,6 +367,7 @@ Verification:
 - restart Pi, reuse the sidecar or restart it cleanly, and confirm persisted data remains available
 
 Exit criteria:
+
 - the extension is ready for normal use across multiple Pi terminals
 - export, privacy notes, and persistence behavior are documented
 

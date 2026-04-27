@@ -2,7 +2,12 @@ import { basename } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext } from "@mariozechner/pi-coding-agent";
 import { toModelKey } from "./paths";
 import { notifyError, notifyInfo } from "./notifications";
-import { getPromptRegistry, getRuntimeStatus, incrementCommandCount, resetRuntimeState } from "./runtime";
+import {
+  getPromptRegistry,
+  getRuntimeStatus,
+  incrementCommandCount,
+  resetRuntimeState,
+} from "./runtime";
 
 async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext): Promise<void> {
   incrementCommandCount();
@@ -15,9 +20,10 @@ async function handleStatusCommand(_args: string, ctx: ExtensionCommandContext):
   const activeModel = ctx.model ? toModelKey(ctx.model.provider, ctx.model.id) : undefined;
   const resolved = activeModel ? promptRegistry.resolvePromptSet(activeModel) : undefined;
   const matchedFiles = resolved?.fragments.map((fragment) => basename(fragment.path)) ?? [];
-  const matchedSelectors = resolved?.fragments.flatMap((fragment) =>
-    fragment.selectors.map((selector) => `${basename(fragment.path)} => ${selector}`),
-  ) ?? [];
+  const matchedSelectors =
+    resolved?.fragments.flatMap((fragment) =>
+      fragment.selectors.map((selector) => `${basename(fragment.path)} => ${selector}`),
+    ) ?? [];
   const warningLines = snapshot.warnings.length > 0 ? snapshot.warnings : ["none"];
   const lastApplied = status.lastApplied;
   const lastAppliedLines = lastApplied

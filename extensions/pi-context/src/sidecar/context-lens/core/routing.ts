@@ -64,10 +64,8 @@ export function classifyRequest(
   // Anthropic Messages API
   if (pathname.includes("/v1/messages"))
     return { provider: "anthropic", apiFormat: "anthropic-messages" };
-  if (pathname.includes("/v1/complete"))
-    return { provider: "anthropic", apiFormat: "unknown" };
-  if (headers["anthropic-version"])
-    return { provider: "anthropic", apiFormat: "unknown" };
+  if (pathname.includes("/v1/complete")) return { provider: "anthropic", apiFormat: "unknown" };
+  if (headers["anthropic-version"]) return { provider: "anthropic", apiFormat: "unknown" };
 
   // Vertex AI: must come BEFORE Gemini (Vertex paths also contain :generateContent)
   // Matches /v1beta1/projects/{project}/locations/{location}/publishers/google/models/{model}:generateContent
@@ -84,16 +82,13 @@ export function classifyRequest(
     pathname.includes(":streamGenerateContent") ||
     pathname.match(/\/v1(beta|alpha)\/models\//) ||
     pathname.includes("/v1internal:");
-  if (isGeminiPath || headers["x-goog-api-key"])
-    return { provider: "gemini", apiFormat: "gemini" };
+  if (isGeminiPath || headers["x-goog-api-key"]) return { provider: "gemini", apiFormat: "gemini" };
 
   // OpenAI
-  if (pathname.includes("/responses"))
-    return { provider: "openai", apiFormat: "responses" };
+  if (pathname.includes("/responses")) return { provider: "openai", apiFormat: "responses" };
   if (pathname.includes("/chat/completions"))
     return { provider: "openai", apiFormat: "chat-completions" };
-  if (pathname.match(/\/(models|embeddings)/))
-    return { provider: "openai", apiFormat: "unknown" };
+  if (pathname.match(/\/(models|embeddings)/)) return { provider: "openai", apiFormat: "unknown" };
   if (headers.authorization?.startsWith("Bearer sk-"))
     return { provider: "openai", apiFormat: "unknown" };
 
@@ -124,11 +119,7 @@ export function extractSource(pathname: string): ExtractSourceResult {
     } catch {
       decoded = match[1];
     }
-    if (
-      decoded.includes("/") ||
-      decoded.includes("\\") ||
-      decoded.includes("..")
-    ) {
+    if (decoded.includes("/") || decoded.includes("\\") || decoded.includes("..")) {
       return { source: null, sessionId: null, cleanPath: pathname };
     }
     const rest = match[2] || "/";
@@ -179,10 +170,7 @@ export function resolveTargetUrl(
       const locMatch = parsedUrl.pathname.match(/\/locations\/([^/]+)\//);
       const location = locMatch?.[1];
       if (location && location !== "global") {
-        targetUrl =
-          `https://${location}-aiplatform.googleapis.com` +
-          parsedUrl.pathname +
-          search;
+        targetUrl = `https://${location}-aiplatform.googleapis.com` + parsedUrl.pathname + search;
       } else {
         targetUrl = upstreams.vertex + parsedUrl.pathname + search;
       }
@@ -190,10 +178,7 @@ export function resolveTargetUrl(
       // Codex Enterprise sets OPENAI_BASE_URL without a /v1 suffix and
       // appends paths like /responses directly. Normalize /responses to
       // /v1/responses so it reaches the correct endpoint on api.openai.com.
-      const openaiPath =
-        parsedUrl.pathname === "/responses"
-          ? "/v1/responses"
-          : parsedUrl.pathname;
+      const openaiPath = parsedUrl.pathname === "/responses" ? "/v1/responses" : parsedUrl.pathname;
       targetUrl = upstreams.openai + openaiPath + search;
     }
   } else if (!targetUrl.startsWith("http")) {

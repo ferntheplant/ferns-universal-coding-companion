@@ -4,15 +4,15 @@ import type { DiffTarget } from "../domain/diff-target";
 
 export type DiffTargetPromptResult = DiffTarget;
 
-export type CmuxPaneSelection =
-  | { kind: "new-pane" }
-  | { kind: "existing-pane"; paneId: string };
+export type CmuxPaneSelection = { kind: "new-pane" } | { kind: "existing-pane"; paneId: string };
 
 export type CmuxModePromptResult = {
   selection: CmuxPaneSelection;
 };
 
-export async function promptForDiffTarget(ctx: ExtensionCommandContext): Promise<DiffTargetPromptResult> {
+export async function promptForDiffTarget(
+  ctx: ExtensionCommandContext,
+): Promise<DiffTargetPromptResult> {
   const selected = await ctx.ui.select("Choose diff target", ["uncommitted", "branch", "commit"]);
   if (!selected) {
     throw new Error("Cancelled diff target selection.");
@@ -45,7 +45,11 @@ export async function promptForDiffTarget(ctx: ExtensionCommandContext): Promise
   };
 }
 
-export async function promptForCmuxMode(ctx: ExtensionCommandContext, pi: ExtensionAPI, availablePanes: PaneInfo[]): Promise<CmuxModePromptResult> {
+export async function promptForCmuxMode(
+  ctx: ExtensionCommandContext,
+  pi: ExtensionAPI,
+  availablePanes: PaneInfo[],
+): Promise<CmuxModePromptResult> {
   const { listCmuxPanes } = await import("../domain/cmux");
 
   // Build selection options with semantic labels

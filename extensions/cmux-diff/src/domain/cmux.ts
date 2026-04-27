@@ -138,7 +138,8 @@ export async function listCmuxPanes(pi: ExtensionAPI): Promise<ListPanesResult> 
   const listResult = await pi.exec("cmux", ["list-panes"], { timeout: 5000 });
 
   if (listResult.code !== 0) {
-    const details = listResult.stderr.trim() || listResult.stdout.trim() || "cmux list-panes failed";
+    const details =
+      listResult.stderr.trim() || listResult.stdout.trim() || "cmux list-panes failed";
     return { success: false, panes: [], error: details };
   }
 
@@ -153,7 +154,9 @@ export async function listCmuxPanes(pi: ExtensionAPI): Promise<ListPanesResult> 
     let title: string | undefined;
     let type: string | undefined;
     try {
-      const surfaceResult = await pi.exec("cmux", ["list-pane-surfaces", "--pane", id], { timeout: 3000 });
+      const surfaceResult = await pi.exec("cmux", ["list-pane-surfaces", "--pane", id], {
+        timeout: 3000,
+      });
       if (surfaceResult.code === 0) {
         title = parseSurfaceTitle(surfaceResult.stdout);
       }

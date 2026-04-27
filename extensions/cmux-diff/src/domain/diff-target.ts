@@ -8,7 +8,9 @@ export function formatDiffTarget(target: DiffTarget): string {
   return `${target.kind}:${target.value}`;
 }
 
-export function validateDiffTarget(target: DiffTarget): { valid: true } | { valid: false; error: string } {
+export function validateDiffTarget(
+  target: DiffTarget,
+): { valid: true } | { valid: false; error: string } {
   if (target.kind === "uncommitted") {
     return { valid: true };
   }

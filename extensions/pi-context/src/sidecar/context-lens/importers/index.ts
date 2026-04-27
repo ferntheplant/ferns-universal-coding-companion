@@ -10,10 +10,7 @@
 import type { JsonValue } from "@contextio/core";
 import { ingestCapture } from "../analysis/ingest.js";
 import type { Store } from "../server/store.js";
-import {
-  discoverClaudeCodeSessions,
-  parseClaudeCodeSession,
-} from "./claude-code.js";
+import { discoverClaudeCodeSessions, parseClaudeCodeSession } from "./claude-code.js";
 import { discoverCodexSessions, parseCodexSession } from "./codex.js";
 import type { ImportedSession, ImportedTurn, ImportSummary } from "./types.js";
 
@@ -24,11 +21,7 @@ import type { ImportedSession, ImportedTurn, ImportSummary } from "./types.js";
  * messages accumulated up to that turn, then feed it through the
  * existing ingestCapture pipeline.
  */
-function ingestTurn(
-  store: Store,
-  session: ImportedSession,
-  turn: ImportedTurn,
-): void {
+function ingestTurn(store: Store, session: ImportedSession, turn: ImportedTurn): void {
   // Build a synthetic request body that parseContextInfo can handle.
   // For Anthropic format: { model, messages, system? }
   // For OpenAI Responses format: { model, input: [...] }
@@ -89,10 +82,7 @@ function ingestTurn(
     provider: session.provider,
     apiFormat: session.apiFormat,
     source: session.source,
-    path:
-      session.apiFormat === "anthropic-messages"
-        ? "/v1/messages"
-        : "/responses",
+    path: session.apiFormat === "anthropic-messages" ? "/v1/messages" : "/responses",
     method: "POST",
     timestamp: turn.timestamp,
     requestBody: requestBody as JsonValue,

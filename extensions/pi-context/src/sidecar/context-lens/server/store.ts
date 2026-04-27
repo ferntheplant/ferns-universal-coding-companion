@@ -67,14 +67,8 @@ export class Store {
   private conversations = new Map<string, Conversation>(); // fingerprint -> conversation
   private responseIdToConvo = new Map<string, string>(); // response_id -> conversationId
   private diskSessionsWritten = new Set<string>();
-  private codexSessionTracker = new Map<
-    string,
-    { conversationId: string; lastSeen: number }
-  >();
-  private geminiSessionTracker = new Map<
-    string,
-    { conversationId: string; lastSeen: number }
-  >();
+  private codexSessionTracker = new Map<string, { conversationId: string; lastSeen: number }>();
+  private geminiSessionTracker = new Map<string, { conversationId: string; lastSeen: number }>();
   private piSessionTracker = new Map<
     string,
     { conversationId: string; lastSeen: number; lastMessagesTokens: number }
@@ -223,10 +217,7 @@ export class Store {
           loadedEntries++;
         }
       } catch (err: unknown) {
-        console.error(
-          "State parse error:",
-          err instanceof Error ? err.message : String(err),
-        );
+        console.error("State parse error:", err instanceof Error ? err.message : String(err));
       }
     }
     // Reverse entries to match runtime order (newest first)
@@ -270,10 +261,7 @@ export class Store {
     piSessionId?: string | null,
   ): CapturedEntry {
     const resolvedSource = detectSource(contextInfo, source, requestHeaders);
-    const workingDirectory = extractWorkingDirectory(
-      contextInfo,
-      rawBody ?? null,
-    );
+    const workingDirectory = extractWorkingDirectory(contextInfo, rawBody ?? null);
     const responseId = extractResponseId(responseData);
 
     const fingerprint = computeFingerprint(
@@ -297,10 +285,7 @@ export class Store {
       // Pi-native ingest includes a stable session UUID. Use it directly.
       conversationId = piSessionId;
     } else if (sessionId) {
-      conversationId = createHash("sha256")
-        .update(sessionId)
-        .digest("hex")
-        .slice(0, 16);
+      conversationId = createHash("sha256").update(sessionId).digest("hex").slice(0, 16);
     } else if (fingerprint && resolvedSource === "codex") {
       // Codex has no built-in conversation IDs. Group by working directory
       // + system prompt fingerprint, with a TTL to split idle sessions.
@@ -316,9 +301,7 @@ export class Store {
       const now = Date.now();
 
       if (rawBody?.previous_response_id) {
-        const chained = this.responseIdToConvo.get(
-          rawBody.previous_response_id,
-        );
+        const chained = this.responseIdToConvo.get(rawBody.previous_response_id);
         if (chained) {
           conversationId = chained;
           if (baseKey) {
@@ -376,8 +359,7 @@ export class Store {
       const now = Date.now();
       const tracked = this.piSessionTracker.get(fingerprint);
       const currentMessagesTokens = contextInfo.messagesTokens;
-      const timedOut =
-        !tracked || now - tracked.lastSeen > PI_SESSION_TTL_MS;
+      const timedOut = !tracked || now - tracked.lastSeen > PI_SESSION_TTL_MS;
       const contextReset =
         tracked &&
         currentMessagesTokens > 0 &&
@@ -386,10 +368,7 @@ export class Store {
       if (!timedOut && !contextReset) {
         conversationId = tracked!.conversationId;
         tracked!.lastSeen = now;
-        tracked!.lastMessagesTokens = Math.max(
-          currentMessagesTokens,
-          tracked!.lastMessagesTokens,
-        );
+        tracked!.lastMessagesTokens = Math.max(currentMessagesTokens, tracked!.lastMessagesTokens);
       } else {
         conversationId = createHash("sha256")
           .update(`${fingerprint}\0${now}`)
@@ -406,9 +385,7 @@ export class Store {
     }
 
     if (conversationId && !this.conversations.has(conversationId)) {
-      const pendingName = rawSessionId
-        ? (this.pendingNames.get(rawSessionId) ?? null)
-        : null;
+      const pendingName = rawSessionId ? (this.pendingNames.get(rawSessionId) ?? null) : null;
       this.conversations.set(conversationId, {
         id: conversationId,
         label: extractConversationLabel(contextInfo),
@@ -427,8 +404,7 @@ export class Store {
         // Backfill source if first request couldn't detect it, or if the
         // stored source is a bare provider name (e.g. "anthropic") that has
         // now been resolved to an actual tool name.
-        const storedSourceIsWeak =
-          convo.source === "unknown" || PROVIDER_NAMES.has(convo.source);
+        const storedSourceIsWeak = convo.source === "unknown" || PROVIDER_NAMES.has(convo.source);
         if (
           storedSourceIsWeak &&
           resolvedSource &&
@@ -461,8 +437,7 @@ export class Store {
     const usage = parseResponseUsage(responseData);
 
     // Validate estimation accuracy before overriding with actuals
-    const actualInputTokens =
-      usage.inputTokens + usage.cacheReadTokens + usage.cacheWriteTokens;
+    const actualInputTokens = usage.inputTokens + usage.cacheReadTokens + usage.cacheWriteTokens;
     if (actualInputTokens > 0) {
       const estimated = contextInfo.totalTokens;
       const actual = actualInputTokens;
@@ -490,8 +465,7 @@ export class Store {
     // Skip cost estimation for error responses (429 rate limits, 5xx errors)
     // since those requests are not billed by the API.
     const httpStatus = meta?.httpStatus ?? null;
-    const isSuccessResponse =
-      httpStatus === null || (httpStatus >= 200 && httpStatus < 300);
+    const isSuccessResponse = httpStatus === null || (httpStatus >= 200 && httpStatus < 300);
     const inputTok = usage.inputTokens || contextInfo.totalTokens;
     const outputTok = usage.outputTokens;
     const costUsd = isSuccessResponse
@@ -535,10 +509,7 @@ export class Store {
       : [];
     const prevMain = sameConvo
       .filter((e) => !e.agentKey)
-      .sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      )[0];
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
     // Collect all tools used across the conversation (including current entry)
     const sessionToolsUsed = new Set<string>();
@@ -564,10 +535,7 @@ export class Store {
     // Find the most recent prior entry in this conversation that has accumulated
     // fetched paths, and use those for cross-turn re-fetch detection.
     const prevEntry = [...sameConvo]
-      .sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      )
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .find((e) => e.toolPatternFetchedPaths);
     const previousContext = prevEntry?.toolPatternFetchedPaths
       ? { fetchedPaths: prevEntry.toolPatternFetchedPaths }
@@ -618,17 +586,12 @@ export class Store {
       }
       // Sort sessions oldest-first, evict until we're at the limit
       const sorted = [...sessionLatest.entries()].sort((a, b) => a[1] - b[1]);
-      const toEvict = sorted
-        .slice(0, sorted.length - this.maxSessions)
-        .map((s) => s[0]);
+      const toEvict = sorted.slice(0, sorted.length - this.maxSessions).map((s) => s[0]);
       const evictSet = new Set(toEvict);
       // Remove all entries belonging to evicted sessions
       for (let i = this.capturedRequests.length - 1; i >= 0; i--) {
         const evictEntry = this.capturedRequests[i];
-        if (
-          evictEntry.conversationId &&
-          evictSet.has(evictEntry.conversationId)
-        ) {
+        if (evictEntry.conversationId && evictSet.has(evictEntry.conversationId)) {
           // Remove detail file
           const detailPath = path.join(this.detailDir, `${evictEntry.id}.json`);
           try {
@@ -646,16 +609,13 @@ export class Store {
           if (rcid === cid) this.responseIdToConvo.delete(rid);
         }
         for (const [key, tracked] of this.codexSessionTracker) {
-          if (tracked.conversationId === cid)
-            this.codexSessionTracker.delete(key);
+          if (tracked.conversationId === cid) this.codexSessionTracker.delete(key);
         }
         for (const [key, tracked] of this.geminiSessionTracker) {
-          if (tracked.conversationId === cid)
-            this.geminiSessionTracker.delete(key);
+          if (tracked.conversationId === cid) this.geminiSessionTracker.delete(key);
         }
         for (const [key, tracked] of this.piSessionTracker) {
-          if (tracked.conversationId === cid)
-            this.piSessionTracker.delete(key);
+          if (tracked.conversationId === cid) this.piSessionTracker.delete(key);
         }
       }
       this.saveState();
@@ -680,20 +640,17 @@ export class Store {
     this.conversations.delete(convoId);
     this.tagsStore.removeConversation(convoId);
     for (let i = this.capturedRequests.length - 1; i >= 0; i--) {
-      if (this.capturedRequests[i].conversationId === convoId)
-        this.capturedRequests.splice(i, 1);
+      if (this.capturedRequests[i].conversationId === convoId) this.capturedRequests.splice(i, 1);
     }
     this.diskSessionsWritten.delete(convoId);
     for (const [rid, cid] of this.responseIdToConvo) {
       if (cid === convoId) this.responseIdToConvo.delete(rid);
     }
     for (const [key, tracked] of this.geminiSessionTracker) {
-      if (tracked.conversationId === convoId)
-        this.geminiSessionTracker.delete(key);
+      if (tracked.conversationId === convoId) this.geminiSessionTracker.delete(key);
     }
     for (const [key, tracked] of this.piSessionTracker) {
-      if (tracked.conversationId === convoId)
-        this.piSessionTracker.delete(key);
+      if (tracked.conversationId === convoId) this.piSessionTracker.delete(key);
     }
     this.dataRevision++;
     this.emitChange("conversation-deleted", convoId);
@@ -764,8 +721,7 @@ export class Store {
   private backfillHealthScores(): void {
     // Process oldest-first so previousTokens lookups work correctly.
     const sorted = [...this.capturedRequests].sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     );
     for (const entry of sorted) {
       if (entry.healthScore) continue;
@@ -774,16 +730,12 @@ export class Store {
         ? sorted.filter(
             (e) =>
               e.conversationId === entry.conversationId &&
-              new Date(e.timestamp).getTime() <
-                new Date(entry.timestamp).getTime(),
+              new Date(e.timestamp).getTime() < new Date(entry.timestamp).getTime(),
           )
         : [];
       const prevMain = sameConvo
         .filter((e) => !e.agentKey)
-        .sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-        )[0];
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
       // Collect all tools used across the conversation (up to this entry)
       const sessionToolsUsed = new Set<string>();
@@ -793,8 +745,7 @@ export class Store {
         }
       }
 
-      const turnCount =
-        sameConvo.filter((e) => !e.agentKey).length + (entry.agentKey ? 0 : 1);
+      const turnCount = sameConvo.filter((e) => !e.agentKey).length + (entry.agentKey ? 0 : 1);
 
       entry.healthScore = computeHealthScore(
         entry,
@@ -814,8 +765,7 @@ export class Store {
     let fixed = 0;
     for (const entry of this.capturedRequests) {
       const usage = parseResponseUsage(entry.response);
-      const actual =
-        usage.inputTokens + usage.cacheReadTokens + usage.cacheWriteTokens;
+      const actual = usage.inputTokens + usage.cacheReadTokens + usage.cacheWriteTokens;
       if (actual > 0 && actual !== entry.contextInfo.totalTokens) {
         rescaleContextTokens(entry.contextInfo, actual);
         fixed++;
@@ -860,10 +810,7 @@ export class Store {
       const ci = entry.contextInfo;
       const detail = this.getEntryDetail(entry.id);
       if (!detail || detail.messages.length <= ci.messages.length) continue;
-      if (
-        detail.totalTokens !== ci.totalTokens &&
-        detail.totalTokens > ci.totalTokens
-      ) {
+      if (detail.totalTokens !== ci.totalTokens && detail.totalTokens > ci.totalTokens) {
         ci.systemTokens = detail.systemTokens;
         ci.toolsTokens = detail.toolsTokens;
         ci.messagesTokens = detail.messagesTokens;
@@ -872,9 +819,7 @@ export class Store {
       }
     }
     if (fixed > 0) {
-      console.log(
-        `Restored totalTokens from detail files for ${fixed} compacted entries`,
-      );
+      console.log(`Restored totalTokens from detail files for ${fixed} compacted entries`);
     }
     this.writeMarker(markerPath);
     return fixed;
@@ -915,9 +860,7 @@ export class Store {
         const hasImage = msg.contentBlocks.some((b) => {
           if (b.type === "image") return true;
           if (b.type === "tool_result" && Array.isArray(b.content)) {
-            return (b.content as any[]).some(
-              (inner: any) => inner?.type === "image",
-            );
+            return (b.content as any[]).some((inner: any) => inner?.type === "image");
           }
           return false;
         });
@@ -939,9 +882,7 @@ export class Store {
       }
     }
     if (migrated > 0) {
-      console.log(
-        `Migrated ${migrated} entries with inflated image token counts`,
-      );
+      console.log(`Migrated ${migrated} entries with inflated image token counts`);
     }
     this.writeMarker(markerPath);
     return migrated;
@@ -961,10 +902,7 @@ export class Store {
         }),
       );
     } catch (err: unknown) {
-      console.error(
-        "Detail save error:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("Detail save error:", err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -1000,29 +938,18 @@ export class Store {
 
   private logToDisk(entry: CapturedEntry): void {
     const safeSource = safeFilenamePart(entry.source || "unknown");
-    const safeConvo = entry.conversationId
-      ? safeFilenamePart(entry.conversationId)
-      : null;
-    const filename = safeConvo
-      ? `${safeSource}-${safeConvo}.lhar`
-      : "ungrouped.lhar";
+    const safeConvo = entry.conversationId ? safeFilenamePart(entry.conversationId) : null;
+    const filename = safeConvo ? `${safeSource}-${safeConvo}.lhar` : "ungrouped.lhar";
     const filePath = path.join(this.dataDir, filename);
 
     let output = "";
 
     // Write session preamble on first entry for this conversation
-    if (
-      entry.conversationId &&
-      !this.diskSessionsWritten.has(entry.conversationId)
-    ) {
+    if (entry.conversationId && !this.diskSessionsWritten.has(entry.conversationId)) {
       this.diskSessionsWritten.add(entry.conversationId);
       const convo = this.conversations.get(entry.conversationId);
       if (convo) {
-        const sessionLine = buildSessionLine(
-          entry.conversationId,
-          convo,
-          entry.contextInfo.model,
-        );
+        const sessionLine = buildSessionLine(entry.conversationId, convo, entry.contextInfo.model);
         output += `${JSON.stringify(sessionLine)}\n`;
       }
     }
@@ -1033,10 +960,7 @@ export class Store {
     try {
       fs.appendFileSync(filePath, output);
     } catch (err: unknown) {
-      console.error(
-        "Log write error:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("Log write error:", err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -1091,19 +1015,9 @@ export class Store {
    * Compact tool_use input: preserve keys that contain file paths (small strings),
    * drop large values like file content, diffs, and command output.
    */
-  private compactToolInput(
-    input: Record<string, any> | undefined,
-  ): Record<string, any> {
+  private compactToolInput(input: Record<string, any> | undefined): Record<string, any> {
     if (!input || typeof input !== "object") return {};
-    const PATH_KEYS = [
-      "file_path",
-      "path",
-      "filePath",
-      "file",
-      "dir_path",
-      "pattern",
-      "glob",
-    ];
+    const PATH_KEYS = ["file_path", "path", "filePath", "file", "dir_path", "pattern", "glob"];
     const result: Record<string, any> = {};
     for (const key of PATH_KEYS) {
       if (typeof input[key] === "string") {
@@ -1113,9 +1027,7 @@ export class Store {
     return result;
   }
 
-  private compactMessages(
-    messages: ContextInfo["messages"],
-  ): ContextInfo["messages"] {
+  private compactMessages(messages: ContextInfo["messages"]): ContextInfo["messages"] {
     const limit = 200;
     const msgs =
       messages.length > this.maxCompactMessages
@@ -1168,9 +1080,7 @@ export class Store {
     // Compact contextInfo in-place
     entry.contextInfo.systemPrompts = [];
     entry.contextInfo.tools = [];
-    entry.contextInfo.messages = this.compactMessages(
-      entry.contextInfo.messages,
-    );
+    entry.contextInfo.messages = this.compactMessages(entry.contextInfo.messages);
   }
 
   /**
@@ -1181,10 +1091,7 @@ export class Store {
    * (source, workingDirectory) are captured. On loadState, later
    * conversation lines overwrite earlier ones, so duplicates are harmless.
    */
-  private appendToState(
-    entry: CapturedEntry,
-    conversationId: string | null,
-  ): void {
+  private appendToState(entry: CapturedEntry, conversationId: string | null): void {
     let lines = "";
 
     if (conversationId) {
@@ -1202,10 +1109,7 @@ export class Store {
     try {
       fs.appendFileSync(this.stateFile, lines);
     } catch (err: unknown) {
-      console.error(
-        "State append error:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("State append error:", err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -1233,10 +1137,7 @@ export class Store {
     try {
       fs.writeFileSync(this.stateFile, lines);
     } catch (err: unknown) {
-      console.error(
-        "State save error:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("State save error:", err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -1332,11 +1233,7 @@ function extractResponseText(response: ResponseData): string | null {
   if (!response) return null;
 
   // Streaming: raw SSE chunks
-  if (
-    "streaming" in response &&
-    response.streaming &&
-    typeof response.chunks === "string"
-  ) {
+  if ("streaming" in response && response.streaming && typeof response.chunks === "string") {
     return response.chunks;
   }
 
@@ -1372,12 +1269,8 @@ function extractResponseText(response: ResponseData): string | null {
     return (r.candidates as Array<Record<string, unknown>>)
       .flatMap((c) => {
         const content = c.content as Record<string, unknown> | undefined;
-        const parts = content?.parts as
-          | Array<Record<string, unknown>>
-          | undefined;
-        return (
-          parts?.map((p) => (typeof p.text === "string" ? p.text : "")) ?? []
-        );
+        const parts = content?.parts as Array<Record<string, unknown>> | undefined;
+        return parts?.map((p) => (typeof p.text === "string" ? p.text : "")) ?? [];
       })
       .filter(Boolean)
       .join("\n");

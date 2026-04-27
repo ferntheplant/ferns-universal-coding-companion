@@ -50,10 +50,7 @@ export function createCaptureWriter(captureDir: string) {
       fs.renameSync(tmpPath, filePath);
       return filename;
     } catch (err: unknown) {
-      console.error(
-        "Capture write error:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("Capture write error:", err instanceof Error ? err.message : String(err));
       try {
         fs.unlinkSync(tmpPath);
       } catch {

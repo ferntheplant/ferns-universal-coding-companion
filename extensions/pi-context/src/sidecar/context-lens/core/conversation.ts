@@ -10,9 +10,7 @@ import type { ContextInfo, ParsedMessage } from "../types.js";
  * @param content - Raw message content (string, often JSON-encoded).
  * @returns A trimmed text string or `null` if no readable text exists.
  */
-export function extractReadableText(
-  content: string | null | undefined,
-): string | null {
+export function extractReadableText(content: string | null | undefined): string | null {
   if (!content) return null;
   let text = content;
   try {
@@ -20,9 +18,7 @@ export function extractReadableText(
     if (Array.isArray(parsed)) {
       const textBlock = parsed.find(
         (b: any) =>
-          (b.type === "text" &&
-            b.text &&
-            !b.text.startsWith("<system-reminder>")) ||
+          (b.type === "text" && b.text && !b.text.startsWith("<system-reminder>")) ||
           (b.type === "input_text" &&
             b.text &&
             !b.text.startsWith("#") &&
@@ -52,26 +48,18 @@ export function extractWorkingDirectory(
 ): string | null {
   const allText = [
     ...(contextInfo.systemPrompts || []).map((sp) => sp.content),
-    ...(contextInfo.messages || [])
-      .filter((m) => m.role === "user")
-      .map((m) => m.content),
+    ...(contextInfo.messages || []).filter((m) => m.role === "user").map((m) => m.content),
   ].join("\n");
 
-  let match = allText.match(
-    /[Pp]rimary working directory[:\s]+[`]?([/~][^\s`\n]+)/,
-  );
+  let match = allText.match(/[Pp]rimary working directory[:\s]+[`]?([/~][^\s`\n]+)/);
   if (match) return match[1];
   match = allText.match(/<cwd>([^<]+)<\/cwd>/);
   if (match) return match[1];
   // Gemini CLI: "I'm currently working in the directory: /path"
-  match = allText.match(
-    /working in the director(?:y|ies)[:\s]+([/~][^\s\n]+)/i,
-  );
+  match = allText.match(/working in the director(?:y|ies)[:\s]+([/~][^\s\n]+)/i);
   if (match) return match[1];
   // Gemini CLI multi-dir: "working in the following directories:\n  - /path"
-  match = allText.match(
-    /working in the following director(?:y|ies)[^\n]*\n\s+-\s+([/~][^\s\n]+)/i,
-  );
+  match = allText.match(/working in the following director(?:y|ies)[^\n]*\n\s+-\s+([/~][^\s\n]+)/i);
   if (match) return match[1];
   // Generic: "working directory is /path" or "working directory = /path"
   match = allText.match(/working directory (?:is |= ?)[`"]?([/~][^\s`"'\n]+)/i);
@@ -210,11 +198,7 @@ export function extractUserPrompt(messages: ParsedMessage[]): string | null {
     if (!text) {
       try {
         const parsed = JSON.parse(m.content);
-        if (
-          Array.isArray(parsed) &&
-          parsed[0] &&
-          parsed[0].type === "input_text"
-        ) {
+        if (Array.isArray(parsed) && parsed[0] && parsed[0].type === "input_text") {
           text = parsed[0].text || "";
         }
       } catch {
@@ -243,10 +227,8 @@ export function extractSessionId(
 ): string | null {
   // Claude Code sends a stable session ID in a request header.
   const claudeSessionId =
-    requestHeaders?.["x-claude-code-session-id"] ??
-    requestHeaders?.["X-Claude-Code-Session-Id"];
-  if (claudeSessionId && typeof claudeSessionId === "string")
-    return `claude_${claudeSessionId}`;
+    requestHeaders?.["x-claude-code-session-id"] ?? requestHeaders?.["X-Claude-Code-Session-Id"];
+  if (claudeSessionId && typeof claudeSessionId === "string") return `claude_${claudeSessionId}`;
 
   const userId = rawBody?.metadata?.user_id;
   if (userId) {
@@ -254,8 +236,7 @@ export function extractSessionId(
     if (match) return match[0];
   }
   const geminiSessionId = rawBody?.request?.session_id;
-  if (geminiSessionId && typeof geminiSessionId === "string")
-    return `gemini_${geminiSessionId}`;
+  if (geminiSessionId && typeof geminiSessionId === "string") return `gemini_${geminiSessionId}`;
   return null;
 }
 
@@ -265,9 +246,7 @@ export function extractSessionId(
  * Currently derived from the first readable user message.
  */
 export function computeAgentKey(contextInfo: ContextInfo): string | null {
-  const userMsgs = (contextInfo.messages || []).filter(
-    (m) => m.role === "user",
-  );
+  const userMsgs = (contextInfo.messages || []).filter((m) => m.role === "user");
   let realText = "";
   for (const msg of userMsgs) {
     const t = extractReadableText(msg.content);
@@ -310,9 +289,7 @@ export function computeFingerprint(
     if (existing) return existing;
   }
 
-  const userMsgs = (contextInfo.messages || []).filter(
-    (m) => m.role === "user",
-  );
+  const userMsgs = (contextInfo.messages || []).filter((m) => m.role === "user");
 
   let promptText: string;
   if (contextInfo.apiFormat === "responses" && userMsgs.length > 1) {
@@ -322,18 +299,13 @@ export function computeFingerprint(
     promptText = extractUserPrompt(userMsgs) || "";
   } else {
     const firstUser = userMsgs[0];
-    promptText = firstUser
-      ? (extractReadableText(firstUser.content) ?? firstUser.content)
-      : "";
+    promptText = firstUser ? (extractReadableText(firstUser.content) ?? firstUser.content) : "";
   }
 
-  const systemText = (contextInfo.systemPrompts || [])
-    .map((sp) => sp.content)
-    .join("\n");
+  const systemText = (contextInfo.systemPrompts || []).map((sp) => sp.content).join("\n");
 
   if (source === "codex") {
-    const cwd =
-      workingDirectory ?? extractWorkingDirectory(contextInfo, rawBody ?? null);
+    const cwd = workingDirectory ?? extractWorkingDirectory(contextInfo, rawBody ?? null);
     if (!systemText && !promptText && !cwd) return null;
     return createHash("sha256")
       .update(`${cwd ?? ""}\0${systemText}\0${promptText}`)
@@ -342,19 +314,14 @@ export function computeFingerprint(
   }
 
   if (!systemText && !promptText) return null;
-  return createHash("sha256")
-    .update(`${systemText}\0${promptText}`)
-    .digest("hex")
-    .slice(0, 16);
+  return createHash("sha256").update(`${systemText}\0${promptText}`).digest("hex").slice(0, 16);
 }
 
 /**
  * Extract a readable label for a conversation, primarily for UI display.
  */
 export function extractConversationLabel(contextInfo: ContextInfo): string {
-  const userMsgs = (contextInfo.messages || []).filter(
-    (m) => m.role === "user",
-  );
+  const userMsgs = (contextInfo.messages || []).filter((m) => m.role === "user");
 
   if (contextInfo.apiFormat === "responses" && userMsgs.length > 1) {
     const prompt = extractUserPrompt(userMsgs);

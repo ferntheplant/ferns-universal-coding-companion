@@ -1,10 +1,6 @@
 import type { PrivacyLevel } from "./context-lens/types.js";
 
-const VALID_PRIVACY_LEVELS = new Set<PrivacyLevel>([
-  "minimal",
-  "standard",
-  "full",
-]);
+const VALID_PRIVACY_LEVELS = new Set<PrivacyLevel>(["minimal", "standard", "full"]);
 
 export function resolvePrivacyLevel(): PrivacyLevel {
   const raw = process.env.PI_CONTEXT_PRIVACY?.trim().toLowerCase();
@@ -18,4 +14,3 @@ export function resolvePrivacyLevel(): PrivacyLevel {
   );
   return "standard";
 }
-

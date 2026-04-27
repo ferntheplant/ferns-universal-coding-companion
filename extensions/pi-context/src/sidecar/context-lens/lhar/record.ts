@@ -53,9 +53,7 @@ export function buildLharRecord(
   const ci = entry.contextInfo;
   // Use pre-computed composition from storeRequest; fall back to recomputing
   const composition =
-    entry.composition.length > 0
-      ? entry.composition
-      : analyzeComposition(ci, entry.rawBody);
+    entry.composition.length > 0 ? entry.composition : analyzeComposition(ci, entry.rawBody);
   const usage = parseResponseUsage(entry.response);
 
   // Sequence + growth must be derived from a stable ordering.
@@ -66,15 +64,12 @@ export function buildLharRecord(
 
   // Make buildLharRecord work even if the caller doesn't include `entry` in `prevEntries`.
   if (entry.conversationId) {
-    const found = convoEntries.some(
-      (e) => e.id === entry.id && e.timestamp === entry.timestamp,
-    );
+    const found = convoEntries.some((e) => e.id === entry.id && e.timestamp === entry.timestamp);
     if (!found) convoEntries = [...convoEntries, entry];
   }
 
   convoEntries.sort((a, b) => {
-    const dt =
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    const dt = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
     if (dt !== 0) return dt;
     return a.id - b.id;
   });
@@ -82,8 +77,7 @@ export function buildLharRecord(
   let convoIndex = convoEntries.findIndex(
     (e) => e.id === entry.id && e.timestamp === entry.timestamp,
   );
-  if (convoIndex < 0)
-    convoIndex = convoEntries.findIndex((e) => e.id === entry.id);
+  if (convoIndex < 0) convoIndex = convoEntries.findIndex((e) => e.id === entry.id);
   if (convoIndex < 0) convoIndex = 0;
   const sequence = convoIndex + 1;
 
@@ -124,9 +118,7 @@ export function buildLharRecord(
   // Tokens per second
   let tokensPerSecond: number | null = null;
   if (entry.timings && entry.timings.receive_ms > 0 && usage.outputTokens > 0) {
-    tokensPerSecond =
-      Math.round((usage.outputTokens / entry.timings.receive_ms) * 1000 * 10) /
-      10;
+    tokensPerSecond = Math.round((usage.outputTokens / entry.timings.receive_ms) * 1000 * 10) / 10;
   }
 
   const timings = entry.timings
@@ -169,8 +161,7 @@ export function buildLharRecord(
       usage: {
         input_tokens: usage.inputTokens || ci.totalTokens,
         output_tokens: usage.outputTokens,
-        total_tokens:
-          (usage.inputTokens || ci.totalTokens) + usage.outputTokens,
+        total_tokens: (usage.inputTokens || ci.totalTokens) + usage.outputTokens,
       },
     },
 
@@ -187,10 +178,8 @@ export function buildLharRecord(
       status_code: entry.httpStatus,
       api_format: ci.apiFormat,
       stream: usage.stream,
-      request_headers:
-        privacy === "minimal" ? {} : redactHeaders(entry.requestHeaders),
-      response_headers:
-        privacy === "minimal" ? {} : redactHeaders(entry.responseHeaders),
+      request_headers: privacy === "minimal" ? {} : redactHeaders(entry.requestHeaders),
+      response_headers: privacy === "minimal" ? {} : redactHeaders(entry.responseHeaders),
     },
 
     timings,
@@ -230,23 +219,16 @@ export function buildLharRecord(
           length: a.length,
         })),
         summary: {
-          high: (entry.securityAlerts || []).filter(
-            (a) => a.severity === "high",
-          ).length,
-          medium: (entry.securityAlerts || []).filter(
-            (a) => a.severity === "medium",
-          ).length,
-          info: (entry.securityAlerts || []).filter(
-            (a) => a.severity === "info",
-          ).length,
+          high: (entry.securityAlerts || []).filter((a) => a.severity === "high").length,
+          medium: (entry.securityAlerts || []).filter((a) => a.severity === "medium").length,
+          info: (entry.securityAlerts || []).filter((a) => a.severity === "info").length,
         },
       },
     },
 
     raw: {
       request_body: privacy === "full" && entry.rawBody ? entry.rawBody : null,
-      response_body:
-        privacy === "full" ? responseBodyForCapture(entry.response) : null,
+      response_body: privacy === "full" ? responseBodyForCapture(entry.response) : null,
     },
   };
 }

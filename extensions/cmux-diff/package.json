@@ -1,12 +1,20 @@
 {
   "name": "@fuc/cmux-diff",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "module": "index.ts",
   "scripts": {
     "dev": "bun run index.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
+  },
+  "dependencies": {
+    "@pierre/diffs": "^1.1.19",
+    "git-diff-view": "^0.0.13",
+    "jotai": "^2.19.1",
+    "react": "^19.2.5",
+    "react-arborist": "^3.4.3",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "catalog:",
@@ -20,13 +28,5 @@
     "@mariozechner/pi-coding-agent": "catalog:",
     "@sinclair/typebox": "*",
     "typescript": "catalog:"
-  },
-  "dependencies": {
-    "@pierre/diffs": "^1.1.19",
-    "git-diff-view": "^0.0.13",
-    "jotai": "^2.19.1",
-    "react": "^19.2.5",
-    "react-arborist": "^3.4.3",
-    "react-dom": "^19.2.5"
   }
 }

@@ -100,7 +100,10 @@ export async function getSidecarStatus(): Promise<SidecarManagerStatus> {
   };
 }
 
-export async function ensureSidecarRunning(): Promise<{ status: SidecarManagerStatus; reused: boolean }> {
+export async function ensureSidecarRunning(): Promise<{
+  status: SidecarManagerStatus;
+  reused: boolean;
+}> {
   const current = await getSidecarStatus();
   if (current.running) {
     return { status: current, reused: true };
@@ -200,7 +203,10 @@ export async function openSidecarInBrowser(
     });
     child.unref();
   } catch {
-    notifyWarning(ctx, `pi-context dashboard is running at ${url}, but automatic browser open failed.`);
+    notifyWarning(
+      ctx,
+      `pi-context dashboard is running at ${url}, but automatic browser open failed.`,
+    );
   }
 
   return { status, reused };

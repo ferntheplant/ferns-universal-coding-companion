@@ -50,7 +50,8 @@ export function App({ bootstrap, initialPayload }: AppProps) {
           return;
         }
         setLoadState("error");
-        const message = loadError instanceof Error ? loadError.message : "Failed to load review data.";
+        const message =
+          loadError instanceof Error ? loadError.message : "Failed to load review data.";
         setError(message);
       });
 

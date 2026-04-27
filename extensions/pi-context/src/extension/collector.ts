@@ -39,7 +39,10 @@ async function persistRecord(record: SpikeTurnRecord): Promise<void> {
   markTurnPersisted();
 }
 
-async function persistIfPresent(record: SpikeTurnRecord | null, ctx: ExtensionContext): Promise<void> {
+async function persistIfPresent(
+  record: SpikeTurnRecord | null,
+  ctx: ExtensionContext,
+): Promise<void> {
   if (!record) return;
 
   try {
@@ -80,11 +83,17 @@ export function handleContext(event: ContextEvent, ctx: ExtensionContext): void 
   captureContextSnapshot(event, ctx);
 }
 
-export function handleBeforeProviderRequest(event: BeforeProviderRequestEvent, ctx: ExtensionContext): void {
+export function handleBeforeProviderRequest(
+  event: BeforeProviderRequestEvent,
+  ctx: ExtensionContext,
+): void {
   captureProviderRequest(event, ctx);
 }
 
-export function handleAfterProviderResponse(event: ProviderResponseEventLike, ctx: ExtensionContext): void {
+export function handleAfterProviderResponse(
+  event: ProviderResponseEventLike,
+  ctx: ExtensionContext,
+): void {
   captureProviderResponse(event, ctx);
 }
 

@@ -113,7 +113,9 @@ async function main(): Promise<void> {
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(`Ingest failed for ${filePath}: ${response.status} ${response.statusText} ${body}`);
+      throw new Error(
+        `Ingest failed for ${filePath}: ${response.status} ${response.statusText} ${body}`,
+      );
     }
 
     ingested += 1;

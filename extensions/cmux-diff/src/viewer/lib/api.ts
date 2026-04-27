@@ -47,7 +47,10 @@ export async function fetchReviewData(token: string): Promise<ReviewPayload> {
   return data.payload;
 }
 
-export async function submitReviewComments(url: string, payload: CommentSubmitPayload): Promise<void> {
+export async function submitReviewComments(
+  url: string,
+  payload: CommentSubmitPayload,
+): Promise<void> {
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },

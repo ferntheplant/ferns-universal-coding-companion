@@ -16,6 +16,7 @@ The extension captures Pi turn events, posts normalized Pi-native ingest payload
 - Sidecar ingests via `POST /api/ingest/pi`, reconstructs rolling history, writes store state, serves UI/API, and exports LHAR.
 
 Validated providers:
+
 - `openai-codex`
 - `opencode-zen`
 
