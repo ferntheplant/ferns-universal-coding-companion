@@ -25,26 +25,34 @@ Just put high level ideas + references here; split out into individual specs onc
 - custom system prompts per model
   - TODO: see if these [prompts](https://github.com/aliou/pi-harness/tree/main/extensions/modes/lib/prompt-families) are any good
   - also this [one](https://github.com/mattpocock/skills/blob/main/ubiquitous-language/SKILL.md)
-- better session names (integrate with `pi-context`)
+  - [rjs](https://github.com/rjs/shaping-skills)
+- AI generated session names (pi-context)
 
 ## Extensions
 
 - [web](https://github.com/nicobailon/pi-web-access)
   - do we need web search or is nice fetch enough?
+  - [smart fetch](https://github.com/Thinkscape/agent-smart-fetch/blob/main/packages/pi-smart-fetch/README.md)
+  - [codex web](https://github.com/ayagmar/pi-codex-web-search)
+  - [agent smart fetch](https://github.com/Thinkscape/agent-smart-fetch)
 - [lsp](https://github.com/samfoy/pi-lsp-extension/tree/main)
   - make small changes to not register so many tools
   - need to make it give diagnostics in batches at end of string of edits instead of on every tool call
 - images
-- cmux
+- cmux sidebar status/notification
   - [winter](https://github.com/w-winter/dot314)
   - [sasha](https://github.com/sasha-computer/pi-cmux)
   - [javier](https://github.com/javiermolinar/pi-cmux)
 - guardrails
   - [git](https://github.com/mattpocock/skills/blob/main/git-guardrails-claude-code/SKILL.md)
   - [toolchain](https://github.com/aliou/pi-toolchain)
-  - [aliou](https://github.com/aliou/pi-guardrails)
+  - [aliou guardrails](https://github.com/aliou/pi-guardrails)
 - [introspection](https://github.com/aliou/pi-harness/tree/main/extensions/introspection)
 - [context-mode](https://github.com/mksglu/context-mode)
+- browser
+  - [dev tools](https://github.com/ChromeDevTools/chrome-devtools-mcp)
+  - [agent browser](https://github.com/vercel-labs/agent-browser)
+  - [playwriter](https://github.com/remorses/playwriter)
 
 ## Workflows
 
@@ -67,10 +75,6 @@ Just put high level ideas + references here; split out into individual specs onc
 
 ## Big boyz (in order)
 
-- browser
-  - [dev tools](https://github.com/ChromeDevTools/chrome-devtools-mcp)
-  - [agent browser](https://github.com/vercel-labs/agent-browser)
-  - [playwriter](https://github.com/remorses/playwriter)
 - "profiles" (i.e. only load figma MCP when it's a frontend session)
 - time travel (i.e. tree + cwd snapshots)
 - sandbox runtimes (might be the solution to time-travel)
