@@ -171,4 +171,3 @@ Then `/reload` in Pi. The script copies `templates/extension/` to `extensions/my
 
 - [`docs/pi-extension-guide.md`](docs/pi-extension-guide.md) — what actually mattered when building Pi extensions in this repo
 - [`docs/tracker.md`](docs/tracker.md) — third-party extensions / skills the user has shopped or shipped
-- [`docs/named-sessions-spec.md`](docs/named-sessions-spec.md) — Pi-session-ID + session-name unification spec
