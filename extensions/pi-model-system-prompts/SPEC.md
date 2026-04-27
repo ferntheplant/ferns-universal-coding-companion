@@ -21,8 +21,9 @@ Three selector forms are supported:
 - exact model — `<provider>/<model-id>` (e.g. `anthropic/claude-sonnet-4-5`)
 - provider wildcard — `<provider>/*` (e.g. `anthropic/*`)
 - model-id wildcard across providers — `*/<model-id>` (e.g. `*/gpt-5`)
+- global wildcard — `*/*`
 
-Anything else (`*/*`, `claude-*`, regex, negation) is invalid and the file is skipped with a warning.
+Anything else (`claude-*`, regex, negation) is invalid and the file is skipped with a warning.
 
 ### Runtime injection
 

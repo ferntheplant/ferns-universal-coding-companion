@@ -6,7 +6,8 @@ const extensionDir = dirname(fileURLToPath(import.meta.url));
 export const repoRoot = resolve(extensionDir, "../..");
 export const modelPromptsDir = resolve(repoRoot, "model-prompts");
 
-export const MODEL_SELECTOR_PATTERN = /^(?:[^*/\s]+\/[^*/\s]+|[^*/\s]+\/\*|\*\/[^*/\s]+)$/;
+export const MODEL_SELECTOR_PATTERN =
+  /^(?:[^*/\s]+\/[^*/\s]+|[^*/\s]+\/\*|\*\/[^*/\s]+|\*\/\*)$/;
 
 export function toModelKey(provider: string, modelId: string): string {
   if (provider.length === 0) {
@@ -21,16 +22,16 @@ export function toModelKey(provider: string, modelId: string): string {
 }
 
 export function isValidModelSelector(selector: string): boolean {
-  if (selector === "*/*") {
-    return false;
-  }
-
   return MODEL_SELECTOR_PATTERN.test(selector);
 }
 
 export function matchesModelSelector(modelKey: string, selector: string): boolean {
   if (!isValidModelSelector(selector)) {
     return false;
+  }
+
+  if (selector === "*/*") {
+    return true;
   }
 
   if (selector === modelKey) {

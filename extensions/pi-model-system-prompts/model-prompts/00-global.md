@@ -1,6 +1,6 @@
 ---
 models:
-  - */*
+  - "*/*"
 description: global system prompt
 ---
 
