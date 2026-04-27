@@ -78,6 +78,13 @@
       "additionalProperties": false
     },
 
+    "LharSessionMetadata": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "LharSessionLine": {
       "type": "object",
       "properties": {
@@ -85,7 +92,8 @@
         "trace_id": { "type": "string" },
         "started_at": { "type": "string" },
         "tool": { "type": "string" },
-        "model": { "type": "string" }
+        "model": { "type": "string" },
+        "metadata": { "$ref": "#/definitions/LharSessionMetadata" }
       },
       "required": ["type", "trace_id", "started_at", "tool", "model"],
       "additionalProperties": false
@@ -390,7 +398,8 @@
                   "trace_id": { "type": "string" },
                   "started_at": { "type": "string" },
                   "tool": { "type": "string" },
-                  "model": { "type": "string" }
+                  "model": { "type": "string" },
+                  "metadata": { "$ref": "#/definitions/LharSessionMetadata" }
                 },
                 "required": ["trace_id", "started_at", "tool", "model"],
                 "additionalProperties": false

@@ -64,11 +64,14 @@ export function toLharJson(
             (c) => traceIdFromConversation(c.id) === record.trace_id,
           )
         : undefined;
+      const trimmedName =
+        convo?.name && typeof convo.name === "string" ? convo.name.trim() : "";
       sessions.push({
         trace_id: record.trace_id,
         started_at: convo?.firstSeen || record.timestamp,
         tool: record.source.tool,
         model: record.gen_ai.request.model,
+        ...(trimmedName ? { metadata: { name: trimmedName } } : {}),
       });
     }
   }

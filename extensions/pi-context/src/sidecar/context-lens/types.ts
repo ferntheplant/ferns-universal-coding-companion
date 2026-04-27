@@ -251,6 +251,7 @@ export type {
   CompositionEntry,
   LharJsonWrapper,
   LharRecord,
+  LharSessionMetadata,
   LharSessionLine,
   Timings,
   ToolCallEntry,

@@ -123,7 +123,7 @@ async function handleNameCommand(
     if (current) {
       notifyInfo(ctx, `Session name: ${current}`);
     } else {
-      notifyInfo(ctx, "No session name set. Usage: /name <label>");
+        notifyInfo(ctx, "No session name set. Usage: /pi-context-name <label>");
     }
     return;
   }

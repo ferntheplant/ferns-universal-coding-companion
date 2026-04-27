@@ -80,6 +80,13 @@ export interface Timings {
 }
 /**
  * This interface was referenced by `LHARLLMHTTPArchiveFormat`'s JSON-Schema
+ * via the `definition` "LharSessionMetadata".
+ */
+export interface LharSessionMetadata {
+  name?: string;
+}
+/**
+ * This interface was referenced by `LHARLLMHTTPArchiveFormat`'s JSON-Schema
  * via the `definition` "LharSessionLine".
  */
 export interface LharSessionLine {
@@ -88,6 +95,7 @@ export interface LharSessionLine {
   started_at: string;
   tool: string;
   model: string;
+  metadata?: LharSessionMetadata;
 }
 /**
  * This interface was referenced by `LHARLLMHTTPArchiveFormat`'s JSON-Schema
@@ -218,6 +226,7 @@ export interface LharJsonWrapper {
       started_at: string;
       tool: string;
       model: string;
+      metadata?: LharSessionMetadata;
     }[];
     entries: LharRecord[];
   };

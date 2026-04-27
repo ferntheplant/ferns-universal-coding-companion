@@ -238,11 +238,16 @@ export function buildSessionLine(
   conversation: Conversation,
   model: string,
 ): LharSessionLine {
-  return {
+  const name = typeof conversation.name === "string" ? conversation.name.trim() : "";
+  const line: LharSessionLine = {
     type: "session",
     trace_id: traceIdFromConversation(conversationId),
     started_at: conversation.firstSeen,
     tool: conversation.source,
     model,
   };
+  if (name) {
+    line.metadata = { name };
+  }
+  return line;
 }
