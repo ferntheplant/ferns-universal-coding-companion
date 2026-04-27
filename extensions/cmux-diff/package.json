@@ -1,5 +1,5 @@
 {
-  "name": "cmux-diff",
+  "name": "@fuc/cmux-diff",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -9,17 +9,17 @@
     "test": "bun test"
   },
   "devDependencies": {
-    "@mariozechner/pi-coding-agent": "^0.67.2",
+    "@mariozechner/pi-coding-agent": "catalog:",
     "@sinclair/typebox": "^0.34.49",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3"
   },
   "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-coding-agent": "catalog:",
     "@sinclair/typebox": "*",
-    "typescript": "^5"
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pierre/diffs": "^1.1.19",

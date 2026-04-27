@@ -1,5 +1,5 @@
 {
-  "name": "pi-model-system-prompts",
+  "name": "@fuc/pi-model-system-prompts",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -8,13 +8,13 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@mariozechner/pi-coding-agent": "^0.67.2",
-    "@types/bun": "latest",
-    "typescript": "^5.9.3"
+    "@mariozechner/pi-coding-agent": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "*",
-    "typescript": "^5"
+    "@mariozechner/pi-coding-agent": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "gray-matter": "^4.0.3"

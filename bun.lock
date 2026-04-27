@@ -5,12 +5,12 @@
     "": {
       "name": "ferns-universal-coder",
       "devDependencies": {
-        "@types/bun": "latest",
-        "typescript": "^5.9.3",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
       },
     },
     "extensions/cmux-diff": {
-      "name": "cmux-diff",
+      "name": "@fuc/cmux-diff",
       "dependencies": {
         "@pierre/diffs": "^1.1.19",
         "git-diff-view": "^0.0.13",
@@ -20,21 +20,21 @@
         "react-dom": "^19.2.5",
       },
       "devDependencies": {
-        "@mariozechner/pi-coding-agent": "^0.67.2",
+        "@mariozechner/pi-coding-agent": "catalog:",
         "@sinclair/typebox": "^0.34.49",
-        "@types/bun": "latest",
+        "@types/bun": "catalog:",
         "@types/node": "^25.6.0",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
       },
       "peerDependencies": {
-        "@mariozechner/pi-coding-agent": "*",
+        "@mariozechner/pi-coding-agent": "catalog:",
         "@sinclair/typebox": "*",
-        "typescript": "^5",
+        "typescript": "catalog:",
       },
     },
     "extensions/pi-context": {
-      "name": "pi-context",
+      "name": "@fuc/pi-context",
       "dependencies": {
         "@contextio/core": "^0.3.2",
         "@hono/node-server": "^2.0.0",
@@ -43,46 +43,53 @@
         "valibot": "^1.3.1",
       },
       "devDependencies": {
-        "@mariozechner/pi-coding-agent": "^0.67.2",
-        "@types/bun": "latest",
-        "typescript": "^5.9.3",
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
       },
       "peerDependencies": {
-        "@mariozechner/pi-coding-agent": "*",
-        "typescript": "^5",
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "typescript": "catalog:",
       },
     },
     "extensions/pi-model-system-prompts": {
-      "name": "pi-model-system-prompts",
+      "name": "@fuc/pi-model-system-prompts",
       "dependencies": {
         "gray-matter": "^4.0.3",
       },
       "devDependencies": {
-        "@mariozechner/pi-coding-agent": "^0.67.2",
-        "@types/bun": "latest",
-        "typescript": "^5.9.3",
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
       },
       "peerDependencies": {
-        "@mariozechner/pi-coding-agent": "*",
-        "typescript": "^5",
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "typescript": "catalog:",
       },
     },
     "extensions/pi-usage": {
-      "name": "pi-usage",
+      "name": "@fuc/pi-usage",
       "devDependencies": {
-        "@mariozechner/pi-ai": "^0.70.2",
-        "@mariozechner/pi-coding-agent": "^0.67.2",
-        "@mariozechner/pi-tui": "^0.70.2",
-        "@types/bun": "latest",
-        "typescript": "^5.9.3",
+        "@mariozechner/pi-ai": "catalog:",
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "@mariozechner/pi-tui": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
       },
       "peerDependencies": {
-        "@mariozechner/pi-ai": "*",
-        "@mariozechner/pi-coding-agent": "*",
-        "@mariozechner/pi-tui": "*",
-        "typescript": "^5",
+        "@mariozechner/pi-ai": "catalog:",
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "@mariozechner/pi-tui": "catalog:",
+        "typescript": "catalog:",
       },
     },
+  },
+  "catalog": {
+    "@mariozechner/pi-ai": "^0.70.2",
+    "@mariozechner/pi-coding-agent": "^0.67.2",
+    "@mariozechner/pi-tui": "^0.70.2",
+    "@types/bun": "latest",
+    "typescript": "^5.9.3",
   },
   "packages": {
     "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.90.0", "", { "dependencies": { "json-schema-to-ts": "^3.1.1" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-MzZtPabJF1b0FTDl6Z6H5ljphPwACLGP13lu8MTiB8jXaW/YXlpOp+Po2cVou3MPM5+f5toyLnul9whKCy7fBg=="],
@@ -164,6 +171,14 @@
     "@borewit/text-codec": ["@borewit/text-codec@0.2.2", "", {}, "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="],
 
     "@contextio/core": ["@contextio/core@0.3.2", "", {}, "sha512-VHYCVmRu5naCzrs1quz7Bj0/mRn5Rm51w7aHNEtpOTfJpdkuRIRCenu+LuaQj6yFifb40MJ+ZZkKKJduOE9VgA=="],
+
+    "@fuc/cmux-diff": ["@fuc/cmux-diff@workspace:extensions/cmux-diff"],
+
+    "@fuc/pi-context": ["@fuc/pi-context@workspace:extensions/pi-context"],
+
+    "@fuc/pi-model-system-prompts": ["@fuc/pi-model-system-prompts@workspace:extensions/pi-model-system-prompts"],
+
+    "@fuc/pi-usage": ["@fuc/pi-usage@workspace:extensions/pi-usage"],
 
     "@google/genai": ["@google/genai@1.50.1", "", { "dependencies": { "google-auth-library": "^10.3.0", "p-retry": "^4.6.2", "protobufjs": "^7.5.4", "ws": "^8.18.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.25.2" }, "optionalPeers": ["@modelcontextprotocol/sdk"] }, "sha512-YbkX7H9+1Pt8wOt7DDREy8XSoiL6fRDzZQRyaVBarFf8MR3zHGqVdvM4cLbDXqPhxqvegZShgfxb8kw9C7YhAQ=="],
 
@@ -417,8 +432,6 @@
 
     "cliui": ["cliui@7.0.4", "", { "dependencies": { "string-width": "^4.2.0", "strip-ansi": "^6.0.0", "wrap-ansi": "^7.0.0" } }, "sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ=="],
 
-    "cmux-diff": ["cmux-diff@workspace:extensions/cmux-diff"],
-
     "color-convert": ["color-convert@2.0.1", "", { "dependencies": { "color-name": "~1.1.4" } }, "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ=="],
 
     "color-name": ["color-name@1.1.4", "", {}, "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA=="],
@@ -620,12 +633,6 @@
     "path-scurry": ["path-scurry@2.0.2", "", { "dependencies": { "lru-cache": "^11.0.0", "minipass": "^7.1.2" } }, "sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg=="],
 
     "pend": ["pend@1.2.0", "", {}, "sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg=="],
-
-    "pi-context": ["pi-context@workspace:extensions/pi-context"],
-
-    "pi-model-system-prompts": ["pi-model-system-prompts@workspace:extensions/pi-model-system-prompts"],
-
-    "pi-usage": ["pi-usage@workspace:extensions/pi-usage"],
 
     "proper-lockfile": ["proper-lockfile@4.1.2", "", { "dependencies": { "graceful-fs": "^4.2.4", "retry": "^0.12.0", "signal-exit": "^3.0.2" } }, "sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA=="],
 

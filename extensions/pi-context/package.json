@@ -1,5 +1,5 @@
 {
-  "name": "pi-context",
+  "name": "@fuc/pi-context",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -12,13 +12,13 @@
     "export:lhar": "bun run scripts/export-lhar.ts"
   },
   "devDependencies": {
-    "@mariozechner/pi-coding-agent": "^0.67.2",
-    "@types/bun": "latest",
-    "typescript": "^5.9.3"
+    "@mariozechner/pi-coding-agent": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "*",
-    "typescript": "^5"
+    "@mariozechner/pi-coding-agent": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@contextio/core": "^0.3.2",
