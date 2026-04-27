@@ -22,6 +22,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@pierre/diffs": "^1.1.19",
     "git-diff-view": "^0.0.13",
     "jotai": "^2.19.1",
     "react": "^19.2.5",
