@@ -58,13 +58,13 @@ async function main(): Promise<void> {
 
   const pascal = toPascal(name);
   const replacements: Array<[string, string]> = [
-    ["@fuc/example-extension", `@fuc/${name}`],
+    ["@fucc/example-extension", `@fucc/${name}`],
     ["example-extension", name],
     ["exampleExtension", pascal[0]!.toLowerCase() + pascal.slice(1)],
   ];
 
   await replaceInFile(join(targetDir, "package.json"), [
-    ["@fuc/example-extension", `@fuc/${name}`],
+    ["@fucc/example-extension", `@fucc/${name}`],
   ]);
   await replaceInFile(join(targetDir, "src", "extension", "index.ts"), replacements);
   await replaceInFile(join(targetDir, "SPEC.md"), [["example-extension", name]]);

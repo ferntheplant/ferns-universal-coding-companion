@@ -1,4 +1,4 @@
-# Fern's Universal Coder Ideas
+# Fern's Universal Coding Companion Ideas
 
 Just put high level ideas + references here; split out into individual specs once ready
 

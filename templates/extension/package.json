@@ -1,5 +1,5 @@
 {
-  "name": "@fuc/example-extension",
+  "name": "@fucc/example-extension",
   "private": true,
   "type": "module",
   "module": "index.ts",

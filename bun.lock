@@ -12,7 +12,7 @@
       },
     },
     "extensions/cmux-diff": {
-      "name": "@fuc/cmux-diff",
+      "name": "@fucc/cmux-diff",
       "dependencies": {
         "@pierre/diffs": "^1.1.19",
         "git-diff-view": "^0.0.13",
@@ -36,7 +36,7 @@
       },
     },
     "extensions/pi-context": {
-      "name": "@fuc/pi-context",
+      "name": "@fucc/pi-context",
       "dependencies": {
         "@contextio/core": "^0.3.2",
         "@hono/node-server": "^2.0.0",
@@ -55,7 +55,7 @@
       },
     },
     "extensions/pi-model-system-prompts": {
-      "name": "@fuc/pi-model-system-prompts",
+      "name": "@fucc/pi-model-system-prompts",
       "dependencies": {
         "gray-matter": "^4.0.3",
       },
@@ -70,7 +70,7 @@
       },
     },
     "extensions/pi-usage": {
-      "name": "@fuc/pi-usage",
+      "name": "@fucc/pi-usage",
       "devDependencies": {
         "@mariozechner/pi-ai": "catalog:",
         "@mariozechner/pi-coding-agent": "catalog:",
@@ -86,7 +86,7 @@
       },
     },
     "templates/extension": {
-      "name": "@fuc/example-extension",
+      "name": "@fucc/example-extension",
       "devDependencies": {
         "@mariozechner/pi-coding-agent": "catalog:",
         "@types/bun": "catalog:",
@@ -186,15 +186,15 @@
 
     "@contextio/core": ["@contextio/core@0.3.2", "", {}, "sha512-VHYCVmRu5naCzrs1quz7Bj0/mRn5Rm51w7aHNEtpOTfJpdkuRIRCenu+LuaQj6yFifb40MJ+ZZkKKJduOE9VgA=="],
 
-    "@fuc/cmux-diff": ["@fuc/cmux-diff@workspace:extensions/cmux-diff"],
+    "@fucc/cmux-diff": ["@fucc/cmux-diff@workspace:extensions/cmux-diff"],
 
-    "@fuc/example-extension": ["@fuc/example-extension@workspace:templates/extension"],
+    "@fucc/example-extension": ["@fucc/example-extension@workspace:templates/extension"],
 
-    "@fuc/pi-context": ["@fuc/pi-context@workspace:extensions/pi-context"],
+    "@fucc/pi-context": ["@fucc/pi-context@workspace:extensions/pi-context"],
 
-    "@fuc/pi-model-system-prompts": ["@fuc/pi-model-system-prompts@workspace:extensions/pi-model-system-prompts"],
+    "@fucc/pi-model-system-prompts": ["@fucc/pi-model-system-prompts@workspace:extensions/pi-model-system-prompts"],
 
-    "@fuc/pi-usage": ["@fuc/pi-usage@workspace:extensions/pi-usage"],
+    "@fucc/pi-usage": ["@fucc/pi-usage@workspace:extensions/pi-usage"],
 
     "@google/genai": ["@google/genai@1.50.1", "", { "dependencies": { "google-auth-library": "^10.3.0", "p-retry": "^4.6.2", "protobufjs": "^7.5.4", "ws": "^8.18.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.25.2" }, "optionalPeers": ["@modelcontextprotocol/sdk"] }, "sha512-YbkX7H9+1Pt8wOt7DDREy8XSoiL6fRDzZQRyaVBarFf8MR3zHGqVdvM4cLbDXqPhxqvegZShgfxb8kw9C7YhAQ=="],
 

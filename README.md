@@ -1,14 +1,14 @@
-# ferns-universal-coder
+# ferns-universal-coding-companion
 
-`fuc` — personal monorepo of Pi coding agent extensions, skills, themes, prompts, and the bootstrap scaffolding that ties them together.
+`fucc` — personal monorepo of Pi coding agent extensions, skills, themes, prompts, and the bootstrap scaffolding that ties them together.
 
 One repo. One root install. One `manifest.json` declaring everything Pi should pick up.
 
 ## Layout
 
 ```text
-ferns-universal-coder/
-├── extensions/             # @fuc/* Pi extensions (one workspace per dir)
+ferns-universal-coding-companion/
+├── extensions/             # @fucc/* Pi extensions (one workspace per dir)
 │   ├── cmux-diff/
 │   ├── pi-context/
 │   ├── pi-model-system-prompts/
@@ -91,7 +91,7 @@ Every extension is a workspace package with the same minimal skeleton:
 
 ```text
 extensions/<name>/
-├── package.json            # @fuc/<name>, catalog: deps
+├── package.json            # @fucc/<name>, catalog: deps
 ├── tsconfig.json           # extends ../../tsconfig.base.json
 ├── index.ts                # re-exports default from src/extension/index
 ├── src/extension/index.ts  # registers commands + Pi event handlers
