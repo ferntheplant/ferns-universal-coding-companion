@@ -85,6 +85,18 @@
         "typescript": "catalog:",
       },
     },
+    "templates/extension": {
+      "name": "@fuc/example-extension",
+      "devDependencies": {
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "@mariozechner/pi-coding-agent": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
   },
   "catalog": {
     "@mariozechner/pi-ai": "^0.70.2",
@@ -175,6 +187,8 @@
     "@contextio/core": ["@contextio/core@0.3.2", "", {}, "sha512-VHYCVmRu5naCzrs1quz7Bj0/mRn5Rm51w7aHNEtpOTfJpdkuRIRCenu+LuaQj6yFifb40MJ+ZZkKKJduOE9VgA=="],
 
     "@fuc/cmux-diff": ["@fuc/cmux-diff@workspace:extensions/cmux-diff"],
+
+    "@fuc/example-extension": ["@fuc/example-extension@workspace:templates/extension"],
 
     "@fuc/pi-context": ["@fuc/pi-context@workspace:extensions/pi-context"],
 

@@ -1,0 +1,19 @@
+{
+  "name": "@fuc/example-extension",
+  "private": true,
+  "type": "module",
+  "module": "index.ts",
+  "scripts": {
+    "dev": "bun run index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "catalog:",
+    "typescript": "catalog:"
+  }
+}

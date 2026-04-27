@@ -13,8 +13,7 @@
 - [caveman](https://github.com/jonjonrankin/pi-caveman/tree/main)
 - [raw paste](https://github.com/tmustier/pi-extensions/tree/main/raw-paste)
 - observability via custom pi-context
-- [extension starter](https://github.com/ferntheplant/pi-extension-starter)
-  - TODO: make it NOT init a git repo
+- extension starter — retired the standalone `ferntheplant/pi-extension-starter` repo; lives in this monorepo at `templates/extension/` and is scaffolded via `bun run new-extension <name>`
 
 ## Extensions
 

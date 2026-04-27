@@ -45,3 +45,11 @@ bun run lint         # oxlint (defaults)
 bun run format       # oxfmt --write
 bun run check        # typecheck + lint + format:check
 ```
+
+## Scaffolding a new extension
+
+```bash
+bun run new-extension my-thing
+```
+
+Copies `templates/extension/` to `extensions/my-thing/` and rewrites the placeholder names. The extension is then picked up by `extensions/*` in `manifest.json` automatically. Run `bun install && ./install.sh` and `/reload` in Pi.

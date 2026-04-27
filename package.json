@@ -19,6 +19,7 @@
   "scripts": {
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
+    "new-extension": "bun run scripts/new-extension.ts",
     "lint": "oxlint",
     "format": "oxfmt --write",
     "format:check": "oxfmt --check",
