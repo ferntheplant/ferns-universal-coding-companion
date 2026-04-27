@@ -1,6 +1,6 @@
-# pi-extensions
+# ferns-universal-coder
 
-Personal monorepo of Pi coding agent extensions, skills, themes, and prompts. One repo, one root install, one `manifest.json` declaring everything Pi should pick up.
+`fuc` — personal monorepo of Pi coding agent extensions, skills, themes, and prompts. One repo, one root install, one `manifest.json` declaring everything Pi should pick up.
 
 ## Layout
 
