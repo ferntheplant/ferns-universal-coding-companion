@@ -11,6 +11,7 @@ Append model-specific system prompt fragments to Pi's existing system prompt cha
 - Fragments live in flat repo-local directory `model-prompts/*.md`.
 - Each file is YAML frontmatter followed by markdown body.
 - Frontmatter requires a `models: string[]` selector list; an optional `description` may be included for status output.
+- Quote any selector containing `*` in YAML frontmatter, e.g. `"*/kimi-k2.5"` or `"*/*"`.
 - The markdown body is the prompt text that gets appended when a selector matches the active model.
 - A single file can target many models by listing multiple selectors.
 
