@@ -26,21 +26,23 @@
   "treeFilterMode": "default",
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
-  "defaultProvider": "cursor",
-  "defaultModel": "claude-4.6-sonnet-thinking",
+  "defaultProvider": "opencode",
+  "defaultModel": "kimi-k2.6",
   "defaultThinkingLevel": "medium",
   "enabledModels": [
-    "cursor/gpt-5.3-codex",
-    "openai-codex/gpt-5.3-codex",
-    "openai-codex/gpt-5.4-mini",
-    "openai-codex/gpt-5.4",
+    "opencode/minimax-m2.5-free",
     "cursor/composer-2",
+    "openai-codex/gpt-5.4-mini",
+    "openai-codex/gpt-5.3-codex",
+    "openai-codex/gpt-5.4",
+    "openai-codex/gpt-5.5",
     "opencode/kimi-k2.5",
     "opencode/kimi-k2.6",
-    "opencode/minimax-m2.5-free",
-    "opencode/glm-5.1",
     "opencode/claude-opus-4-6",
     "cursor/claude-4.6-opus-thinking",
-    "cursor/claude-4.6-sonnet-thinking"
+    "cursor/claude-4.6-sonnet-thinking",
+    "opencode/claude-opus-4-7",
+    "opencode/gemini-3.1-pro",
+    "cursor/gemini-3.1-pro"
   ]
 }

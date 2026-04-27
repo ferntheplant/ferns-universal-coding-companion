@@ -2,6 +2,9 @@ import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-age
 import type { AssistantMessage } from "@mariozechner/pi-ai";
 import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { FOOTER_STATUS_KEY } from "./footer";
+import { createStickyContextUsageResolver } from "./context-usage";
+
+const resolveStickyContextUsage = createStickyContextUsageResolver();
 
 function formatTokens(count: number): string {
   if (!Number.isFinite(count) || count <= 0) return "0";
@@ -107,7 +110,7 @@ export function installUsageCustomFooter(pi: ExtensionAPI, ctx: ExtensionContext
         const usingSubscription = ctx.model ? ctx.modelRegistry.isUsingOAuth(ctx.model) : false;
         const costLabel = `$${usage.costTotal.toFixed(3)}${usingSubscription ? " (sub)" : ""}`;
 
-        const context = ctx.getContextUsage();
+        const context = resolveStickyContextUsage(ctx, ctx.getContextUsage());
         const contextPercent = context?.percent ?? null;
         const contextWindow = context?.contextWindow ?? ctx.model?.contextWindow ?? 0;
         const contextPercentText = contextPercent === null ? "?" : `${contextPercent.toFixed(1)}%`;
