@@ -9,7 +9,7 @@
     "npm:@tmustier/pi-raw-paste",
     "git:github.com/jonjonrankin/pi-caveman"
   ],
-  "lastChangelogVersion": "0.70.2",
+  "lastChangelogVersion": "0.70.6",
   "images": {
     "blockImages": false
   },
@@ -26,8 +26,8 @@
   "treeFilterMode": "default",
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
-  "defaultProvider": "cursor",
-  "defaultModel": "composer-2",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "defaultThinkingLevel": "medium",
   "enabledModels": [
     "opencode/minimax-m2.5-free",

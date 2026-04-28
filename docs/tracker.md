@@ -80,6 +80,7 @@ Just put high level ideas + references here; split out into individual specs onc
 - sandbox runtimes (might be the solution to time-travel)
   - [just bash](https://github.com/vercel-labs/just-bash)
   - [zmx](https://erock.prose.sh/zmx-ai-portal)
+  - [gondolin](https://github.com/earendil-works/gondolin)
 - remote runtimes
   - [sandcastle](https://github.com/mattpocock/sandcastle)
   - cloudflare
