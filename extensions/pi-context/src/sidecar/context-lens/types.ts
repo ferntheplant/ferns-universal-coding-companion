@@ -46,12 +46,23 @@ export interface ImageBlock {
   source?: unknown;
 }
 
+export interface ThinkingBlock {
+  type: "thinking";
+  thinking: string;
+}
+
 export interface InputTextBlock {
   type: "input_text";
   text: string;
 }
 
-export type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock | ImageBlock | InputTextBlock;
+export type ContentBlock =
+  | TextBlock
+  | ToolUseBlock
+  | ToolResultBlock
+  | ImageBlock
+  | ThinkingBlock
+  | InputTextBlock;
 
 // Tool definitions (union of Anthropic and OpenAI formats)
 export interface AnthropicTool {

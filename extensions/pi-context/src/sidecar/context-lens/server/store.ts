@@ -28,6 +28,12 @@ import {
   normalizeComposition,
   parseResponseUsage,
 } from "../lhar.js";
+import {
+  contentBlocksToText,
+  normalizeContentBlock,
+  normalizeContentBlocks,
+  normalizeMessageRole,
+} from "../core/block-normalize.js";
 import { ConversationLineSchema, EntryLineSchema } from "../schemas.js";
 import { safeFilenamePart } from "../server-utils.js";
 import type {
@@ -54,6 +60,61 @@ type StoreChangeListener = (event: StoreChangeEvent) => void;
 const CODEX_SESSION_TTL_MS = 5 * 60 * 1000;
 const GEMINI_SESSION_TTL_MS = 5 * 60 * 1000;
 const PI_SESSION_TTL_MS = 5 * 60 * 1000;
+
+function reviveContentBlocks(content: unknown): ContentBlock[] | null {
+  if (Array.isArray(content)) {
+    const blocks = normalizeContentBlocks(content);
+    return blocks.length > 0 ? blocks : null;
+  }
+
+  if (typeof content !== "string") return null;
+  const trimmed = content.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      const blocks = normalizeContentBlocks(parsed);
+      return blocks.length > 0 ? blocks : null;
+    }
+  } catch {
+    /* not JSON */
+  }
+
+  return null;
+}
+
+function normalizeStoredMessage(message: ContextInfo["messages"][number]): ContextInfo["messages"][number] {
+  const contentBlocks =
+    message.contentBlocks && message.contentBlocks.length > 0
+      ? message.contentBlocks.map((block) => normalizeContentBlock(block))
+      : reviveContentBlocks(message.content);
+
+  const textContent =
+    contentBlocks && contentBlocks.length > 0
+      ? contentBlocksToText(contentBlocks)
+      : typeof message.content === "string"
+        ? message.content
+        : message.content == null
+          ? ""
+          : String(message.content);
+
+  return {
+    ...message,
+    role: normalizeMessageRole(message.role),
+    content: textContent,
+    contentBlocks,
+  };
+}
+
+function normalizeContextInfoMessages(contextInfo: ContextInfo): ContextInfo {
+  return {
+    ...contextInfo,
+    messages: Array.isArray(contextInfo.messages)
+      ? contextInfo.messages.map((message) => normalizeStoredMessage(message))
+      : [],
+  };
+}
 
 export class Store {
   private readonly dataDir: string;
@@ -200,7 +261,7 @@ export class Store {
           // nested content blocks as loose objects).
           const entry: CapturedEntry = {
             ...projected,
-            contextInfo: projected.contextInfo as ContextInfo,
+            contextInfo: normalizeContextInfoMessages(projected.contextInfo as ContextInfo),
             response: (projected.response || { raw: true }) as ResponseData,
             requestHeaders: {},
             responseHeaders: {},
@@ -914,7 +975,7 @@ export class Store {
     const detailPath = path.join(this.detailDir, `${entryId}.json`);
     try {
       const data = JSON.parse(fs.readFileSync(detailPath, "utf-8"));
-      return data.contextInfo ?? null;
+      return data.contextInfo ? normalizeContextInfoMessages(data.contextInfo as ContextInfo) : null;
     } catch {
       return null;
     }
@@ -968,34 +1029,35 @@ export class Store {
   // Full content is available via the detail API (per-entry files on disk).
   private compactBlock(b: ContentBlock): ContentBlock {
     const limit = 200;
-    switch (b.type) {
+    const normalized = normalizeContentBlock(b);
+    switch (normalized.type) {
       case "tool_use":
         return {
           type: "tool_use",
-          id: b.id,
-          name: b.name,
+          id: normalized.id,
+          name: normalized.name,
           // Preserve small path-like keys for file attribution; drop large values
-          input: this.compactToolInput(b.input),
+          input: this.compactToolInput(normalized.input),
         };
       case "tool_result": {
         const rc =
-          typeof b.content === "string"
-            ? b.content.slice(0, limit)
-            : Array.isArray(b.content)
-              ? b.content.map((bb) => this.compactBlock(bb))
+          typeof normalized.content === "string"
+            ? normalized.content.slice(0, limit)
+            : Array.isArray(normalized.content)
+              ? normalized.content.map((bb) => this.compactBlock(bb))
               : "";
-        return { type: "tool_result", tool_use_id: b.tool_use_id, content: rc };
+        return { type: "tool_result", tool_use_id: normalized.tool_use_id, content: rc };
       }
       case "text":
-        return { type: "text", text: (b.text || "").slice(0, limit) };
+        return { type: "text", text: (normalized.text || "").slice(0, limit) };
       case "input_text":
-        return { type: "input_text", text: (b.text || "").slice(0, limit) };
+        return { type: "input_text", text: (normalized.text || "").slice(0, limit) };
       case "image":
         return { type: "image" };
       default: {
         // Handle thinking blocks and other unknown types; truncate text-like fields.
         // Use typed narrowing so this stays correct when new block types are added.
-        const fallback = b as Record<string, unknown>;
+        const fallback = normalized as unknown as Record<string, unknown>;
         if (typeof fallback.thinking === "string")
           return {
             ...fallback,

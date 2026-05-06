@@ -5,9 +5,9 @@
     "npm:pi-answer",
     "npm:pi-hashline-readmap",
     "npm:@sherif-fanous/pi-rtk",
-    "npm:pi-cursor-provider",
     "npm:@tmustier/pi-raw-paste",
-    "git:github.com/jonjonrankin/pi-caveman"
+    "git:github.com/jonjonrankin/pi-caveman",
+    "npm:pi-smart-fetch"
   ],
   "lastChangelogVersion": "0.73.0",
   "images": {
@@ -20,29 +20,26 @@
   "followUpMode": "one-at-a-time",
   "steeringMode": "one-at-a-time",
   "collapseChangelog": true,
-  "quietStartup": true,
+  "quietStartup": false,
   "enableInstallTelemetry": false,
   "doubleEscapeAction": "tree",
   "treeFilterMode": "default",
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
   "defaultProvider": "opencode",
-  "defaultModel": "kimi-k2.6",
+  "defaultModel": "minimax-m2.7",
   "defaultThinkingLevel": "high",
   "enabledModels": [
-    "opencode/minimax-m2.5-free",
-    "cursor/composer-2",
     "openai-codex/gpt-5.4-mini",
     "openai-codex/gpt-5.3-codex",
     "openai-codex/gpt-5.4",
     "openai-codex/gpt-5.5",
+    "opencode/minimax-m2.7",
+    "opencode/qwen3.6-plus",
     "opencode/kimi-k2.5",
     "opencode/kimi-k2.6",
     "opencode/claude-opus-4-6",
-    "cursor/claude-4.6-opus-thinking",
-    "cursor/claude-4.6-sonnet-thinking",
     "opencode/claude-opus-4-7",
-    "opencode/gemini-3.1-pro",
-    "cursor/gemini-3.1-pro"
+    "opencode/gemini-3.1-pro"
   ]
 }

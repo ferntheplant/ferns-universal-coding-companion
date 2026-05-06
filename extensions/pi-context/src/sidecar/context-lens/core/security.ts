@@ -153,17 +153,27 @@ function extractToolName(msg: ParsedMessage, allMessages: ParsedMessage[]): stri
   for (const m of allMessages) {
     if (m.contentBlocks) {
       for (const b of m.contentBlocks) {
-        if (b.type === "tool_use" && b.id && b.name) {
-          nameMap.set(b.id, b.name);
+        const block = b as any;
+        const type = block.type;
+        if (
+          (type === "tool_use" || type === "toolCall" || type === "tool_call") &&
+          block.id &&
+          block.name
+        ) {
+          nameMap.set(block.id, block.name);
         }
       }
     }
   }
 
   for (const b of msg.contentBlocks) {
-    if (b.type === "tool_use" && b.name) return b.name;
-    if (b.type === "tool_result" && b.tool_use_id) {
-      return nameMap.get(b.tool_use_id) || null;
+    const block = b as any;
+    const type = block.type;
+    if ((type === "tool_use" || type === "toolCall" || type === "tool_call") && block.name) {
+      return block.name;
+    }
+    if ((type === "tool_result" || type === "toolResult") && block.tool_use_id) {
+      return nameMap.get(block.tool_use_id) || null;
     }
   }
   return null;
@@ -171,7 +181,10 @@ function extractToolName(msg: ParsedMessage, allMessages: ParsedMessage[]): stri
 
 function isToolResultMessage(msg: ParsedMessage): boolean {
   if (!msg.contentBlocks) return false;
-  return msg.contentBlocks.some((b) => b.type === "tool_result");
+  return msg.contentBlocks.some((b) => {
+    const type = (b as any).type;
+    return type === "tool_result" || type === "toolResult";
+  });
 }
 
 function truncateMatch(text: string, start: number, length: number): string {

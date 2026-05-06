@@ -1,4 +1,10 @@
 import type { ContentBlock, ContextInfo, ParsedMessage } from "../types.js";
+import {
+  contentBlocksToText,
+  normalizeContentBlocks,
+  normalizeContentBlock,
+  normalizeMessageRole,
+} from "./block-normalize.js";
 import { estimateTokens } from "./tokens.js";
 
 /**
@@ -20,20 +26,30 @@ function parseResponsesItem(
 
   // Standard message with role/content (e.g. {"type":"message","role":"user","content":[...]})
   if (item.role) {
-    const isSystem = item.role === "system" || item.role === "developer";
+    const role = normalizeMessageRole(item.role);
+    const isSystem = role === "system" || role === "developer";
     let content: string;
     let contentBlocks: ContentBlock[] | null = null;
-    if (typeof item.content === "string") {
+    if (role === "tool") {
+      const block = normalizeContentBlock({
+        type: "tool_result",
+        tool_use_id:
+          item.tool_call_id ?? item.toolCallId ?? item.tool_use_id ?? item.toolUseId ?? item.id ?? "",
+        content: item.content,
+      });
+      contentBlocks = [block];
+      content = contentBlocksToText(contentBlocks) || JSON.stringify(item.content || item);
+    } else if (typeof item.content === "string") {
       content = item.content;
     } else if (Array.isArray(item.content)) {
-      contentBlocks = item.content as ContentBlock[];
-      content = item.content.map((b: any) => b.text || "").join("\n");
+      contentBlocks = normalizeContentBlocks(item.content);
+      content = contentBlocksToText(contentBlocks) || JSON.stringify(item.content);
     } else {
       content = JSON.stringify(item.content || item);
     }
     const tokens = estimateTokens(item.content ?? content, model);
     return {
-      message: { role: item.role, content, contentBlocks, tokens },
+      message: { role, content, contentBlocks, tokens },
       tokens,
       isSystem,
       content,
@@ -219,10 +235,17 @@ export function parseContextInfo(
 
     if (body.messages && Array.isArray(body.messages)) {
       info.messages = body.messages.map((msg: any): ParsedMessage => {
-        const contentBlocks = Array.isArray(msg.content) ? msg.content : null;
+        const role = normalizeMessageRole(msg.role);
+        const contentBlocks = Array.isArray(msg.content) ? normalizeContentBlocks(msg.content) : null;
+        const content =
+          typeof msg.content === "string"
+            ? msg.content
+            : contentBlocks && contentBlocks.length > 0
+              ? contentBlocksToText(contentBlocks) || JSON.stringify(msg.content)
+              : JSON.stringify(msg.content);
         return {
-          role: msg.role,
-          content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
+          role,
+          content,
           contentBlocks,
           tokens: estimateTokens(msg.content, model),
         };
@@ -361,10 +384,8 @@ export function parseContextInfo(
             contentStr = msg.content;
             contentBlocks.push({ type: "text", text: msg.content });
           } else if (Array.isArray(msg.content)) {
-            contentStr = msg.content.map((b: { text?: string }) => b.text || "").join("\n");
-            for (const part of msg.content) {
-              if (part.type === "text") contentBlocks.push({ type: "text", text: part.text || "" });
-            }
+            contentBlocks = normalizeContentBlocks(msg.content);
+            contentStr = contentBlocksToText(contentBlocks) || JSON.stringify(msg.content);
           } else {
             contentStr = "";
           }
@@ -404,7 +425,7 @@ export function parseContextInfo(
 
           const tokens = estimateTokens(tokenSource, model);
           info.messages.push({
-            role: msg.role,
+            role: normalizeMessageRole(msg.role),
             content: contentStr || JSON.stringify(msg.content),
             contentBlocks: contentBlocks.length > 0 ? contentBlocks : null,
             tokens,

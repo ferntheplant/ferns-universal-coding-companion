@@ -516,15 +516,10 @@ function normalizeToolResultMessage(toolResult: unknown): Record<string, unknown
   });
 
   return {
-    role: "user",
-    content: [
-      {
-        type: "tool_result",
-        tool_use_id: String(value.toolCallId ?? ""),
-        content: textParts.join(""),
-        is_error: Boolean(value.isError),
-      },
-    ],
+    role: "tool",
+    tool_call_id: String(value.toolCallId ?? ""),
+    content: textParts.join(""),
+    is_error: Boolean(value.isError),
   };
 }
 

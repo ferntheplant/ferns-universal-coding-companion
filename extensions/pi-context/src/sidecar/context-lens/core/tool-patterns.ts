@@ -129,7 +129,8 @@ function extractToolCalls(messages: ParsedMessage[]): ToolCall[] {
   const calls: ToolCall[] = [];
   for (let i = 0; i < messages.length; i++) {
     for (const b of messages[i].contentBlocks ?? []) {
-      if (b.type === "tool_use") {
+      const type = (b as any).type;
+      if (type === "tool_use" || type === "toolCall" || type === "tool_call") {
         calls.push({ msgIndex: i, block: b as ToolUseBlock });
       }
     }
@@ -141,7 +142,8 @@ function extractToolResults(messages: ParsedMessage[]): ToolResult[] {
   const results: ToolResult[] = [];
   for (let i = 0; i < messages.length; i++) {
     for (const b of messages[i].contentBlocks ?? []) {
-      if (b.type === "tool_result") {
+      const type = (b as any).type;
+      if (type === "tool_result" || type === "toolResult") {
         results.push({ msgIndex: i, block: b as ToolResultBlock });
       }
     }

@@ -4,6 +4,8 @@ import { detectActiveProvider } from "./providers/registry";
 import {
   fetchProviderUsageWithCache,
   markLifecycleEvent,
+  markTurnEnd,
+  markTurnStart,
   resetRuntimeState,
   setActiveModelProvider,
   setActiveProviderId,
@@ -57,6 +59,12 @@ export default function usageExtension(pi: ExtensionAPI): void {
   pi.on("turn_start", async (_event, ctx) => {
     setActiveModelProvider(ctx.model?.provider);
     markLifecycleEvent("turn_start");
+    markTurnStart();
+    await refreshActiveProviderFooter(ctx, false);
+  });
+
+  pi.on("turn_end", async (_event, ctx) => {
+    markTurnEnd();
     await refreshActiveProviderFooter(ctx, false);
   });
 

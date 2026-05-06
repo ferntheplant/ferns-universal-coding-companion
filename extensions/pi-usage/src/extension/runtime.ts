@@ -29,6 +29,10 @@ export interface RuntimeState {
   zenLoginCommandRuns: number;
   pollTimer: ReturnType<typeof setInterval> | null;
   providerCache: Map<ProviderId, ProviderRuntimeCache>;
+  messageStartedAt: number | null;
+  turnElapsedMs: number;
+  turnStartedAt: number | null;
+  lastTurnDurationMs: number | null;
 }
 
 export interface RuntimeSnapshot {
@@ -59,6 +63,10 @@ const runtimeState: RuntimeState = {
   zenLoginCommandRuns: 0,
   pollTimer: null,
   providerCache: new Map(),
+  messageStartedAt: null,
+  turnElapsedMs: 0,
+  turnStartedAt: null,
+  lastTurnDurationMs: null,
 };
 
 function createEmptyProviderCache(): ProviderRuntimeCache {
@@ -100,6 +108,34 @@ export function markCommandRun(commandName: UsageCommandName): void {
   }
 
   runtimeState.zenLoginCommandRuns += 1;
+}
+
+export function markTurnStart(): void {
+  if (runtimeState.messageStartedAt === null) {
+    runtimeState.messageStartedAt = Date.now();
+  }
+  runtimeState.turnStartedAt = Date.now();
+}
+
+export function markTurnEnd(): void {
+  if (runtimeState.turnStartedAt !== null) {
+    const turnDuration = Date.now() - runtimeState.turnStartedAt;
+    runtimeState.turnElapsedMs += turnDuration;
+    runtimeState.lastTurnDurationMs = turnDuration;
+    runtimeState.turnStartedAt = null;
+  }
+}
+
+export function getTurnElapsedMs(): number {
+  let elapsed = runtimeState.turnElapsedMs;
+  if (runtimeState.turnStartedAt !== null) {
+    elapsed += Date.now() - runtimeState.turnStartedAt;
+  }
+  return elapsed;
+}
+
+export function isTurnActive(): boolean {
+  return runtimeState.turnStartedAt !== null;
 }
 
 export function startPolling(task: () => void, intervalMs = runtimeState.pollIntervalMs): void {
@@ -197,4 +233,8 @@ export function resetRuntimeState(): void {
   runtimeState.usageCommandRuns = 0;
   runtimeState.zenLoginCommandRuns = 0;
   runtimeState.providerCache.clear();
+  runtimeState.messageStartedAt = null;
+  runtimeState.turnElapsedMs = 0;
+  runtimeState.turnStartedAt = null;
+  runtimeState.lastTurnDurationMs = null;
 }

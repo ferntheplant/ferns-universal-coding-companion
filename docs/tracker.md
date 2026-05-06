@@ -19,6 +19,7 @@ Just put high level ideas + references here; split out into individual specs onc
 - [raw paste](https://github.com/tmustier/pi-extensions/tree/main/raw-paste)
 - custom observability via custom pi-context
 - custom extension starter
+- [web fetch](https://github.com/Thinkscape/agent-smart-fetch)
 
 ## In-Flight
 
@@ -31,11 +32,6 @@ Just put high level ideas + references here; split out into individual specs onc
 
 ## Extensions
 
-- [web](https://github.com/nicobailon/pi-web-access)
-  - do we need web search or is nice fetch enough?
-  - [smart fetch](https://github.com/Thinkscape/agent-smart-fetch/blob/main/packages/pi-smart-fetch/README.md)
-  - [codex web](https://github.com/ayagmar/pi-codex-web-search)
-  - [agent smart fetch](https://github.com/Thinkscape/agent-smart-fetch)
 - [lsp](https://github.com/samfoy/pi-lsp-extension/tree/main)
   - make small changes to not register so many tools
   - need to make it give diagnostics in batches at end of string of edits instead of on every tool call

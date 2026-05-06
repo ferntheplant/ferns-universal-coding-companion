@@ -349,7 +349,12 @@ export function extractToolsUsed(messages: ParsedMessage[]): Set<string> {
   for (const msg of messages) {
     if (msg.contentBlocks) {
       for (const block of msg.contentBlocks) {
-        if (block.type === "tool_use" && "name" in block && block.name) {
+        const type = (block as any).type;
+        if (
+          (type === "tool_use" || type === "toolCall" || type === "tool_call") &&
+          "name" in block &&
+          block.name
+        ) {
           toolsUsed.add(block.name);
         }
       }

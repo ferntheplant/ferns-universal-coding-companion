@@ -319,13 +319,19 @@ function normalizeAssistantContent(message: PiAssistantMessage | null): unknown[
     const type = typeof raw.type === "string" ? raw.type : "text";
 
     if (type === "text") return { type: "text", text: String(raw.text ?? "") };
-    if (type === "thinking") {
+    if (type === "thinking" || type === "reasoning") {
       return {
         type: "thinking",
         thinking: String(raw.thinking ?? raw.text ?? ""),
       };
     }
-    if (type === "tool_use" || type === "toolCall" || type === "tool_call") {
+    if (
+      type === "tool_use" ||
+      type === "toolCall" ||
+      type === "tool_call" ||
+      type === "function_call" ||
+      type === "custom_tool_call"
+    ) {
       return {
         type: "tool_use",
         id: String(raw.id ?? raw.toolUseId ?? ""),
@@ -333,7 +339,12 @@ function normalizeAssistantContent(message: PiAssistantMessage | null): unknown[
         input: (raw.input ?? raw.arguments ?? {}) as Record<string, unknown>,
       };
     }
-    if (type === "tool_result" || type === "toolResult") {
+    if (
+      type === "tool_result" ||
+      type === "toolResult" ||
+      type === "function_call_output" ||
+      type === "custom_tool_call_output"
+    ) {
       return {
         type: "tool_result",
         tool_use_id: String(raw.tool_use_id ?? raw.toolUseId ?? raw.toolCallId ?? ""),
@@ -544,12 +555,19 @@ function classifyBlock(
   const value = block as Record<string, unknown>;
   const type = typeof value.type === "string" ? value.type : "";
 
-  if (type === "tool_use" || type === "function_call" || type === "custom_tool_call") {
+  if (
+    type === "tool_use" ||
+    type === "toolCall" ||
+    type === "tool_call" ||
+    type === "function_call" ||
+    type === "custom_tool_call"
+  ) {
     addComposition(counts, "tool_calls", estimateTokens(block));
     return;
   }
   if (
     type === "tool_result" ||
+    type === "toolResult" ||
     type === "function_call_output" ||
     type === "custom_tool_call_output"
   ) {
@@ -589,7 +607,12 @@ function classifyMessage(
   }
 
   const value = message as Record<string, unknown>;
-  const role = typeof value.role === "string" ? value.role : "user";
+  const role =
+    typeof value.role === "string" && value.role === "toolResult"
+      ? "tool"
+      : typeof value.role === "string"
+        ? value.role
+        : "user";
   const type = typeof value.type === "string" ? value.type : "";
 
   if (!("role" in value) && type) {
@@ -733,7 +756,13 @@ function countAssistantToolCalls(message: PiAssistantMessage | null): number {
   return message.content.filter((block) => {
     if (!block || typeof block !== "object") return false;
     const type = (block as { type?: unknown }).type;
-    return type === "tool_use" || type === "tool_call" || type === "toolCall";
+    return (
+      type === "tool_use" ||
+      type === "tool_call" ||
+      type === "toolCall" ||
+      type === "function_call" ||
+      type === "custom_tool_call"
+    );
   }).length;
 }
 
@@ -741,7 +770,8 @@ function countThinkingBlocks(message: PiAssistantMessage | null): number {
   if (!Array.isArray(message?.content)) return 0;
   return message.content.filter((block) => {
     if (!block || typeof block !== "object") return false;
-    return (block as { type?: unknown }).type === "thinking";
+    const type = (block as { type?: unknown }).type;
+    return type === "thinking" || type === "reasoning";
   }).length;
 }
 

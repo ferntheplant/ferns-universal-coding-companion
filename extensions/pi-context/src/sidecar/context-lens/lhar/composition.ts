@@ -1,4 +1,5 @@
 import { estimateTokens } from "../core.js";
+import { normalizeContentBlock, normalizeMessageRole } from "../core/block-normalize.js";
 import type { CompositionCategory, CompositionEntry } from "../lhar-types.generated.js";
 import type { ContextInfo } from "../types.js";
 
@@ -102,7 +103,7 @@ function classifyMessage(
     }
   }
 
-  const role: string = msg.role || "user";
+  const role: string = normalizeMessageRole(msg.role);
   const content = msg.content;
 
   // System / developer messages
@@ -113,7 +114,13 @@ function classifyMessage(
 
   // Tool result messages (OpenAI chat-completions role="tool")
   if (role === "tool") {
-    add("tool_results", estimateTokens(content, model));
+    if (typeof content === "string") {
+      add("tool_results", estimateTokens(content, model));
+    } else if (Array.isArray(content)) {
+      add("tool_results", estimateTokens(content.map((block) => normalizeContentBlock(block)), model));
+    } else {
+      add("tool_results", estimateTokens(content ?? "", model));
+    }
     return;
   }
 
@@ -149,7 +156,7 @@ function classifyMessage(
   // Array of content blocks
   if (Array.isArray(content)) {
     for (const block of content) {
-      classifyBlock(block, role, add, model);
+      classifyBlock(normalizeContentBlock(block), role, add, model);
     }
     return;
   }
@@ -168,15 +175,15 @@ function classifyBlock(
 ): void {
   const type: string = block.type || "";
 
-  if (type === "tool_use") {
+  if (type === "tool_use" || type === "toolCall" || type === "tool_call") {
     add("tool_calls", estimateTokens(block, model));
     return;
   }
-  if (type === "tool_result") {
+  if (type === "tool_result" || type === "toolResult") {
     add("tool_results", estimateTokens(block.content || "", model));
     return;
   }
-  if (type === "thinking") {
+  if (type === "thinking" || type === "reasoning") {
     add("thinking", estimateTokens(block.thinking || block.text || "", model));
     return;
   }

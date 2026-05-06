@@ -1,8 +1,14 @@
 {
   "settings": "settings.json",
-  "themes": ["themes/*.json"],
-  "extensions": ["extensions/*"],
-  "skills": ["skills/*"],
+  "themes": [
+    "themes/*.json"
+  ],
+  "extensions": [
+    "extensions/*"
+  ],
+  "skills": [
+    "skills/*"
+  ],
   "packages": [
     "npm:pi-mcp-adapter",
     "npm:pi-terminal-signals",
@@ -11,6 +17,7 @@
     "npm:@sherif-fanous/pi-rtk",
     "npm:pi-cursor-provider",
     "npm:@tmustier/pi-raw-paste",
+    "npm:pi-smart-fetch",
     "git:github.com/jonjonrankin/pi-caveman"
   ]
 }

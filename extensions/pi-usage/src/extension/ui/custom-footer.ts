@@ -3,6 +3,10 @@ import type { AssistantMessage } from "@mariozechner/pi-ai";
 import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { FOOTER_STATUS_KEY } from "./footer";
 import { createStickyContextUsageResolver } from "./context-usage";
+import {
+  getTurnElapsedMs,
+  isTurnActive,
+} from "../runtime";
 
 const resolveStickyContextUsage = createStickyContextUsageResolver();
 
@@ -13,6 +17,20 @@ function formatTokens(count: number): string {
   if (count < 1_000_000) return `${Math.round(count / 1_000)}k`;
   if (count < 10_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
   return `${Math.round(count / 1_000_000)}M`;
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1_000) return `${(ms / 1_000).toFixed(1)}s`;
+  if (ms < 60_000) return `${Math.floor(ms / 1_000)}s`;
+  const minutes = Math.floor(ms / 60_000);
+  const seconds = Math.floor((ms % 60_000) / 1_000);
+  return `${minutes}m${seconds.toString().padStart(2, "0")}s`;
+}
+
+function getGenerationTimeText(): string | null {
+  const elapsedMs = getTurnElapsedMs();
+  if (elapsedMs <= 0 && !isTurnActive()) return null;
+  return formatDuration(elapsedMs);
 }
 
 function alignLeftRight(width: number, left: string, right: string): string {
@@ -90,8 +108,17 @@ export function installUsageCustomFooter(pi: ExtensionAPI, ctx: ExtensionContext
   ctx.ui.setFooter((tui, theme, footerData) => {
     const unsub = footerData.onBranchChange(() => tui.requestRender());
 
+    const timerInterval = setInterval(() => {
+      if (isTurnActive()) {
+        tui.requestRender();
+      }
+    }, 250);
+
     return {
-      dispose: unsub,
+      dispose: () => {
+        unsub();
+        clearInterval(timerInterval);
+      },
       invalidate() {},
       render(width: number): string[] {
         const cwdBase = normalizeCwd(ctx.cwd);
@@ -118,7 +145,11 @@ export function installUsageCustomFooter(pi: ExtensionAPI, ctx: ExtensionContext
         const contextSegment = `${contextBar} ${contextPercentText}/${formatTokens(contextWindow)}`;
 
         const leftSuffix = `↑${formatTokens(usage.input)} ↓${formatTokens(usage.output)} R${formatTokens(usage.cacheRead)} ${costLabel}`;
-        const line2Left = `${contextSegment} ${theme.fg("dim", leftSuffix)}`;
+        let line2Left = `${contextSegment} ${theme.fg("dim", leftSuffix)}`;
+        const genTime = getGenerationTimeText();
+        if (genTime) {
+          line2Left += ` ⏱ ${genTime}`;
+        }
 
         const statuses = footerData.getExtensionStatuses();
         const quotaStatus = statuses.get(FOOTER_STATUS_KEY) ?? "";
