@@ -17,13 +17,16 @@ Just put high level ideas + references here; split out into individual specs onc
 - custom usage quota tracking via pi-usage
 - [caveman](https://github.com/jonjonrankin/pi-caveman/tree/main)
 - [raw paste](https://github.com/tmustier/pi-extensions/tree/main/raw-paste)
-- custom observability via custom pi-context
+- custom observability via pi-context
 - custom extension starter
+- custom generation time tracker via pi-usage
 - [web fetch](https://github.com/Thinkscape/agent-smart-fetch)
 
 ## In-Flight
 
 - AI generated session names (pi-context)
+- replace `pi-context` with [langfuse](https://github.com/hdkiller/pi-langfuse)
+- install [agent browser native](https://github.com/fitchmultz/pi-agent-browser-native)
 
 ## Extensions
 
@@ -35,7 +38,7 @@ Just put high level ideas + references here; split out into individual specs onc
   - [sasha](https://github.com/sasha-computer/pi-cmux)
   - [javier](https://github.com/javiermolinar/pi-cmux)
 - guardrails
-  - [git](https://github.com/mattpocock/skills/blob/main/git-guardrails-claude-code/SKILL.md)
+  - [git](https://github.com/mattpocock/skills/blob/main/skills/misc/git-guardrails-claude-code/scripts/block-dangerous-git.sh)
   - [toolchain](https://github.com/aliou/pi-toolchain)
   - [aliou guardrails](https://github.com/aliou/pi-guardrails)
 - [introspection](https://github.com/aliou/pi-harness/tree/main/extensions/introspection)
@@ -84,3 +87,94 @@ Just put high level ideas + references here; split out into individual specs onc
 - subagents
 - natives (see `omp`)
 - TTSR (see `omp`)
+
+
+## General categories of features
+
+### HUD
+
+- current context window usage
+- response timers
+- reasoning traces
+- tool use visualizer
+- quota tracker
+
+### Context
+
+- bash tool result compression
+- hashline read + edits
+- AST grep
+- graph search
+- long term memory
+- session mining
+- lsp integration
+- `/btw` mode
+- introspection (inspect current context)
+
+### Ecosystem
+
+- respects `AGENTS.md`
+- uses `skills/` folder
+- MCP support
+- works with all major providers
+- collects traces for observability
+
+### Capabilities
+
+- browser use
+- web search
+- web fetch
+- research subagents
+- microtask subagents
+- tool call sanity checks
+- toolchain enforcement (i.e. npm -> pnpm)
+
+### Workspace
+
+- git worktrees
+- session rollback includes workspace state
+- UI tool integration (i.e. cmux, superset, etc)
+- durable sessions runtime
+- session forking
+- secrets management
+
+### Orchestration
+
+- planning
+- full-power subagents
+- background execution
+
+### Project specific needs
+
+- guides (via skills or readmes/agents.md)
+- worktree setup script
+- verifier commands
+  - tier 1: format, lint, and typecheck
+  - tier 2: fast automated tests
+  - tier 3: slow automated tests
+  - tier 4: artifacts for human review
+    - playbooks demonstrated in artifacts should eventually becomes automated in at least tier 3, hopefully tier 2
+
+## Autonomous modes
+
+- three primary interactive "modes"
+  - product lead: design feature/spec
+  - tech lead: create architecture and implementation plan
+  - pair programmer: live coding
+- background autonomous execution is exactly 2 modes
+  - worker
+  - verifier
+- follow Factory AI missions architecture
+  - dream is interactive session with product + tech leads -> fully autonomous implementation via worker<-->verifier iterations
+  - I like their appeal to bitter lesson: do not provide strict structure for how planning looks and let model intelligence design its own planning solution
+    - all the orchestrator gets to know is that "milestones" are handed off to worker/verifier pairs to implement
+      - tier 1 and 2 verification before verifier handoff
+      - tier 3 verification before milestone complete
+      - tier 4 verification before mission complete
+
+## zmx persistence
+
+- basically wrap every pi session in a zmx wrapper
+- give each pi session yet another zmx session to serve as a bash "sandbox"
+- extensions that need singletons (langfuse server, code review server, etc) share their resource as a zmx session
+- the sdk wrapping zmx should expose a generic interface that we can fill with exe.dev later

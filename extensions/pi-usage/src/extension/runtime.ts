@@ -28,8 +28,6 @@ export interface RuntimeState {
   usageCommandRuns: number;
   zenLoginCommandRuns: number;
   pollTimer: ReturnType<typeof setInterval> | null;
-  providerCache: Map<ProviderId, ProviderRuntimeCache>;
-  messageStartedAt: number | null;
   turnElapsedMs: number;
   turnStartedAt: number | null;
   lastTurnDurationMs: number | null;
@@ -63,7 +61,6 @@ const runtimeState: RuntimeState = {
   zenLoginCommandRuns: 0,
   pollTimer: null,
   providerCache: new Map(),
-  messageStartedAt: null,
   turnElapsedMs: 0,
   turnStartedAt: null,
   lastTurnDurationMs: null,
@@ -111,9 +108,7 @@ export function markCommandRun(commandName: UsageCommandName): void {
 }
 
 export function markTurnStart(): void {
-  if (runtimeState.messageStartedAt === null) {
-    runtimeState.messageStartedAt = Date.now();
-  }
+  runtimeState.turnElapsedMs = 0;
   runtimeState.turnStartedAt = Date.now();
 }
 
@@ -233,7 +228,6 @@ export function resetRuntimeState(): void {
   runtimeState.usageCommandRuns = 0;
   runtimeState.zenLoginCommandRuns = 0;
   runtimeState.providerCache.clear();
-  runtimeState.messageStartedAt = null;
   runtimeState.turnElapsedMs = 0;
   runtimeState.turnStartedAt = null;
   runtimeState.lastTurnDurationMs = null;

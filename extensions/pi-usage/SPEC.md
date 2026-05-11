@@ -30,7 +30,7 @@ A provider only appears once it is authenticated and its data can actually be fe
 - Updates automatically when the user changes models.
 - Disappears when the active model is not one of the supported providers (rather than showing stale data or a fake row).
 - Reads from a short-lived cache so model switches feel instant; refreshes are deduplicated when triggered by rapid UI events.
-- Also displays live "generation time" — a running timer from the first `turn_start` through all subsequent turns until control returns to the user. Accumulated across turns so tool calls don't reset the timer. Shows total message time inline next to context-usage. Persists the final total duration when idle.
+- Also displays live "generation time" — a running timer that starts when the user sends a message and stops when the model finishes and returns control. Resets on each new user message so each turn is tracked independently. Shows the current turn's elapsed time inline next to context-usage. Persists the final total duration when idle.
 
 ### Per-provider display intent
 
