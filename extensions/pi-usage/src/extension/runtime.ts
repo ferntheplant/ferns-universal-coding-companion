@@ -5,6 +5,8 @@ export type UsageCommandName = "usage" | "usage-zen-login";
 
 export type LifecycleEventName =
   | "session_start"
+  | "agent_start"
+  | "agent_end"
   | "turn_start"
   | "model_select"
   | "session_shutdown";
@@ -28,6 +30,7 @@ export interface RuntimeState {
   usageCommandRuns: number;
   zenLoginCommandRuns: number;
   pollTimer: ReturnType<typeof setInterval> | null;
+  providerCache: Map<ProviderId, ProviderRuntimeCache>;
   turnElapsedMs: number;
   turnStartedAt: number | null;
   lastTurnDurationMs: number | null;

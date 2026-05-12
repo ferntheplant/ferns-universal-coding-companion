@@ -56,14 +56,25 @@ export default function usageExtension(pi: ExtensionAPI): void {
     });
   });
 
-  pi.on("turn_start", async (_event, ctx) => {
+  pi.on("agent_start", async (_event, ctx) => {
     setActiveModelProvider(ctx.model?.provider);
-    markLifecycleEvent("turn_start");
+    markLifecycleEvent("agent_start");
     markTurnStart();
     await refreshActiveProviderFooter(ctx, false);
   });
 
+  pi.on("turn_start", async (_event, ctx) => {
+    setActiveModelProvider(ctx.model?.provider);
+    markLifecycleEvent("turn_start");
+    await refreshActiveProviderFooter(ctx, false);
+  });
+
   pi.on("turn_end", async (_event, ctx) => {
+    await refreshActiveProviderFooter(ctx, false);
+  });
+
+  pi.on("agent_end", async (_event, ctx) => {
+    markLifecycleEvent("agent_end");
     markTurnEnd();
     await refreshActiveProviderFooter(ctx, false);
   });
