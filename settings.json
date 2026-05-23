@@ -4,9 +4,10 @@
     "npm:pi-terminal-signals",
     "npm:@tmustier/pi-raw-paste",
     "npm:pi-smart-fetch",
-    "npm:pi-hashline-readmap"
+    "npm:pi-hashline-readmap",
+    "npm:pi-agent-browser-native"
   ],
-  "lastChangelogVersion": "0.75.1",
+  "lastChangelogVersion": "0.75.4",
   "images": {
     "blockImages": false
   },
@@ -21,22 +22,23 @@
   "enableInstallTelemetry": false,
   "doubleEscapeAction": "tree",
   "treeFilterMode": "default",
-  "theme": "rose-pine-moon",
+  "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
   "defaultProvider": "opencode",
-  "defaultModel": "qwen3.6-plus",
+  "defaultModel": "glm-5.1",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "openai-codex/gpt-5.4-mini",
-    "openai-codex/gpt-5.3-codex",
     "openai-codex/gpt-5.4",
     "openai-codex/gpt-5.5",
-    "opencode/minimax-m2.7",
-    "opencode/qwen3.6-plus",
-    "opencode/kimi-k2.5",
-    "opencode/kimi-k2.6",
     "opencode/claude-opus-4-6",
     "opencode/claude-opus-4-7",
-    "opencode/gemini-3.1-pro"
+    "opencode/qwen3.6-plus",
+    "opencode/minimax-m2.7",
+    "opencode/kimi-k2.6",
+    "opencode/glm-5.1",
+    "opencode/deepseek-v4-flash-free",
+    "opencode/gemini-3.1-pro",
+    "opencode/gemini-3.5-flash"
   ]
 }
