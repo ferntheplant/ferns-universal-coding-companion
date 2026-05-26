@@ -174,7 +174,7 @@ function ensureHttpUrl(urlCandidate: string): string {
   }
 }
 
-function cookieHeaderFromRecord(cookies: Record<string, string>): string {
+export function cookieHeaderFromRecord(cookies: Record<string, string>): string {
   return Object.entries(cookies)
     .map(([name, value]) => `${name}=${value}`)
     .join("; ");

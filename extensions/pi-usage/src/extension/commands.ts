@@ -1,5 +1,6 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { bootstrapZenAuthFromCurl } from "./auth/zen-auth";
+import { bootstrapGoAuthFromCurl } from "./auth/go-auth";
 import { notifyError, notifyInfo, notifySuccess } from "./notifications";
 import { getConfiguredProviders, getProviderRegistry } from "./providers/registry";
 import type { ProviderAdapter, ProviderId } from "./providers/types";
@@ -82,6 +83,45 @@ async function handleZenLoginCommand(args: string, ctx: ExtensionCommandContext)
   );
 }
 
+async function requestGoCurlText(args: string, ctx: ExtensionCommandContext): Promise<string> {
+  const fromArgs = args.trim();
+  if (fromArgs.length > 0) {
+    return fromArgs;
+  }
+
+  const instructions = [
+    "Open the OpenCode Go dashboard page in your browser while logged in.",
+    "In DevTools Network, copy the Go page document request as curl.",
+    "Paste the full curl command below.",
+  ].join("\n");
+
+  if (!ctx.hasUI) {
+    throw new Error(
+      `${instructions}\n\nNo UI input is available here, so pass the curl text as command args: /usage-go-login <curl ...>`,
+    );
+  }
+
+  notifyInfo(ctx, instructions);
+  const pasted = await ctx.ui.editor("Paste Go dashboard curl command");
+  if (!pasted || pasted.trim().length === 0) {
+    throw new Error("No curl command was provided.");
+  }
+
+  return pasted.trim();
+}
+
+async function handleGoLoginCommand(args: string, ctx: ExtensionCommandContext): Promise<void> {
+  markCommandRun("usage-go-login");
+
+  const curlText = await requestGoCurlText(args, ctx);
+  const { record } = await bootstrapGoAuthFromCurl(ctx, curlText);
+
+  notifySuccess(
+    ctx,
+    `Go auth saved and validated for ${record.dashboardUrl} (${Object.keys(record.cookies).length} cookie(s)).`,
+  );
+}
+
 export function registerCommands(pi: ExtensionAPI): void {
   pi.registerCommand("usage", {
     description: "Show the usage dashboard",
@@ -103,6 +143,18 @@ export function registerCommands(pi: ExtensionAPI): void {
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         notifyError(ctx, `usage-zen-login failed: ${message}`);
+      }
+    },
+  });
+
+  pi.registerCommand("usage-go-login", {
+    description: "Setup OpenCode Go dashboard login auth",
+    handler: async (args, ctx) => {
+      try {
+        await handleGoLoginCommand(args, ctx);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        notifyError(ctx, `usage-go-login failed: ${message}`);
       }
     },
   });

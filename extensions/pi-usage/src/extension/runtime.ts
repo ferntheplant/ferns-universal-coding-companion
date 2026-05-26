@@ -1,7 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { ProviderAdapter, ProviderId, ProviderUsageResult } from "./providers/types";
 
-export type UsageCommandName = "usage" | "usage-zen-login";
+export type UsageCommandName = "usage" | "usage-zen-login" | "usage-go-login";
 
 export type LifecycleEventName =
   | "session_start"
@@ -29,6 +29,7 @@ export interface RuntimeState {
   cacheFreshnessMs: number;
   usageCommandRuns: number;
   zenLoginCommandRuns: number;
+  goLoginCommandRuns: number;
   pollTimer: ReturnType<typeof setInterval> | null;
   providerCache: Map<ProviderId, ProviderRuntimeCache>;
   turnElapsedMs: number;
@@ -46,6 +47,7 @@ export interface RuntimeSnapshot {
   cacheFreshnessMs: number;
   usageCommandRuns: number;
   zenLoginCommandRuns: number;
+  goLoginCommandRuns: number;
   isPolling: boolean;
 }
 
@@ -62,6 +64,7 @@ const runtimeState: RuntimeState = {
   cacheFreshnessMs: DEFAULT_CACHE_FRESHNESS_MS,
   usageCommandRuns: 0,
   zenLoginCommandRuns: 0,
+  goLoginCommandRuns: 0,
   pollTimer: null,
   providerCache: new Map(),
   turnElapsedMs: 0,
@@ -107,7 +110,12 @@ export function markCommandRun(commandName: UsageCommandName): void {
     return;
   }
 
-  runtimeState.zenLoginCommandRuns += 1;
+  if (commandName === "usage-zen-login") {
+    runtimeState.zenLoginCommandRuns += 1;
+    return;
+  }
+
+  runtimeState.goLoginCommandRuns += 1;
 }
 
 export function markTurnStart(): void {
@@ -213,7 +221,8 @@ export function getRuntimeSnapshot(): RuntimeSnapshot {
     pollIntervalMs: runtimeState.pollIntervalMs,
     cacheFreshnessMs: runtimeState.cacheFreshnessMs,
     usageCommandRuns: runtimeState.usageCommandRuns,
-    zenLoginCommandRuns: runtimeState.zenLoginCommandRuns,
+  zenLoginCommandRuns: runtimeState.zenLoginCommandRuns,
+  goLoginCommandRuns: runtimeState.goLoginCommandRuns,
     isPolling: runtimeState.pollTimer !== null,
   };
 }
@@ -230,6 +239,7 @@ export function resetRuntimeState(): void {
   runtimeState.cacheFreshnessMs = DEFAULT_CACHE_FRESHNESS_MS;
   runtimeState.usageCommandRuns = 0;
   runtimeState.zenLoginCommandRuns = 0;
+  runtimeState.goLoginCommandRuns = 0;
   runtimeState.providerCache.clear();
   runtimeState.turnElapsedMs = 0;
   runtimeState.turnStartedAt = null;

@@ -1,6 +1,6 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
-export type ProviderId = "codex" | "zen" | "cursor";
+export type ProviderId = "codex" | "zen" | "cursor" | "go";
 
 export type DashboardSection =
   | {

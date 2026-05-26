@@ -79,7 +79,7 @@ export const zenProvider: ProviderAdapter = {
   label: "OpenCode Zen",
 
   detectActive(modelProvider: string | undefined): boolean {
-    return modelProvider === "opencode" || modelProvider === "opencode-go";
+    return modelProvider === "opencode";
   },
 
   async isConfigured(_ctx: ExtensionContext): Promise<boolean> {

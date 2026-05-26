@@ -8,8 +8,15 @@ export interface ZenAuthRecord {
   updatedAt: number;
 }
 
+export interface GoAuthRecord {
+  dashboardUrl: string;
+  cookies: Record<string, string>;
+  updatedAt: number;
+}
+
 interface ExtensionStorageData {
   zenAuth?: ZenAuthRecord;
+  goAuth?: GoAuthRecord;
 }
 
 export const EXTENSION_STORAGE_FILE = path.join(
@@ -70,6 +77,38 @@ function parseZenAuth(value: unknown): ZenAuthRecord | null {
   };
 }
 
+function parseGoAuth(value: unknown): GoAuthRecord | null {
+  const obj = asRecord(value);
+  if (!obj) {
+    return null;
+  }
+
+  const dashboardUrl = typeof obj.dashboardUrl === "string" ? obj.dashboardUrl : null;
+  const updatedAt = typeof obj.updatedAt === "number" ? obj.updatedAt : null;
+  const cookiesRaw = asRecord(obj.cookies);
+
+  if (!dashboardUrl || !updatedAt || !cookiesRaw) {
+    return null;
+  }
+
+  const cookies: Record<string, string> = {};
+  for (const [name, cookieValue] of Object.entries(cookiesRaw)) {
+    if (typeof cookieValue === "string" && cookieValue.length > 0) {
+      cookies[name] = cookieValue;
+    }
+  }
+
+  if (Object.keys(cookies).length === 0) {
+    return null;
+  }
+
+  return {
+    dashboardUrl,
+    updatedAt,
+    cookies,
+  };
+}
+
 export async function readExtensionStorage(
   storageFile = EXTENSION_STORAGE_FILE,
 ): Promise<ExtensionStorageData> {
@@ -82,8 +121,10 @@ export async function readExtensionStorage(
     }
 
     const zenAuth = parseZenAuth(obj.zenAuth);
+    const goAuth = parseGoAuth(obj.goAuth);
     return {
       zenAuth: zenAuth ?? undefined,
+      goAuth: goAuth ?? undefined,
     };
   } catch {
     return {};
@@ -147,4 +188,32 @@ export async function clearZenAuthRecord(storageFile = EXTENSION_STORAGE_FILE): 
       await writeExtensionStorage(legacyNext, LEGACY_EXTENSION_STORAGE_FILE);
     }
   }
+}
+
+export async function getGoAuthRecord(
+  storageFile = EXTENSION_STORAGE_FILE,
+): Promise<GoAuthRecord | null> {
+  const storage = await readExtensionStorage(storageFile);
+  return storage.goAuth ?? null;
+}
+
+export async function setGoAuthRecord(
+  record: GoAuthRecord,
+  storageFile = EXTENSION_STORAGE_FILE,
+): Promise<void> {
+  const storage = await readExtensionStorage(storageFile);
+  await writeExtensionStorage(
+    {
+      ...storage,
+      goAuth: record,
+    },
+    storageFile,
+  );
+}
+
+export async function clearGoAuthRecord(storageFile = EXTENSION_STORAGE_FILE): Promise<void> {
+  const storage = await readExtensionStorage(storageFile);
+  const next: ExtensionStorageData = { ...storage };
+  delete next.goAuth;
+  await writeExtensionStorage(next, storageFile);
 }

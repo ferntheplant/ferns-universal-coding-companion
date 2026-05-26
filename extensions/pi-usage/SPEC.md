@@ -11,6 +11,7 @@ Give the user a single, trustworthy view of remaining quota / balance across the
 - Google Gemini
 - Synthetic.new
 - OpenCode Zen
+- OpenCode Go
 
 A provider only appears once it is authenticated and its data can actually be fetched. A broken provider must not break the others.
 
@@ -39,6 +40,7 @@ A provider only appears once it is authenticated and its data can actually be fe
 - **Google Gemini**: best available request/quota view derived from the Google quota payload, presented as percent bars.
 - **Synthetic.new**: rolling 5-hour and weekly token limits when present (preferred over the legacy subscription bucket); also search and free-tool-call style buckets when present.
 - **OpenCode Zen**: exact dollar balance remaining (e.g. `Zen balance $17.35`). No invented percent bar — Zen is not quota-shaped.
+- **OpenCode Go**: rolling usage % and weekly usage % fetched from the Go dashboard page, with reset countdowns. Presented as percent bars like Codex.
 
 ### Zen auth recovery
 
@@ -48,6 +50,15 @@ Zen has no documented balance endpoint, so the extension scrapes the dashboard. 
 - The extension extracts only the cookies it needs from the paste, validates them against a real balance fetch, and stores them only on success.
 - Zen scrape auth lives separately from `~/.pi/agent/auth.json` so it can never mutate other providers' credentials.
 - On future auth failure, the user is told to rerun the recovery flow rather than being silently zeroed out.
+
+### Go auth recovery
+
+Go has no documented usage API, so the extension scrapes the Go dashboard page. When that auth expires:
+
+- A setup/recovery command (`/usage-go-login`) walks the user through copying a logged-in Go dashboard request (as `curl`) and pasting it.
+- The extension extracts only the cookies it needs from the paste, validates them against a real Go page fetch, and stores them only on success.
+- Go scrape auth lives in the same storage file as Zen auth (separate record) so one can never mutate the other's credentials.
+- On future auth failure, the user is told to rerun `/usage-go-login` rather than being silently zeroed out.
 
 ## Non-goals
 

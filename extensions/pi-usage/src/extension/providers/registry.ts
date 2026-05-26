@@ -1,10 +1,11 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { codexProvider } from "./codex";
+import { goProvider } from "./go";
 import { cursorProvider } from "./cursor";
 import type { ProviderAdapter, ProviderId } from "./types";
 import { zenProvider } from "./zen";
 
-const PROVIDERS: ProviderAdapter[] = [codexProvider, cursorProvider, zenProvider];
+const PROVIDERS: ProviderAdapter[] = [codexProvider, cursorProvider, goProvider, zenProvider];
 
 export function getProviderRegistry(): ProviderAdapter[] {
   return PROVIDERS;
