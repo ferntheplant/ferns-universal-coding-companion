@@ -7,7 +7,7 @@
     "npm:pi-hashline-readmap",
     "npm:pi-agent-browser-native"
   ],
-  "lastChangelogVersion": "0.75.4",
+  "lastChangelogVersion": "0.75.5",
   "images": {
     "blockImages": false
   },
@@ -22,23 +22,23 @@
   "enableInstallTelemetry": false,
   "doubleEscapeAction": "tree",
   "treeFilterMode": "default",
-  "theme": "rose-pine-dawn",
+  "theme": "rose-pine-moon",
   "editorPaddingX": 0,
-  "defaultProvider": "opencode",
-  "defaultModel": "glm-5.1",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.4-mini",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "openai-codex/gpt-5.4-mini",
     "openai-codex/gpt-5.4",
     "openai-codex/gpt-5.5",
-    "opencode/claude-opus-4-6",
+    "opencode/claude-sonnet-4-6",
     "opencode/claude-opus-4-7",
+    "opencode/gpt-5.4-nano",
     "opencode/qwen3.6-plus",
     "opencode/minimax-m2.7",
     "opencode/kimi-k2.6",
     "opencode/glm-5.1",
     "opencode/deepseek-v4-flash-free",
-    "opencode/gemini-3.1-pro",
     "opencode/gemini-3.5-flash"
   ]
 }

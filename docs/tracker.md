@@ -4,29 +4,33 @@ Just put high level ideas + references here; split out into individual specs onc
 
 ## Done
 
+NOTE: Had to remove caveman + rtk due to conflicts
+
 - custom html "slides" skill
 - [mcp adapter](https://github.com/nicobailon/pi-mcp-adapter)
 - [terminal signals](https://github.com/lucasmeijer/pi-terminal-signals)
 - [pi answer](https://github.com/sids/pi-extensions/tree/main/answer)
 - [hashline readmap](https://github.com/coctostan/pi-hashline-readmap)
   - possible [alternative](https://github.com/RimuruW/pi-hashline-edit)
-- [`rtk`](https://github.com/sherif-fanous/pi-rtk)
+  - TODO: merge with [`rtk`](https://github.com/sherif-fanous/pi-rtk)
   - TODO: merge with [bash-live-view](https://github.com/lucasmeijer/pi-bash-live-view)
   - TODO: add `cwd` param to bash tool (see [aliou](https://github.com/aliou/pi-harness/tree/main/extensions/defaults))
 - [cursor](https://github.com/ndraiman/pi-cursor-provider)
 - custom usage quota tracking via pi-usage
-- [caveman](https://github.com/jonjonrankin/pi-caveman/tree/main)
 - [raw paste](https://github.com/tmustier/pi-extensions/tree/main/raw-paste)
 - custom observability via pi-context
 - custom extension starter
 - custom generation time tracker via pi-usage
 - [web fetch](https://github.com/Thinkscape/agent-smart-fetch)
+- [agent browser](https://github.com/fitchmultz/pi-agent-browser-native)
+- [exa mcp search](https://exa.ai/mcp)
 
 ## In-Flight
 
+- track mcp configs
+- move config to dotfiles
 - AI generated session names (pi-context)
 - replace `pi-context` with [langfuse](https://github.com/hdkiller/pi-langfuse)
-- install [agent browser native](https://github.com/fitchmultz/pi-agent-browser-native)
 
 ## Extensions
 
@@ -44,9 +48,8 @@ Just put high level ideas + references here; split out into individual specs onc
 - [introspection](https://github.com/aliou/pi-harness/tree/main/extensions/introspection)
   - see what tools/skills/extensions/context is currently available
 - [context-mode](https://github.com/mksglu/context-mode)
-- browser
+- browser dev tools
   - [dev tools](https://github.com/ChromeDevTools/chrome-devtools-mcp)
-  - [agent browser](https://github.com/vercel-labs/agent-browser)
   - [playwriter](https://github.com/remorses/playwriter)
   - [browserai](https://github.com/mksglu/browsirai)
 
@@ -62,6 +65,7 @@ Just put high level ideas + references here; split out into individual specs onc
   - [breadcrumbs](https://github.com/aliou/pi-harness/tree/main/extensions/breadcrumbs)
 - planning (blueprint -> plan; verification steps)
   - [dex](https://dex.rip/guide)
+    - [scott](https://github.com/stolinski/s-stack/blob/main/skills/dex/SKILL.md)
   - matt pocock skills [domain model](https://github.com/mattpocock/skills/tree/main/domain-model) and [to-prd](https://github.com/mattpocock/skills/blob/main/to-prd/SKILL.md)
   - [hattice](https://github.com/mksglu/hatice)
   - [rjs](https://github.com/rjs/shaping-skills)
@@ -80,14 +84,15 @@ Just put high level ideas + references here; split out into individual specs onc
   - [just bash](https://github.com/vercel-labs/just-bash)
   - [zmx](https://erock.prose.sh/zmx-ai-portal)
   - [gondolin](https://github.com/earendil-works/gondolin)
+  - [runtm](https://github.com/runtm-ai/runtm)
 - remote runtimes
   - [sandcastle](https://github.com/mattpocock/sandcastle)
   - cloudflare
   - exe.dev
+  - [ax](https://github.com/google/ax)
 - subagents
 - natives (see `omp`)
 - TTSR (see `omp`)
-
 
 ## General categories of features
 
@@ -107,7 +112,7 @@ Just put high level ideas + references here; split out into individual specs onc
 - AST grep
 - graph codebase search
 - session mining
-- lsp integration
+- lsp integration (really this means "hints" without model directly asking)
 - `/btw` mode
 
 ### Ecosystem
@@ -121,8 +126,9 @@ Just put high level ideas + references here; split out into individual specs onc
 ### Capabilities
 
 - browser use
-- web search
+- browser devtools
 - web fetch
+- web search
 - research subagents
 - microtask subagents
 - tool call sanity checks
@@ -142,12 +148,13 @@ Just put high level ideas + references here; split out into individual specs onc
 - planning
 - full-power subagents
 - background execution
+- remote runtimes
 
 ### Project specific needs
 
 - guides (via skills or readmes/agents.md)
 - worktree setup script
-- verifier commands
+- verifier command integration
   - tier 1: format, lint, and typecheck
   - tier 2: fast automated tests
   - tier 3: slow automated tests
@@ -164,19 +171,12 @@ Just put high level ideas + references here; split out into individual specs onc
   - worker
   - verifier
 - follow Factory AI missions architecture
-  - dream is interactive session with product + tech leads -> fully autonomous     implementation via worker<-->verifier iterations
+  - dream is interactive session with product + tech leads -> fully autonomous implementation via worker<-->verifier iterations
   - I like their appeal to bitter lesson: do not provide strict structure for how planning looks and let model intelligence design its own planning solution
     - all the orchestrator gets to know is that "milestones" are handed off to worker/verifier pairs to implement
       - tier 1 and 2 verification before verifier handoff
       - tier 3 verification before milestone complete
       - tier 4 verification before mission complete
-
-## zmx persistence
-
-- basically wrap every pi session in a zmx wrapper
-- give each pi session yet another zmx session to serve as a bash "sandbox"
-- extensions that need singletons (langfuse server, code review server, etc) share their resource as a zmx session
-- the sdk wrapping zmx should expose a generic interface that we can fill with exe.dev later
 
 ## Autonomy vs Interactivity
 
@@ -187,3 +187,12 @@ In the featureset listed above most features apply to both types code coding har
 ### The Canvas vs The Control Plane
 
 An assistant needs a realtime canvas but an agent needs a batch processing control plane that is optimized for me to declare intents and monitor drift. Note that the act of declaring intent is likely best served by an interactive tool for thought meaning the necessary canvas takes 2 forms: one for intent and one for assistance. Off the top of my head an interactive intent-tool might look like a direct chat side-by-side with the intent document where an LLM serves as a thought partner for drafting an intent-doc of appropriate detail and scope. This is similar to the assistant which serves as a thought partner in directly writing code; are these really different tools?
+
+## Specific Implementations
+
+### zmx persistence
+
+- basically wrap every pi session in a zmx wrapper
+- give each pi session yet another zmx session to serve as a bash "sandbox"
+- extensions that need singletons (langfuse server, code review server, etc) share their resource as a zmx session
+- the sdk wrapping zmx should expose a generic interface that we can fill with exe.dev later
