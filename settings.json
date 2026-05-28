@@ -7,7 +7,7 @@
     "npm:pi-hashline-readmap",
     "npm:pi-agent-browser-native"
   ],
-  "lastChangelogVersion": "0.75.5",
+  "lastChangelogVersion": "0.76.0",
   "images": {
     "blockImages": false
   },
@@ -25,7 +25,7 @@
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
   "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4-flash",
+  "defaultModel": "qwen3.6-plus",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "openai-codex/gpt-5.4-mini",

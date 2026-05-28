@@ -12,9 +12,7 @@
   "packages": [
     "npm:pi-mcp-adapter",
     "npm:pi-terminal-signals",
-    "npm:pi-answer",
     "npm:pi-hashline-readmap",
-    "npm:pi-cursor-provider",
     "npm:@tmustier/pi-raw-paste",
     "npm:pi-smart-fetch",
     "npm:pi-agent-browser-native"
