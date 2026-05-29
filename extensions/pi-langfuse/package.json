@@ -1,0 +1,64 @@
+{
+	"name": "pi-langfuse",
+	"version": "1.4.3",
+	"description": "Langfuse extension for Pi coding agent",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gooyoung/pi-langfuse.git"
+	},
+	"bugs": {
+		"url": "https://github.com/gooyoung/pi-langfuse/issues"
+	},
+	"homepage": "https://github.com/gooyoung/pi-langfuse#readme",
+	"type": "module",
+	"main": "index.ts",
+	"files": [
+		"index.ts",
+		"src/",
+		"types/",
+		"README.md",
+		"README_CN.md",
+		"image.png",
+		"skills-lock.json",
+		"tsconfig.json"
+	],
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"keywords": [
+		"pi-package",
+		"langfuse",
+		"observability",
+		"tracing",
+		"monitoring",
+		"pi-coding-agent",
+		"extension"
+	],
+	"pi": {
+		"extensions": [
+			"./index.ts"
+		],
+		"image": "https://github.com/gooyoung/pi-langfuse/blob/main/image.png?raw=true"
+	},
+	"dependencies": {
+		"@langfuse/client": "^5.3.0",
+		"@langfuse/otel": "^5.3.0",
+		"@langfuse/tracing": "^5.3.0",
+		"@opentelemetry/sdk-node": "^0.218.0",
+		"@opentelemetry/sdk-trace-base": "^2.0.1"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
+	"license": "MIT",
+	"engines": {
+		"node": ">=22"
+	},
+	"devDependencies": {
+		"typescript": "^6.0.3"
+	}
+}
