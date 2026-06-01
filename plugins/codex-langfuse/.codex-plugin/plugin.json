@@ -1,0 +1,17 @@
+{
+  "name": "codex-langfuse",
+  "version": "0.1.0",
+  "description": "Send Codex hook traces to Langfuse with Codex session correlation.",
+  "author": {
+    "name": "Withco"
+  },
+  "interface": {
+    "displayName": "Codex Langfuse",
+    "shortDescription": "Trace Codex sessions and turns in Langfuse.",
+    "longDescription": "Codex Langfuse records Codex hook events, tool calls, and turn output in Langfuse. It uses the Codex session ID as Langfuse sessionId so traces from one Codex session can be grouped together.",
+    "developerName": "Withco",
+    "category": "Productivity",
+    "capabilities": ["Hooks", "Observability"],
+    "defaultPrompt": "Show me how to configure Codex Langfuse."
+  }
+}

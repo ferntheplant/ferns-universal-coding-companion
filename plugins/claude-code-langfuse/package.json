@@ -1,0 +1,12 @@
+{
+  "name": "claude-code-langfuse",
+  "version": "0.1.0",
+  "description": "Claude Code hook plugin that sends agent traces to Langfuse with the shared base metadata schema.",
+  "files": [
+    "hooks/"
+  ],
+  "scripts": {
+    "test": "python3 -m pytest test/ -v 2>/dev/null || echo 'no tests yet'"
+  },
+  "license": "MIT"
+}

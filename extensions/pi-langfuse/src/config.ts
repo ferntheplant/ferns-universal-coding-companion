@@ -14,6 +14,7 @@ export function loadConfigFromFile(): Config | null {
           publicKey: config.publicKey,
           secretKey: config.secretKey,
           host: config.host || DEFAULT_LANGFUSE_HOST,
+          restOnly: config.restOnly ?? false,
         };
       }
     } catch (e) {
@@ -31,10 +32,12 @@ export function loadConfigFromEnv(): Config | null {
     return null;
   }
 
+  const restOnlyEnv = process.env.LANGFUSE_REST_ONLY;
   return {
     publicKey,
     secretKey,
     host: process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST || DEFAULT_LANGFUSE_HOST,
+    restOnly: restOnlyEnv === "true" || restOnlyEnv === "1",
   };
 }
 

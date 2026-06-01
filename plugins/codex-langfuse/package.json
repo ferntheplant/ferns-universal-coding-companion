@@ -1,0 +1,17 @@
+{
+  "name": "codex-langfuse",
+  "version": "0.1.0",
+  "description": "Codex hook plugin that sends agent traces to Langfuse.",
+  "type": "module",
+  "main": "scripts/langfuse-hook.mjs",
+  "files": [
+    ".codex-plugin/",
+    "hooks/",
+    "scripts/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}

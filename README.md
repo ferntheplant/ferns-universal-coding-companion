@@ -109,6 +109,57 @@ The `templates/extension/` workspace is a working copy of this skeleton; `bun ru
 
 `oxlint` and `oxfmt` run at the repo root with their defaults. `bun run check` is the canonical pre-commit gate (typecheck + lint + format check).
 
+## Observability
+
+All coding agents — Pi, Codex, OpenCode, and Claude Code — send traces to a single Langfuse project so runs can be compared across harnesses, models, and repos.
+
+### Shared trace schema
+
+Every trace carries the same base metadata regardless of harness:
+
+| Field | Description |
+| --- | --- |
+| `harness` | `"pi"` \| `"codex"` \| `"opencode"` \| `"claude-code"` |
+| `sessionId` | Harness-native session identifier |
+| `cwd` | Working directory at run start |
+| `repo` | Git repo name (extracted from remote URL) |
+| `repoRemote` | Full git remote URL |
+| `gitBranch` | Branch at run start |
+| `gitCommit` | Short HEAD SHA at run start |
+| `model` | LLM model identifier |
+
+Tags follow the format `harness:{name}`, `model:{name}`, `repo:{name}` so you can filter and compare across all four harnesses in the Langfuse trace list view.
+
+Every harness also emits these evaluation scores (where the harness supports hook-level events):
+
+| Score | Type | Description |
+| --- | --- | --- |
+| `tool_call_count` | Numeric | Total tool calls in the run |
+| `turn_count` | Numeric | Agentic turns |
+| `tool_success_rate` | Numeric | (calls − errors) / calls |
+| `session_had_errors` | Boolean | Whether any tool returned an error |
+
+### Plugins
+
+| Harness | Plugin | Architecture |
+| --- | --- | --- |
+| Pi | [`extensions/pi-langfuse/`](extensions/pi-langfuse/README.md) | Pi SDK extension, event-driven, richest hierarchy |
+| Codex | [`plugins/codex-langfuse/`](plugins/codex-langfuse/README.md) | Hook script (Node.js), git context stored at SessionStart |
+| OpenCode | [`plugins/opencode-langfuse/`](plugins/opencode-langfuse/README.md) | OTEL passthrough via `HarnessAttributesProcessor` |
+| Claude Code | [`plugins/claude-code-langfuse/`](plugins/claude-code-langfuse/README.md) | Python hook, reads transcript JSONL on Stop |
+
+### Quick setup
+
+Set these env vars (or equivalent config per harness) and point each plugin at the same Langfuse project:
+
+```bash
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_BASE_URL="https://cloud.langfuse.com"   # or your self-hosted URL
+```
+
+See each plugin's README for harness-specific installation steps.
+
 ## Extensions
 
 - [`cmux-diff`](extensions/cmux-diff/SPEC.md) — interactive git-diff review inside cmux that submits comments back to the active Pi session

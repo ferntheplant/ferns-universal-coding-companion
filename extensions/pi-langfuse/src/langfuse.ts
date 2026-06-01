@@ -220,7 +220,8 @@ async function fallbackToRestIngestion(rt: LangfuseRuntime) {
   }
   store.attempted = true;
 
-  if (await waitForTraceVisibility(rt, store.trace.id)) {
+  const restOnly = state.config?.restOnly ?? false;
+  if (!restOnly && await waitForTraceVisibility(rt, store.trace.id)) {
     return;
   }
 
@@ -301,10 +302,12 @@ async function fallbackToRestIngestion(rt: LangfuseRuntime) {
     }
   }
 
-  if (totalChunks > 1) {
-    console.warn(`📊 Langfuse: OTel trace ${trace.id} was not visible; sent fallback trace via REST ingestion in ${totalChunks} chunks`);
-  } else {
-    console.warn(`📊 Langfuse: OTel trace ${trace.id} was not visible; wrote fallback trace via REST ingestion`);
+  if (!restOnly) {
+    if (totalChunks > 1) {
+      console.warn(`📊 Langfuse: OTel trace ${trace.id} was not visible; sent fallback trace via REST ingestion in ${totalChunks} chunks`);
+    } else {
+      console.warn(`📊 Langfuse: OTel trace ${trace.id} was not visible; wrote fallback trace via REST ingestion`);
+    }
   }
 }
 
@@ -362,7 +365,9 @@ export async function shutdownRuntime(): Promise<void> {
   }
 
   try {
-    await runtime.tracerProvider?.forceFlush?.();
+    if (!state.config?.restOnly) {
+      await runtime.tracerProvider?.forceFlush?.();
+    }
     await fallbackToRestIngestion(runtime);
     await runtime.scoreClient.flush?.();
     await runtime.scoreClient.shutdown?.();

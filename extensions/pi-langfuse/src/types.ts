@@ -2,6 +2,19 @@ export interface Config {
   publicKey: string;
   secretKey: string;
   host: string;
+  /**
+   * When true, skips the OTel flush + visibility check and sends directly via
+   * Langfuse REST ingestion. Recommended for self-hosted Langfuse instances
+   * where OTel processing latency causes the fallback to always trigger.
+   */
+  restOnly?: boolean;
+}
+
+export interface GitContext {
+  repo?: string;
+  repoRemote?: string;
+  gitBranch?: string;
+  gitCommit?: string;
 }
 
 export interface LangfuseObservation {
@@ -97,6 +110,7 @@ export interface AgentState {
   traceId?: string;
   promptInput?: unknown;
   cwd?: string;
+  gitContext?: GitContext;
   generationSeq: number;
   activeGenerations: Map<string, GenerationState>;
   generationOrder: string[];

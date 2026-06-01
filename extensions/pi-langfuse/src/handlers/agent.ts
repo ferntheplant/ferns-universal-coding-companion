@@ -3,6 +3,7 @@ import { getRuntime, sendScore } from "../langfuse.js";
 import { ensureConfig } from "../config.js";
 import { shapePayload, truncate, extractFinalAssistant, extractAssistantOutput } from "../utils.js";
 import { closeDanglingObservations } from "./tool.js";
+import { getGitContext } from "../git.js";
 
 export function updateTraceIO(input?: unknown, output?: unknown) {
   const root = state.agentState?.root;
@@ -51,8 +52,11 @@ export async function startAgentRun(event: Record<string, unknown>, ctx: any) {
       context: event.context ?? event.attachments,
     });
 
+    const gitContext = await getGitContext(cwd);
+
     state.agentState = {
       cwd,
+      gitContext,
       promptInput,
       generationSeq: 0,
       activeGenerations: new Map(),
@@ -61,10 +65,17 @@ export async function startAgentRun(event: Record<string, unknown>, ctx: any) {
       providerMetadataByRequest: new Map(),
     };
 
+    const traceTags = [
+      "harness:pi",
+      ...(state.currentModel ? [`model:${truncate(state.currentModel, 100)}`] : []),
+      ...(gitContext.repo ? [`repo:${gitContext.repo}`] : []),
+    ];
+
     const root = rt.propagateAttributes(
       {
         sessionId: state.currentSessionId ? truncate(state.currentSessionId, 200) : undefined,
-        traceName: "pi-agent",
+        traceName: "pi:agent",
+        tags: traceTags,
         metadata: {
           cwd: truncate(cwd, 200),
           ...(state.currentModel ? { model: truncate(state.currentModel, 200) } : {}),
@@ -73,14 +84,19 @@ export async function startAgentRun(event: Record<string, unknown>, ctx: any) {
       },
       () =>
         rt.startObservation(
-          "pi-agent",
+          "pi:agent",
           {
             input: promptInput,
             metadata: {
+              harness: "pi",
               cwd,
               model: state.currentModel || undefined,
               provider: state.currentProvider || undefined,
               sessionId: state.currentSessionId || undefined,
+              repo: gitContext.repo,
+              repoRemote: gitContext.repoRemote,
+              gitBranch: gitContext.gitBranch,
+              gitCommit: gitContext.gitCommit,
               ...(systemPrompt ? { systemPrompt: truncate(String(systemPrompt), 20000) } : {}),
             },
           },
@@ -114,11 +130,14 @@ export async function finishAgentRun(event: Record<string, unknown> = {}) {
       .update({
         output,
         metadata: {
+          harness: "pi",
           cwd: state.agentState.cwd,
+          sessionId: state.currentSessionId || undefined,
           completed: true,
           model: state.currentModel || undefined,
           provider: state.currentProvider || undefined,
           totalTools: state.toolCallCount,
+          ...state.agentState.gitContext,
           ...scores,
         },
       })

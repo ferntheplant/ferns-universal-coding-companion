@@ -7,13 +7,21 @@
 
 Langfuse observability extension for [Pi Coding Agent](https://github.com/earendil-works/pi-coding-agent). Sends complete Pi agent runs to [Langfuse](https://langfuse.com) so you can inspect the user prompt, root agent workflow, every LLM generation, every tool call, final assistant response, usage, cost, and health scores in one trace.
 
-## Why Langfuse?
+Part of the [unified observability setup](../../README.md#observability) — Pi traces land in the same Langfuse project as Codex, OpenCode, and Claude Code, with a shared base metadata schema for cross-harness comparison.
 
-Langfuse provides open-source observability for LLM applications. This extension allows you to **trace**, **monitor**, and **debug** your Pi sessions with production-grade detail, helping you understand exactly how your agent is performing, what it's costing you, and where it might be failing.
+## Trace shape
+
+```
+pi:agent                          (one per user prompt, tags: harness:pi model:… repo:…)
+  └─ turn                         (one per agentic turn)
+       └─ llm-generation          (one per provider API call)
+       └─ {tool-name}             (one per tool call)
+```
 
 ## Features
 
-- **Complete Agent Traces**: Creates one trace per user prompt with a root `agent` observation containing the prompt input and final assistant output.
+- **Shared base schema**: Every trace carries `harness: "pi"`, `sessionId`, `cwd`, `repo`, `repoRemote`, `gitBranch`, `gitCommit`, and `model` — the same fields as all other harness plugins.
+- **Complete Agent Traces**: Creates one trace per user prompt with a root `pi:agent` observation containing the prompt input and final assistant output.
 - **REST fallback for self-hosted Langfuse**: Uses the Langfuse OpenTelemetry SDK first, then verifies that the trace is visible. If a self-hosted OTel ingestion pipeline accepts spans but does not materialize traces, the extension writes the run through Langfuse's REST ingestion API.
 - **Per-Request Generations**: Records a separate `generation` observation for every provider request, including the actual provider payload instead of only the original prompt.
 - **Final Message Capture**: Uses finalized assistant messages for generation and root outputs, so Langfuse shows what the user actually saw in Pi.
@@ -21,7 +29,7 @@ Langfuse provides open-source observability for LLM applications. This extension
 - **Parallel Tool Safety**: Correlates tool observations by `toolCallId`, avoiding result mix-ups when Pi runs tools concurrently.
 - **Session Correlation**: Groups traces from the same Pi session under a shared Langfuse session ID.
 - **Cost and Token Tracking**: Records usage and cost details on each generation when Pi/provider payloads expose them.
-- **Evaluation Scores**: Automatically computes and sends tool success rates, error counts, and session health metrics.
+- **Evaluation Scores**: Automatically computes and sends `tool_call_count`, `turn_count`, `tool_success_rate`, `total_tool_errors`, and `session_had_errors`.
 - **Defensive Payload Shaping**: Parses JSON-like strings when possible, limits object depth, and truncates large payloads before upload.
 
 ## Highlights
@@ -42,20 +50,34 @@ Langfuse provides open-source observability for LLM applications. This extension
 
 ## Installation
 
-### Option 1: Install via npm (recommended for users)
+### Option 1: Via the monorepo (if using `ferns-universal-coding-companion`)
+
+`pi-langfuse` is already declared in `manifest.json`. Run the installer from the
+repo root and it will be symlinked into Pi automatically:
+
+```bash
+./install.sh
+```
+
+Then in Pi:
+
+```
+/reload
+```
+
+### Option 2: Install via npm
 
 ```bash
 pi install npm:pi-langfuse
 ```
 
-Pi will download the package and register it as an extension.
-
-### Option 2: Install from local source (recommended for development)
+### Option 3: Install from local source
 
 ```bash
 git clone <your-repo-url>
 cd pi-langfuse
 npm install
+pi link /path/to/pi-langfuse
 ```
 
 Then tell Pi to use it:

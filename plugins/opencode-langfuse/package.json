@@ -1,0 +1,28 @@
+{
+  "name": "opencode-langfuse",
+  "version": "0.1.0",
+  "description": "Langfuse observability plugin for OpenCode with inline-config support",
+  "type": "module",
+  "main": "src/index.ts",
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@langfuse/otel": "^4.5.1",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/sdk-node": "^0.217.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.1"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.1.14"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.15.13",
+    "typescript": "catalog:"
+  },
+  "license": "MIT"
+}

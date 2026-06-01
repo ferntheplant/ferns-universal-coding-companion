@@ -1,0 +1,21 @@
+
+  {
+    "name": "ferns-local",
+    "interface": {
+      "displayName": "Ferns Local"
+    },
+    "plugins": [
+      {
+        "name": "codex-langfuse",
+        "source": {
+          "source": "local",
+          "path": "./plugins/codex-langfuse"
+        },
+        "policy": {
+          "installation": "AVAILABLE",
+          "authentication": "ON_INSTALL"
+        },
+        "category": "Productivity"
+      }
+    ]
+  }
