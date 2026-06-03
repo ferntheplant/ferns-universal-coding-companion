@@ -5,3 +5,9 @@ node_modules/
 .DS_Store
 dist/
 *.tsbuildinfo
+
+# Build context produced by sandbox/build-snapshot.ts (transient)
+sandbox/_context.tar.gz
+
+# Local sandbox secrets (DAYTONA_API_KEY etc.)
+sandbox/.env

@@ -160,6 +160,18 @@ export LANGFUSE_BASE_URL="https://cloud.langfuse.com"   # or your self-hosted UR
 
 See each plugin's README for harness-specific installation steps.
 
+## Sandbox
+
+[`sandbox/`](sandbox/README.md) — Daytona-based throwaway environments for testing the harness end-to-end. Builds a single image (Pi + every extension dependency + the repo + your auth) once, then spins up isolated sandboxes from it in seconds.
+
+```bash
+cp sandbox/.env.example sandbox/.env       # set DAYTONA_API_KEY
+bun sandbox/build-snapshot.ts              # one-time, ~6 min cold
+bun sandbox/run-sandbox.ts                 # ~15s, leaves a sandbox you can SSH into
+```
+
+See [`sandbox/README.md`](sandbox/README.md) for the full pipeline, cache behavior, and the gotchas (MinIO hostname, tailnet routing, TLS termination via caddy).
+
 ## Extensions
 
 - [`cmux-diff`](extensions/cmux-diff/SPEC.md) — interactive git-diff review inside cmux that submits comments back to the active Pi session
