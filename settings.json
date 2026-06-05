@@ -24,8 +24,8 @@
   "treeFilterMode": "default",
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "qwen3.6-plus",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "openai-codex/gpt-5.4-mini",

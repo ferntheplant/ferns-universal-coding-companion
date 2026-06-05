@@ -13,11 +13,12 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const ENV_PATH = resolve(SCRIPT_DIR, ".env");
+const SANDBOX_ENV_PATH = resolve(SCRIPT_DIR, ".env");
+const REPO_ENV_PATH = resolve(SCRIPT_DIR, "..", ".env");
 
-export function loadSandboxEnv(): void {
-  if (!existsSync(ENV_PATH)) return;
-  const content = readFileSync(ENV_PATH, "utf-8");
+function loadEnvFile(path: string): void {
+  if (!existsSync(path)) return;
+  const content = readFileSync(path, "utf-8");
   for (const rawLine of content.split("\n")) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#")) continue;
@@ -30,6 +31,18 @@ export function loadSandboxEnv(): void {
       .replace(/^['"]|['"]$/g, "");
     if (!process.env[key]) process.env[key] = value;
   }
+}
+
+/**
+ * Loads sandbox/.env (for standalone CLI use like bun sandbox/run-sandbox.ts)
+ * AND repo-root /.env (where Flue's quickstart asks users to put creds).
+ * Both are optional. Existing process.env values always win.
+ */
+export function loadSandboxEnv(): void {
+  // Sandbox-local first so its values take priority over the repo-root file
+  // for any key set in both (sandbox/.env is the more-specific location).
+  loadEnvFile(SANDBOX_ENV_PATH);
+  loadEnvFile(REPO_ENV_PATH);
 }
 
 export function requireEnv(key: string, hint?: string): string {

@@ -11,3 +11,6 @@ sandbox/_context.tar.gz
 
 # Local sandbox secrets (DAYTONA_API_KEY etc.)
 sandbox/.env
+
+# Host-side provider keys (OPENCODE_API_KEY etc.) loaded by sandbox/env.ts.
+.env
