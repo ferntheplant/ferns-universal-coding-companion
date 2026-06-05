@@ -46,7 +46,7 @@ import { loadSandboxEnv, requireEnv } from "./env.ts";
 loadSandboxEnv();
 
 const REMOTE_REPO_DIR = "/opt/fucc";
-const DEFAULT_SNAPSHOT_BASE = "fucc-pi-harness-v1";
+const DEFAULT_SNAPSHOT_BASE = "fucc-pi-harness";
 
 // Host-side ~/.pi state we mirror into the sandbox. Pi reads OAuth refresh
 // tokens (openai-codex, claude pro/max, github copilot) AND API keys for

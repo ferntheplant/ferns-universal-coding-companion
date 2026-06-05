@@ -157,6 +157,33 @@ export function extractTextContent(content: unknown, maxLength?: number): string
   return maxLength ? truncate(text, maxLength) : text;
 }
 
+/**
+ * Extract thinking/reasoning blocks from assistant message content.
+ * These are { type: "thinking", thinking: string } blocks that appear
+ * before text content in provider responses with reasoning enabled.
+ * Important for cancelled generations where the model was mid-thinking.
+ */
+export function extractThinkingContent(content: unknown, maxLength?: number): string | undefined {
+  if (!Array.isArray(content)) {
+    return undefined;
+  }
+
+  const thinking = content
+    .map((item) => {
+      if (!item || typeof item !== "object") return "";
+      const block = item as { type?: string; thinking?: string };
+      return block.type === "thinking" && block.thinking ? block.thinking : "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
+
+  if (!thinking) {
+    return undefined;
+  }
+
+  return maxLength ? truncate(thinking, maxLength) : thinking;
+}
+
 export function extractToolCalls(message: Record<string, unknown>): unknown | undefined {
   return (
     message.toolCalls ??
@@ -177,6 +204,18 @@ export function extractAssistantOutput(message: unknown): unknown | undefined {
 
   const msg = message as Record<string, unknown>;
   const text = extractTextContent(msg.content);
+  const thinking = extractThinkingContent(msg.content);
+
+  // Thinking-only (e.g. cancelled mid-think): return thinking content wrapped for clarity
+  if (thinking && !text) {
+    return thinking;
+  }
+
+  // Both thinking + text: prepend thinking so the trace shows the full response
+  if (thinking && text) {
+    return `${thinking}\n\n${text}`;
+  }
+
   if (text) {
     return text;
   }
