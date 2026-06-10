@@ -15,6 +15,7 @@
     "npm:pi-hashline-readmap",
     "npm:@tmustier/pi-raw-paste",
     "npm:pi-smart-fetch",
-    "npm:pi-agent-browser-native"
+    "npm:pi-agent-browser-native",
+    "npm:@juicesharp/rpiv-todo"
   ]
 }
