@@ -1,0 +1,19 @@
+{
+  "name": "@fucc/pi-cmux",
+  "private": true,
+  "type": "module",
+  "module": "index.ts",
+  "scripts": {
+    "dev": "bun run index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "typescript": "catalog:"
+  }
+}

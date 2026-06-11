@@ -26,7 +26,7 @@
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
   "defaultProvider": "opencode-go",
-  "defaultModel": "qwen3.7-plus",
+  "defaultModel": "glm-5.1",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "openai-codex/gpt-5.4-mini",

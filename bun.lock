@@ -38,6 +38,18 @@
         "typescript": "catalog:",
       },
     },
+    "extensions/pi-cmux": {
+      "name": "@fucc/pi-cmux",
+      "devDependencies": {
+        "@earendil-works/pi-coding-agent": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "@earendil-works/pi-coding-agent": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "extensions/pi-context": {
       "name": "@fucc/pi-context",
       "dependencies": {
@@ -268,6 +280,8 @@
     "@fucc/cmux-diff": ["@fucc/cmux-diff@workspace:extensions/cmux-diff"],
 
     "@fucc/example-extension": ["@fucc/example-extension@workspace:templates/extension"],
+
+    "@fucc/pi-cmux": ["@fucc/pi-cmux@workspace:extensions/pi-cmux"],
 
     "@fucc/pi-context": ["@fucc/pi-context@workspace:extensions/pi-context"],
 
@@ -1433,6 +1447,8 @@
 
     "@aws-sdk/util-user-agent-node/@smithy/types": ["@smithy/types@4.14.1", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-59b5HtSVrVR/eYNei3BUj3DCPKD/G7EtDDe7OEJE7i7FtQFugYo6MxbotS8mVJkLNVf8gYaAlEBwwtJ9HzhWSg=="],
 
+    "@fucc/pi-cmux/@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
+
     "@grpc/proto-loader/yargs": ["yargs@17.7.2", "", { "dependencies": { "cliui": "^8.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "require-directory": "^2.1.1", "string-width": "^4.2.3", "y18n": "^5.0.5", "yargs-parser": "^21.1.1" } }, "sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w=="],
 
     "@langfuse/client/@langfuse/core": ["@langfuse/core@5.4.1", "", { "peerDependencies": { "@opentelemetry/api": "^1.9.0" } }, "sha512-TjaRTr9fGqaWuyYKFSezKxN4DWAaK/lq//hRMw8rQKFkZUs6vTgUODxqZTFTR6np5VnLVw+eZLlnHROPKbXqdg=="],
@@ -1600,6 +1616,8 @@
     "@aws-sdk/token-providers/@aws-sdk/core/@smithy/core": ["@smithy/core@3.24.1", "", { "dependencies": { "@aws-crypto/crc32": "5.2.0", "@smithy/types": "^4.14.1", "tslib": "^2.6.2" } }, "sha512-3mT7o4qQyUWttYnVK3A0Z/u3Xha3E81tXn32Tz6vjZiUXhBrkEivpw1hBYfh84iFF9CSzkBU9Y1DJ3Q6RQ231g=="],
 
     "@aws-sdk/token-providers/@aws-sdk/core/@smithy/signature-v4": ["@smithy/signature-v4@5.4.1", "", { "dependencies": { "@smithy/core": "^3.24.1", "@smithy/types": "^4.14.1", "tslib": "^2.6.2" } }, "sha512-728lZZEWYWubBESrfntNslZQYDKRlJDY4dcDnYbL50+gu35pGPLblu4S0/RH/RDLF6me1M87ECHsHELGL7dA/Q=="],
+
+    "@fucc/pi-cmux/@types/bun/bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
 
     "@grpc/proto-loader/yargs/cliui": ["cliui@8.0.1", "", { "dependencies": { "string-width": "^4.2.0", "strip-ansi": "^6.0.1", "wrap-ansi": "^7.0.0" } }, "sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ=="],
 
