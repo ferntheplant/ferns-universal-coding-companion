@@ -177,24 +177,63 @@ export async function resume(pi: ExtensionAPI, ctx: ExtensionContext): Promise<v
     return;
   }
   if (run.phase === "paused") {
-    const target = run.pausedFromPhase ?? "working";
+    let target = run.pausedFromPhase ?? "working";
     run.pausedFromPhase = undefined;
+    // Resuming from a gate failure should continue gating, not go back to needs_human
+    if (target === "needs_human") {
+      run.needsHumanReason = undefined;
+      target = "gating";
+    }
     await transition(pi, ctx, run, target);
     if (target === "gating") {
       void runGatesGuarded(pi, ctx);
+      ctx.ui.notify("Autopilot resumed — re-running gate pipeline...", "info");
       return;
     }
     ctx.ui.notify("Autopilot resumed — waiting for the agent's next stop.", "info");
     return;
   }
   if (run.phase === "needs_human") {
-    await transition(pi, ctx, run, "working");
-    ctx.ui.notify("Autopilot resumed — waiting for the agent's next stop.", "info");
+    // Resuming from needs_human (likely a gate failure) — re-run the gate pipeline
+    run.needsHumanReason = undefined;
+    await transition(pi, ctx, run, "gating");
+    void runGatesGuarded(pi, ctx);
+    ctx.ui.notify("Autopilot resumed — re-running gate pipeline...", "info");
     return;
   }
   ctx.ui.notify(`Autopilot is ${run.phase}; nothing to resume.`, "info");
 }
 
+export async function approveBaseline(pi: ExtensionAPI, ctx: ExtensionContext): Promise<void> {
+  const run = getRun();
+  if (!run) {
+    ctx.ui.notify("Autopilot is not armed.", "info");
+    return;
+  }
+
+  const cleared = run.baselineDirtyPaths.length;
+  run.baselineDirtyPaths = [];
+  run.needsHumanReason = undefined;
+
+  // If paused from a gate failure (needs_human), resume gating
+  if (run.phase === "paused" && run.pausedFromPhase === "needs_human") {
+    run.pausedFromPhase = undefined;
+    await transition(pi, ctx, run, "gating");
+    ctx.ui.notify(`Baseline cleared (${cleared} path(s) approved). Resuming gate pipeline...`, "info");
+    void runGatesGuarded(pi, ctx);
+    return;
+  }
+
+  // If directly in needs_human phase, transition to gating
+  if (run.phase === "needs_human") {
+    await transition(pi, ctx, run, "gating");
+    ctx.ui.notify(`Baseline cleared (${cleared} path(s) approved). Resuming gate pipeline...`, "info");
+    void runGatesGuarded(pi, ctx);
+    return;
+  }
+
+  ctx.ui.notify(`Baseline cleared (${cleared} path(s) approved).`, "info");
+}
 export function statusLines(): string[] {
   const run = getRun();
   const config = getConfig();
@@ -241,9 +280,7 @@ export async function restoreFromSession(pi: ExtensionAPI, ctx: ExtensionContext
   run.pausedFromPhase =
     run.phase === "paused"
       ? run.pausedFromPhase
-      : run.phase === "needs_human"
-        ? "working"
-        : run.phase;
+      : run.phase; // preserve original phase (including needs_human for gate failures)
   run.phase = "paused";
   restoreRun(run, config);
   emitArmedState(pi, true);
@@ -400,6 +437,7 @@ async function runGates(pi: ExtensionAPI, ctx: ExtensionContext): Promise<void> 
     // Findings restart the pipeline from gate 0 after the agent's fix pass.
     run.gateCursor = 0;
     await transition(pi, ctx, run, "working", `fixing ${gate.id} findings (round ${used}/${cap})`);
+    run.suppressAutoPause = true;
     pi.sendUserMessage(findingsPrompt(gate.id, fresh));
     return;
   }

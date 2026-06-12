@@ -48,15 +48,21 @@ export default function piAutopilot(pi: ExtensionAPI): void {
     await onAgentEnd(pi, ctx, event.messages);
   });
 
-  // The operator typing a real prompt while the loop is active means they
-  // took the wheel: auto-pause instead of racing them. Slash commands and
-  // non-interactive sources (including our own injections) don't count, and
-  // needs_human is exactly the phase where typing an answer is expected.
+  // The operator typing a real prompt while the agent is actively streaming
+  // means they took the wheel: auto-pause instead of racing them. Slash
+  // commands and non-interactive sources don't count, and needs_human is
+  // exactly the phase where typing an answer is expected.
+  //
+  // Crucially, streamingBehavior is undefined when the agent is idle — so
+  // arming and then typing the initial task prompt does NOT count as "taking
+  // the wheel." Only mid-stream steers and follow-ups while the agent is
+  // actively working trigger auto-pause.
   pi.on("input", async (event, ctx) => {
     const run = getRun();
     if (!run) return;
     if (event.source !== "interactive") return;
     if (event.text.trimStart().startsWith("/")) return;
+    if (!(event as any).streamingBehavior) return; // agent idle — this is just a task prompt
     if (run.phase === "working" || run.phase === "gating") {
       await pause(pi, ctx);
       ctx.ui.notify("Autopilot auto-paused: you took the wheel.", "info");

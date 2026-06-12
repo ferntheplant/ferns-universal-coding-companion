@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { arm, disarm, pause, resume, statusLines } from "./controller";
+import { arm, disarm, pause, resume, approveBaseline, statusLines } from "./controller";
 
 export function registerCommands(pi: ExtensionAPI): void {
   pi.registerCommand("auto", {
@@ -27,6 +27,13 @@ export function registerCommands(pi: ExtensionAPI): void {
     description: "Resume a paused or needs-human autopilot run",
     handler: async (_args, ctx) => {
       await resume(pi, ctx);
+    },
+  });
+
+  pi.registerCommand("auto-approve-baseline", {
+    description: "Approve pre-existing dirty files and continue with gate pipeline",
+    handler: async (_args, ctx) => {
+      await approveBaseline(pi, ctx);
     },
   });
 

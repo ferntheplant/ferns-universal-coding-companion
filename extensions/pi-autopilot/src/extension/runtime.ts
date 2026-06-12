@@ -44,6 +44,7 @@ export function startRun(options: {
     tokensSpent: 0,
     costSpent: 0,
     compactedOnce: false,
+    suppressAutoPause: false,
   };
   return runtime.run;
 }

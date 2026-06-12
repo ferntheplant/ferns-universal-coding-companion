@@ -85,6 +85,8 @@ export interface RunState {
   costSpent: number;
   /** The one allowed auto-compaction per run has been used. */
   compactedOnce: boolean;
+  /** Suppress auto-pause while the autopilot is injecting its own prompt. */
+  suppressAutoPause: boolean;
 }
 
 /** JSON-safe snapshot of RunState persisted via appendEntry for crash recovery. */
