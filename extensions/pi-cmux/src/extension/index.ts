@@ -8,24 +8,35 @@ function inCmux(): boolean {
 }
 
 async function setCmuxSidebar(pi: ExtensionAPI): Promise<void> {
-  await pi.exec("cmux", [
-    "set-status",
-    STATUS_KEY,
-    ATTENTION_MESSAGE,
-    "--icon", "sparkle",
-    "--color", "#ff9500",
-    "--priority", "80",
-  ], { timeout: 5000 });
+  await pi.exec(
+    "cmux",
+    [
+      "set-status",
+      STATUS_KEY,
+      ATTENTION_MESSAGE,
+      "--icon",
+      "sparkle",
+      "--color",
+      "#ff9500",
+      "--priority",
+      "80",
+    ],
+    { timeout: 5000 },
+  );
 }
 
 async function clearCmuxSidebar(pi: ExtensionAPI): Promise<void> {
-  await pi.exec("cmux", [
-    "clear-status",
-    STATUS_KEY,
-  ], { timeout: 5000 });
+  await pi.exec("cmux", ["clear-status", STATUS_KEY], { timeout: 5000 });
 }
 
 export default function piCmuxExtension(pi: ExtensionAPI): void {
+  // While pi-autopilot is armed it owns the workspace status with richer
+  // per-phase messages; suppress the generic attention ping until it disarms.
+  let autopilotArmed = false;
+  pi.events.on("pi-autopilot:armed", (data) => {
+    autopilotArmed = Boolean((data as { armed?: boolean } | undefined)?.armed);
+  });
+
   pi.registerCommand("pi-cmux-clear", {
     description: "Clear the cmux workspace attention status from sidebar",
     handler: async (_args, ctx) => {
@@ -38,6 +49,7 @@ export default function piCmuxExtension(pi: ExtensionAPI): void {
   });
 
   pi.on("agent_end", async (_event, ctx) => {
+    if (autopilotArmed) return;
     if (inCmux()) {
       await setCmuxSidebar(pi).catch(() => {});
     }
