@@ -139,6 +139,10 @@ export async function runCliReview(
   }
 
   note(gate, `review round ${round}: normalizing ${adapter} findings`);
+  gate.ctx.ui.notify(
+    `Review round ${round} (${adapter}):\n${reviewText.slice(0, 500)}`,
+    "info",
+  );
   const findings = await normalizeFindings(gate, reviewText);
   if (findings.length === 0) return { status: "pass" };
   return { status: "findings", findings };

@@ -329,6 +329,10 @@ export async function runGreptileReview(gate: GateContext, headSha: string): Pro
     if (await botCheckCompleted(gate, triggerAtMs)) {
       const rawText = changesToRawText(diffSnapshots(baseline, current));
       if (!rawText.trim()) return complete({ status: "pass" });
+      gate.ctx.ui.notify(
+        `Review round ${round}: greptile check completed, normalizing review diff`,
+        "info",
+      );
       const findings = await normalizeFindings(gate, rawText);
       if (findings.length === 0) return complete({ status: "pass" });
       return complete({ status: "findings", findings });

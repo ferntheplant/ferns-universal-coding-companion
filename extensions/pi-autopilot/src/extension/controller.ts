@@ -75,23 +75,34 @@ async function needsHuman(pi: ExtensionAPI, ctx: ExtensionContext, reason: strin
   }
 }
 
-function findingsPrompt(gateId: string, findings: Finding[]): string {
+function findingsPrompt(gateId: string, findings: Finding[], roundInfo: string): string {
   const items = findings
     .map((finding, index) => {
       const location = finding.file
         ? ` (${finding.file}${finding.line ? `:${finding.line}` : ""})`
         : "";
-      return `${index + 1}. [${finding.source}] ${finding.title}${location}\n${finding.body}`;
+      const severity = finding.severity ? ` [${finding.severity}]` : "";
+      return `${index + 1}. [${finding.source}${severity}] ${finding.title}${location}\n${finding.body}`;
     })
     .join("\n\n");
   return [
-    `Autopilot: the "${gateId}" gate returned ${findings.length} finding(s):`,
+    `Autopilot (${roundInfo}): the "${gateId}" gate returned ${findings.length} finding(s):`,
     "",
     items,
     "",
     "For each finding: fix it if it's a genuine issue, or explicitly reject it with one",
     "line of reasoning. When done, call report_status.",
   ].join("\n");
+}
+
+function findingsSummary(findings: Finding[]): string {
+  return findings
+    .map((f) => {
+      const loc = f.file ? ` (${f.file}${f.line ? `:${f.line}` : ""})` : "";
+      const sev = f.severity ? ` [${f.severity}]` : "";
+      return `• ${f.title}${loc}${sev}`;
+    })
+    .join("\n");
 }
 
 export async function arm(
@@ -435,10 +446,14 @@ async function runGates(pi: ExtensionAPI, ctx: ExtensionContext): Promise<void> 
     }
 
     // Findings restart the pipeline from gate 0 after the agent's fix pass.
+    const roundInfo = `round ${used}/${cap}`;
+    const summary = findingsSummary(fresh);
     run.gateCursor = 0;
-    await transition(pi, ctx, run, "working", `fixing ${gate.id} findings (round ${used}/${cap})`);
+    const firstTitle = fresh[0]?.title ?? "unknown";
+    await transition(pi, ctx, run, "working", `fixing ${gate.id} findings (${roundInfo}): ${fresh.length} issue(s), first: ${firstTitle}`);
+    ctx.ui.notify(`${gate.id} findings (${roundInfo}):\n${summary}`, "warning");
     run.suppressAutoPause = true;
-    pi.sendUserMessage(findingsPrompt(gate.id, fresh));
+    pi.sendUserMessage(findingsPrompt(gate.id, fresh, roundInfo));
     return;
   }
 

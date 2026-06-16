@@ -8,7 +8,7 @@
     "npm:pi-agent-browser-native",
     "npm:@juicesharp/rpiv-todo"
   ],
-  "lastChangelogVersion": "0.79.1",
+  "lastChangelogVersion": "0.79.5",
   "images": {
     "blockImages": false
   },
@@ -25,25 +25,25 @@
   "treeFilterMode": "default",
   "theme": "rose-pine-dawn",
   "editorPaddingX": 0,
-  "defaultProvider": "opencode-go",
-  "defaultModel": "qwen3.7-max",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "openai-codex/gpt-5.4-mini",
     "openai-codex/gpt-5.4",
     "openai-codex/gpt-5.5",
     "opencode/claude-sonnet-4-6",
-    "opencode/claude-opus-4-7",
+    "opencode/claude-opus-4-8",
     "opencode/gpt-5.4-nano",
     "opencode/gemini-3.5-flash",
     "opencode-go/deepseek-v4-flash",
     "opencode-go/deepseek-v4-pro",
     "opencode-go/glm-5.1",
     "opencode-go/kimi-k2.6",
-    "opencode-go/minimax-m2.7",
+    "opencode-go/kimi-k2.7-code",
     "opencode-go/minimax-m3",
-    "opencode-go/qwen3.6-plus",
     "opencode-go/qwen3.7-plus",
-    "opencode-go/qwen3.7-max"
+    "opencode-go/qwen3.7-max",
+    "opencode-go/mimo-v2.5-pro"
   ]
 }
